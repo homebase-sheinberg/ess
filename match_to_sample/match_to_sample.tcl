@@ -5,6 +5,7 @@
 ##  DECRIPTION
 ##    System for creating match to sample paradigms
 ##
+## test on mobile
 
 package require ess
 
