@@ -121,7 +121,7 @@ namespace eval search::circles {
 		[dl_unpack [dl_choose $g:dists_pos [dl_llist [dl_llist 1]]]]
 	    
 	    set dist_r [expr $scale*$dist_prop]
-	    set dist_color $targ_color
+	    set dist_color { 1 0 0 }
 	    
 	    dl_set $g:dist_rs [dl_repeat $dist_r [dl_llength $g:dist_xs]]
 	    dl_set $g:dist_colors \
