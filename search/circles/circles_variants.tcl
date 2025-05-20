@@ -39,8 +39,9 @@ namespace eval search::circles {
 		dist_prop { 1.2 1.1 0.9 0.8 }
 		mindist {1.5 2.0}
 		targ_range { 8 9 10 }
-		targ_color {
+			targ_color {
 		    { cyan { 0 1 1 } }
+		    { red { 1 0 0 } }
 		}
 	    }
 	}
@@ -120,7 +121,7 @@ namespace eval search::circles {
 		[dl_unpack [dl_choose $g:dists_pos [dl_llist [dl_llist 1]]]]
 	    
 	    set dist_r [expr $scale*$dist_prop]
-	    set dist_color  { red { 1 0 0 } }
+	    set dist_color  $targ_color
 	    
 	    dl_set $g:dist_rs [dl_repeat $dist_r [dl_llength $g:dist_xs]]
 	    dl_set $g:dist_colors \
