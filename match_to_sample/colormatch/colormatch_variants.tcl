@@ -6,6 +6,7 @@
 #   variant dictionary
 #
 
+
 namespace eval match_to_sample::colormatch {
     variable params_defaults { sample_time 500 delay_time 500 }
 
