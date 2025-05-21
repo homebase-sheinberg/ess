@@ -10,7 +10,7 @@
 #
 # AUTHOR
 #   DLS
-# test
+#
 
 # find the shader dir
 set stimdir [file dir [info nameofexecutable]]
@@ -74,43 +74,94 @@ proc create_circle { r g b { a 1 } } {
     return $c
 }
 
-proc create_noise { id } {
-    set noise_mg [metagroup]
-    for { set i 0 } { $i < [dl_length stimdg:noise_elements:$id] } { incr i } {
-        lassign [dl_tcllist [dl_get stimdg:noise_elements:$id $i]] x y r
-        set c [create_circle 0 0 0]
-        translateObj $c $x $y
-        scaleObj $c $r
-        metagroupAdd $noise_mg $c
-    }
-    return $noise_mg
+proc create_open_circle { r g b { a 1 } } {
+    global pi
+    set n 36
+    set step [expr 2.*$::pi/$n]
+    set c [polygon]
+    dl_local x [dl_mult 0.5 [dl_cos [dl_fromto 0 [expr 2*$pi] $step]]]
+    dl_local y [dl_mult 0.5 [dl_sin [dl_fromto 0 [expr 2*$pi] $step]]]
+    polyverts $c $x $y
+    polytype $c line_loop
+    polycolor $c $r $g $b $a
+    return $c
 }
 
+proc create_cue { id } {
+    set mg [metagroup]
+    set cue_color ".2 1 1"
+    for { set i 0 } { $i < [dl_length stimdg:cued_choices:$id] } { incr i } {
+	set s [create_circle {*}$cue_color 0.8]
+	translateObj $s {*}[dl_tcllist stimdg:cued_choices:$id:$i]
+	scaleObj $s [expr 0.9*[dl_get stimdg:choice_scale $id]]
+	metagroupAdd $mg $s
+    }
+    setVisible $mg 0
+    return $mg
+}
+
+proc do_rotate { o { increment 1 } } {
+    set r [shaderObjSetUniform $o rotationAngle]
+    set r [expr {$r+$increment}]
+    shaderObjSetUniform $o rotationAngle $r
+}
+
+proc create_mask { shader id color } {
+    if { [dl_length stimdg:noise_elements:$id] } {
+	set mscale 1.5
+	set scale [expr {$mscale*[dl_get stimdg:shape_scale $id]}]
+
+	set obj [shaderObj $shader]
+	scaleObj $obj $scale
+
+	dl_local centers [dl_collapse [dl_choose stimdg:noise_elements:$id [dl_llist "0 1"]]]
+	dl_local centers [dl_div $centers $mscale]
+	dl_local radii [dl_collapse [dl_choose stimdg:noise_elements:$id [dl_llist 2]]]
+	dl_local radii [dl_div $radii $mscale]
+	
+	shaderObjSetUniform $obj maskColor "$color 1"
+	shaderObjSetUniform $obj circlePos [dl_tcllist $centers]
+	shaderObjSetUniform $obj radii [dl_tcllist $radii]
+	shaderObjSetUniform $obj nCircles [dl_length $radii]
+	shaderObjSetUniform $obj isCircle 1
+	shaderObjSetUniform $obj invert 0
+    } else {
+	set obj [nullObj]
+    }
+    return $obj
+}
+
+proc rotate_noise { angle } { rotateObj $::mask $angle 0 0 -1; redraw }
+    
 proc nexttrial { id } {
     resetObjList         ;# unload existing objects
     shaderImageReset;        ;# free any shader textures
     shaderDeleteAll;         ;# reset any shader objects
     glistInit 2
 
-    set shader_file image    ;# shader file is image.glsl
+    set shader_file image
     set shader [shaderBuild $shader_file]
+
+    set mask_shader_file holemask
+    set mask_shader [shaderBuild $mask_shader_file]
 
     set ::current_trial $id
     set trialtype [dl_get stimdg:trial_type $id]
     set scale [dl_get stimdg:choice_scale $id]
     set nchoices [dl_get stimdg:n_choices $id]
+    set is_cued [dl_get stimdg:is_cued $id]
 
+    set mask_color "0.1 0.1 0.15"
+    
     # add the visual sample for VV trials, no visual sample for HV trials
     if { $trialtype == "visual" } {
         set ::sample [metagroup]
-        set shape [create_shape $shader $id]
-        metagroupAdd $::sample $shape
 
-        # add noise to metagroup if specified
-        if { [dl_length stimdg:noise_elements:$id] } {
-            set noise [create_noise $id]
-            metagroupAdd $::sample $noise
-        }
+        set ::shape [create_shape $shader $id]
+        set ::mask  [create_mask $mask_shader $id $mask_color]
+	
+        metagroupAdd $::sample $::shape
+	metagroupAdd $::sample $::mask
 
         glistAddObject $::sample 0
         setVisible $::sample 0
@@ -122,14 +173,35 @@ proc nexttrial { id } {
     set mg [metagroup]
 
     for { set i 0 } { $i < $nchoices } { incr i } {
-        set s [create_circle 1 1 1 0.3]
+        if { !$is_cued } {
+	    set s [create_circle 1 1 1 0.3]
+	} else {
+	    set s [create_open_circle 1 1 1 0.3]
+	}
         translateObj $s {*}[dl_tcllist stimdg:choice_centers:$id:$i]
         scaleObj $s [dl_get stimdg:choice_scale $id]
         metagroupAdd $mg $s
     }
+
+    # add lr choices if we are using cueing
+    set nlrchoices [dl_length stimdg:lr_choice_centers:$id]
+    if { $is_cued } {
+	for { set i 0 } { $i < $nlrchoices } { incr i } {
+	    set s [create_circle 1 1 1 0.3]
+	    translateObj $s {*}[dl_tcllist stimdg:lr_choice_centers:$id:$i]
+	    scaleObj $s [dl_get stimdg:lr_choice_scale $id]
+	    metagroupAdd $mg $s
+	}
+    }
+    
     glistAddObject $mg 0
     setVisible $mg 0
     set ::choice_array $mg
+
+    if { $is_cued } {
+	set ::cue [create_cue $id]
+	glistAddObject $::cue 0
+    }
 
     # gray selecting circle
     set s [create_circle .9 .9 .9 0.9]
@@ -224,6 +296,16 @@ proc sample_off {} {
     redraw
 }
 
+proc cue_on {} {
+    setVisible $::cue 1
+    redraw
+}
+	     
+proc cue_off {} {
+    setVisible $::cue 0
+    redraw
+}
+	     
 proc choices_on {} {
     setVisible $::choice_array 1
     redraw
