@@ -1,0 +1,100 @@
+dm_dims $dm
+package require dbscan
+dbscan::cluster
+dl_local assigned [dbscan::cluster $dm]
+dl_tcllist $assigned
+dl_max $dm:0
+dl_max $dm:1
+dl_min $dm:0
+package require dbscan
+package require dtw
+dg_read jitters
+dl_local t [dl_llist [dl_choose jitters:x:0 [dl_fromto 0 50]] [dl_choose jitters:y:0 [dl_fromto 0 50]]]
+dl_local t [dl_transpose $t]
+dl_local dm [dtwDistanceOnly $t]
+dl_local assigned [dbscan::cluster $dm 10]
+dl_tcllist $assigned
+dl_max $assigned
+source jitter_worlds.tcl
+cluster_jittered_trajectories jitters 0 100 
+source jitter_worlds.tcl
+cluster_jittered_trajectories jitters 0 100 
+dg_view group0
+cluster_jittered_trajectories jitters 1 100 
+dg_view group1
+dl_max group1:cluster
+dl_max group0:cluster
+cluster_jittered_trajectories jitters 1 100 25
+dl_max group2:cluster
+cluster_jittered_trajectories jitters 8 100 25
+dl_max group3:cluster
+cluster_jittered_trajectories jitters 18 100 25
+dl_max group4:cluster
+cluster_jittered_trajectories jitters 18 100 20
+dl_max group5:cluster
+cluster_jittered_trajectories jitters 18 100 30
+dl_max group6:cluster
+cluster_jittered_trajectories jitters 18 200 30
+dg_read jitters
+cluster_jittered_trajectories jitters 3 250 30
+source jitter_worlds.tcl
+cluster_jittered_trajectories jitters 3 250 30
+dg_view group0
+dl_max group0
+dl_max group0:cluster
+dl_tcllist [dl_sortedFunc group0:cluster group0:cluster dl_lengths]
+cluster_jittered_trajectories jitters 3 250 25
+dl_tcllist [dl_sortedFunc group1:cluster group1:cluster dl_lengths]
+package require dtw
+dtwDistanceOnly
+dg_view jitters
+
+dl_tcllist [dtwDistanceOnly [dl_llist jitters:x:0:0 jitters:y:0:0] [dl_llist jitters:x:0:1 jitters:y:0:1]]
+time { cluster_jittered_trajectories jitters 3 250 25 }
+dg_dir
+dg_read jitters
+source jitter_worlds.tcl
+time { cluster_jittered_trajectories jitters 3 250 25 }
+dl_tcllist [dl_sortedFunc group0:cluster group0:cluster dl_lengths]
+source jitter_worlds.tcl
+dg_dir
+time { cluster_jittered_trajectories jitters 3 250 25 }
+dl_tcllist [dl_sortedFunc group1:cluster group1:cluster dl_lengths]
+source jitter_worlds.tcl
+time { cluster_jittered_trajectories jitters 3 250 25 }
+dl_tcllist [dl_sortedFunc group2:cluster group2:cluster dl_lengths]
+source jitter_worlds.tcl
+time { cluster_jittered_trajectories jitters 3 250 25 }
+dl_tcllist [dl_sortedFunc group3:cluster group3:cluster dl_lengths]
+source jitter_worlds.tcl
+time { cluster_jittered_trajectories jitters 3 2 250 25 }
+time { cluster_jittered_trajectories jitters 3 250 2 25 }
+dg_dir
+dl_tcllist [dl_sortedFunc group5:cluster group5:cluster dl_lengths]
+cluster_jittered_trajectories jitters 7 250 2 25
+dl_tcllist [dl_sortedFunc group6:cluster group6:cluster dl_lengths]
+cluster_jittered_trajectories jitters 7 250 1 25
+dl_tcllist [dl_sortedFunc group7:cluster group7:cluster dl_lengths]
+cluster_jittered_trajectories jitters 7 250 1 15
+dl_tcllist [dl_sortedFunc group8:cluster group8:cluster dl_lengths]
+cluster_jittered_trajectories jitters 3 250 1 15
+dl_tcllist [dl_sortedFunc group9:cluster group9:cluster dl_lengths]
+dg_delete all
+dg_delete jitters
+dg_delete jitter
+dg_dir
+dg_read jitters
+dg_view jitters
+dl_length jitters:distance_matrix:0
+dl_length jitters:distance_matrix:0:0
+dl_indices [dl_ones 10]
+dl_tcllist [dl_indices [dl_ones 10]]
+dl_tcllist [dl_index [dl_ones 10]]
+dl_indices [dl_zeroes 10]
+dl_indices [dl_zeros 10]
+dl_tcllist [dl_indices [dl_zeros 10]]
+dl_tcllist [dl_index [dl_zeros 10]]
+dl_fromto 0 0
+dl_tcllist [dl_fromto 0 0]
+dl_choose [dl_fromto 0 10] [dl_fromto 0 0]
+dl_tcllist [dl_choose [dl_fromto 0 10] [dl_fromto 0 0]]
