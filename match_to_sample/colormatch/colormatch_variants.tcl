@@ -7,7 +7,7 @@
 #
 
 namespace eval match_to_sample::colormatch {
-    variable params_defaults { sample_time 500 delay_time 500 }
+    variable params_defaults { sample_time 1500 delay_time 1 }
 
     variable variants {
 	noDistractor     {
