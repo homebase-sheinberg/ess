@@ -149,7 +149,7 @@ namespace eval planko::training {
 	}
 
 	$s add_method feedback { resp correct } {
-	    rmtSend "!show_feedback [expr $resp-1] $correct"
+	    rmtSend "!show_response [expr $resp-1]"
 	}
 
 	$s add_method feedback_complete {} {
@@ -157,13 +157,14 @@ namespace eval planko::training {
 	}
 
 	$s add_method reward {} {
+	    rmtSend "!show_feedback [expr $resp-1] $correct"
 	    soundPlay 3 70 70
 	    ::ess::reward $juice_ml
 	    ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
 	}
 
 	$s add_method noreward {} {
-
+	    rmtSend "!show_feedback [expr $resp-1] $correct"
 	}
 
 	$s add_method finale {} {
