@@ -10,13 +10,13 @@ namespace eval match_to_sample::colormatch {
     variable params_defaults { sample_time 2000 delay_time 0 }
 
     variable variants {
-	noDistractor     {
+	noDistractors     {
 	    description "no distractor"
 	    loader_proc setup_trials
 	    loader_options {
 		n_rep { 50 100 }
 		targ_scale 1.5
-		color_choices noDistractor
+		color_choices noDistractors
 	    }
 	}
 	easy     {
@@ -76,7 +76,7 @@ namespace eval match_to_sample::colormatch {
 		dl_local green [dl_flist 0 1 0]
 		dl_local sample_colors [dl_repeat [dl_llist $red $green] $n_per_side]
 		dl_local nonmatch_colors [dl_repeat [dl_llist $green $red] $n_per_side]
-	    } elseif { $color_choices == "noDistractor" } {
+	    } elseif { $color_choices == "noDistractors" } {
 		dl_local transparent [dl_flist 0 0 0 0]
 		dl_local sample_colors [dl_urand [dl_repeat 3 $n_obs]]
 		dl_local nonmatch_colors [dl_repeat [dl_llist $transparent] $n_obs]
