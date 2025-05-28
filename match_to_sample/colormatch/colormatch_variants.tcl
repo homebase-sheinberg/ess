@@ -14,7 +14,7 @@ namespace eval match_to_sample::colormatch {
 	    description "no distractor"
 	    loader_proc setup_trials
 	    loader_options {
-		n_rep { 75 50 100 500 1000}
+		n_rep { 50 100 500 1000}
 		targ_scale 1.5
 		color_choices noDistractor
 	    }
