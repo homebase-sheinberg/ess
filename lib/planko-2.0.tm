@@ -346,7 +346,6 @@ namespace eval planko {
 	variable params
 	default_params
 
-	set params(floor_only) 1
 	dict for { k v } $d { set params($k) $v }
 	
 	set acc accept_board
