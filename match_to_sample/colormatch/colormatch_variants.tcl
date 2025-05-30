@@ -23,7 +23,7 @@ namespace eval match_to_sample::colormatch {
 	    description "easy comparisons"
 	    loader_proc setup_trials
 	    loader_options {
-		n_rep { 50 100 }
+		n_rep { 50 100 200 400 800}
 		targ_scale 1.5
 		color_choices easy
 	    }
