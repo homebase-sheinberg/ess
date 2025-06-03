@@ -88,29 +88,34 @@ namespace eval planko::training {
 	$s add_method single_deinit {} {}
 
 	$s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
-	    set n_rep $nr
-	    
-	    if { [dg_exists stimdg] } { dg_delete stimdg }
+    set n_rep $nr
+    if { [dg_exists stimdg] } { dg_delete stimdg }
 
-	    
-	    set n_obs [expr [llength $nplanks]*$n_rep]
-	    
-	    set maxx [expr $screen_halfx]
-	    set maxy [expr $screen_halfy]
+    set n_obs [expr [llength $nplanks] * $n_rep]
 
-	    # this is a set of params to pass into generate_worlds
-	    set p "nplanks $nplanks $params"
-	    set g [planko::generate_worlds $n_obs $p]
-	    dl_set $g:wrong_catcher_alpha \
-		[dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
+    # Flatten list-valued params
+    foreach key {ball_start_x ball_start_y hitplanks} {
+        if {[dict exists $params $key]} {
+            set val [dict get $params $key]
+            if {[llength $val] > 1} {
+                if {$key eq "hitplanks"} {
+                    set flat_val [dl_repeat [dl_ilist $val] $n_obs]
+                } else {
+                    set flat_val [dl_repeat [dl_flist $val] $n_obs]
+                }
+                dict set params $key $flat_val
+            }
+        }
+    }
 
-	    # rename id column to stimtytpe
-	    dg_rename $g:id stimtype 
-	    dl_set $g:remaining [dl_ones $n_obs]
-	    
-	    dg_rename $g simdg
-	    return $g
-	}
+    set p "nplanks $nplanks $params"
+    set g [planko::generate_worlds $n_obs $p]
+
+    dl_set $g:wrong_catcher_alpha [dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
+
+    dg_rename $g stimdg
+    return $g
+}
 	
 	  $s add_method super_loader { nr nplanks wrong_catcher_alpha params } {
     set n_obs [expr [llength $nplanks] * $nr]
