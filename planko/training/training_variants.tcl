@@ -58,7 +58,7 @@ namespace eval planko::training {
         }
         super_monkey {
             description "alternate ball start X with hitplanks 2–4"
-            loader_proc super_loader
+            loader_proc basic_planko
             loader_options {
                 nr { 10 20 30 40 50 60 70 80 90 100 }
                 nplanks { 10 }
