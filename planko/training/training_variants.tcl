@@ -63,11 +63,12 @@ namespace eval planko::training {
               nr { 10 20 30 40 50 60 70 80 90 100 }
               nplanks { 10 }
               wrong_catcher_alpha { 1.0 }
+              stim_dur { 500 750 1000 1500 2000 } 
       
               params {
-                  { jitter_hit2 { ball_jitter_x 6 ball_start_y 5 ball_jitter_y 1 hitplanks 2 } }
-                  { jitter_hit3 { ball_jitter_x 6 ball_start_y 5 ball_jitter_y 1 hitplanks 3 } }
-                  { jitter_hit4 { ball_jitter_x 6 ball_start_y 5 ball_jitter_y 1 hitplanks 4 } }
+                  { jitter_hit2 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 hitplanks 2 } }
+                  { jitter_hit3 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 hitplanks 3 } }
+                  { jitter_hit4 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 hitplanks 4 } }
               }
           }
       }
