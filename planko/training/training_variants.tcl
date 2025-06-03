@@ -136,8 +136,8 @@ namespace eval planko::training {
                 dict set trial_params nplanks $nplanks
 
                 set p ""
-                dict for {k v} $trial_params {
-                    append p "$k $v "
+                  dict for {k v} $trial_params {
+                  append p "$k \"$v\" "
                 }
 
                 set trial [planko::generate_worlds 1 $p]
