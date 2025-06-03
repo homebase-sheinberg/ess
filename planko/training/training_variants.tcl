@@ -81,23 +81,29 @@ namespace eval planko::training {
 
         $s add_method single_deinit {} {}
 
-        $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
-            set n_rep $nr
-            if { [dg_exists stimdg] } { dg_delete stimdg }
-
-            set n_obs [expr [llength $nplanks] * $n_rep]
-
-            set p "nplanks $nplanks $params"
-            set g [planko::generate_worlds $n_obs $p]
-
-            dl_set $g:wrong_catcher_alpha \
-                [dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
-
-            dg_rename $g:id stimtype
-            dl_set $g:remaining [dl_ones $n_obs]
-
-            dg_rename $g stimdg
-            return $g
+        $s add_method basic_planko { nr nplanks wrong_catcher_alpha params {stim_dur ""} } {
+          set n_rep $nr
+          if { [dg_exists stimdg] } { dg_delete stimdg }
+      
+          set n_obs [expr [llength $nplanks] * $n_rep]
+      
+          set p "nplanks $nplanks $params"
+          set g [planko::generate_worlds $n_obs $p]
+      
+          dl_set $g:wrong_catcher_alpha \
+              [dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
+      
+          dg_rename $g:id stimtype
+          dl_set $g:remaining [dl_ones $n_obs]
+      
+          dg_rename $g stimdg
+      
+          # ✅ Set stim_dur on the system if it was passed
+          if { $stim_dur ne "" } {
+              $s set stim_dur $stim_dur
+          }
+      
+          return $g
         }
 
         
