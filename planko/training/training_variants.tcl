@@ -106,7 +106,7 @@ namespace eval planko::training {
             dg_rename $g:id stimtype
             dl_set $g:remaining [dl_ones $n_obs]
 
-            dg_rename $g simdg
+            dg_rename $g stimdg
             return $g
         }
 
