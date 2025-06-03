@@ -111,8 +111,8 @@ namespace eval planko::training {
 	    dg_rename $g simdg
 	    return $g
 	}
-    }
-  $s add_method super_loader { nr nplanks wrong_catcher_alpha params } {
+	
+	  $s add_method super_loader { nr nplanks wrong_catcher_alpha params } {
     set n_obs [expr [llength $nplanks] * $nr]
 
     # Preprocess: flatten ball_start_x and hitplanks
@@ -141,6 +141,8 @@ namespace eval planko::training {
 
     dg_rename $g simdg
     return $g
+    }
+
 }
 }
 
