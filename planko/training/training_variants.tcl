@@ -54,6 +54,30 @@ namespace eval planko::training {
     		         { two_plank { ball_jitter_x 10 ball_start_y 5 ball_jitter_y 3 minplanks 2 } } }
 	    }
 	}
+	
+super_monkey {
+    description "alternate ball start X with hitplanks 2–4"
+    loader_proc basic_planko
+    loader_options {
+        nr { 70 }
+        nplanks { 10 }
+        wrong_catcher_alpha { 1.0 }
+
+        params {
+            { default_hit2 { hitplanks 2 } }
+            { default_hit3 { hitplanks 3 } }
+            { default_hit4 { hitplanks 4 } }
+
+            { twozero_hit2 { ball_start_x {-2.0 0.0 0.0 2.0} hitplanks 2 } }
+            { twozero_hit3 { ball_start_x {-2.0 0.0 0.0 2.0} hitplanks 3 } }
+            { twozero_hit4 { ball_start_x {-2.0 0.0 0.0 2.0} hitplanks 4 } }
+
+            { threeSeven_hit2 { ball_start_x {-3.0 -2.0 -1.0 0.0 1.0 2.0 3.0} hitplanks 2 } }
+            { threeSeven_hit3 { ball_start_x {-3.0 -2.0 -1.0 0.0 1.0 2.0 3.0} hitplanks 3 } }
+            { threeSeven_hit4 { ball_start_x {-3.0 -2.0 -1.0 0.0 1.0 2.0 3.0} hitplanks 4 } }
+        }
+    }
+}
     }	
     
     proc variants_init { s } {
