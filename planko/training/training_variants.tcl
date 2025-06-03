@@ -105,20 +105,14 @@ namespace eval planko::training {
 	    return $g
 	}
     }
-  $s add_method super_loader { nr nplanks wrong_catcher_alpha params } {
+proc super_loader { nr nplanks wrong_catcher_alpha params } {
     set n_obs [expr [llength $nplanks] * $nr]
 
-    # Preprocess: flatten ball_start_x and hitplanks
+    # Flattening input lists
     if {[dict exists $params ball_start_x]} {
         set bx [dict get $params ball_start_x]
         set flat_bx [dl_repeat [dl_flist $bx] $n_obs]
         dict set params ball_start_x $flat_bx
-    }
-
-    if {[dict exists $params ball_start_y]} {
-        set by [dict get $params ball_start_y]
-        set flat_by [dl_repeat [dl_flist $by] $n_obs]
-        dict set params ball_start_y $flat_by
     }
 
     if {[dict exists $params hitplanks]} {
@@ -126,6 +120,16 @@ namespace eval planko::training {
         set flat_hp [dl_repeat [dl_ilist $hp] $n_obs]
         dict set params hitplanks $flat_hp
     }
+
+    set p "nplanks $nplanks $params"
+    set g [planko::generate_worlds $n_obs $p]
+
+    dl_set $g:wrong_catcher_alpha \
+        [dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
+
+    dg_rename $g simdg
+    return $g
+}
 
     set p "nplanks $nplanks $params"
     set g [planko::generate_worlds $n_obs $p]
