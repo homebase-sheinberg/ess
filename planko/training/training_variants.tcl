@@ -57,31 +57,20 @@ namespace eval planko::training {
             }
         }
         super_monkey {
-            description "alternate ball start X with hitplanks 2–4"
-            loader_proc basic_planko
-            loader_options {
-                nr { 10 20 30 40 50 60 70 80 90 100 }
-                nplanks { 10 }
-                wrong_catcher_alpha { 1.0 }
-                params {
-                    { default_hit2     { hitplanks 2 } }
-                    { default_hit3     { hitplanks 3 } }
-                    { default_hit4     { hitplanks 4 } }
-
-                    { minusTwo_hit2     { ball_start_x {-2.0 } hitplanks 2 } }
-                    { plusTwo_hit2     { ball_start_x { 2.0 } hitplanks 2 } }
-                    { zero_hit2     { ball_start_x { 0.0 } hitplanks 2 } }
-
-                    { minusTwo_hit3     { ball_start_x {-2.0 } hitplanks 3 } }
-                    { plusTwo_hit3    { ball_start_x { 2.0 } hitplanks 3 } }
-                    { zero_hit3     { ball_start_x { 0.0 } hitplanks 3 } }
-                    
-                    { minusTwo_hit4     { ball_start_x {-2.0 } hitplanks 4 } }
-                    { plusTwo_hit4     { ball_start_x { 2.0 } hitplanks 4 } }
-                    { zero_hit4     { ball_start_x { 0.0 } hitplanks 4 } }
-                }
-            }
-        }
+          description "jitter X ball start, vary hitplanks"
+          loader_proc basic_planko
+          loader_options {
+              nr { 10 20 30 40 50 60 70 80 90 100 }
+              nplanks { 10 }
+              wrong_catcher_alpha { 1.0 }
+      
+              params {
+                  { jitter_hit2 { ball_jitter_x 6 ball_start_y 5 ball_jitter_y 1 hitplanks 2 } }
+                  { jitter_hit3 { ball_jitter_x 6 ball_start_y 5 ball_jitter_y 1 hitplanks 3 } }
+                  { jitter_hit4 { ball_jitter_x 6 ball_start_y 5 ball_jitter_y 1 hitplanks 4 } }
+              }
+          }
+      }
     }
 
     proc variants_init { s } {
