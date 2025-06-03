@@ -107,52 +107,61 @@ namespace eval planko::training {
         }
 
         $s add_method super_loader { nr nplanks wrong_catcher_alpha params } {
-            set n_obs [expr [llength $nplanks] * $nr]
-
-            # Flatten any list-valued params across trials
-            foreach key {ball_start_x ball_start_y hitplanks} {
-                if {[dict exists $params $key]} {
-                    set val [dict get $params $key]
-                    if {[llength $val] > 1} {
-                        if {$key eq "hitplanks"} {
-                            dict set params $key [dl_repeat [dl_ilist $val] $n_obs]
-                        } else {
-                            dict set params $key [dl_repeat [dl_flist $val] $n_obs]
-                        }
-                    } else {
-                        dict set params $key [dl_repeat [dl_flist $val] $n_obs]
-                    }
-                }
-            }
-
-            set g [dg_create]
-            for {set i 0} {$i < $n_obs} {incr i} {
-                set trial_params [dict create]
-                foreach key {ball_start_x ball_start_y hitplanks} {
-                    if {[dict exists $params $key]} {
-                        dict set trial_params $key [dl_get [dict get $params $key] $i]
-                    }
-                }
-                dict set trial_params nplanks $nplanks
-
-                set p ""
-                  dict for {k v} $trial_params {
-                  append p "$k \"$v\" "
-                }
-
-                set trial [planko::generate_worlds 1 $p]
-                dl_set $trial:wrong_catcher_alpha [dl_flist $wrong_catcher_alpha]
-
-                if {$i == 0} {
-                    set g $trial
-                } else {
-                    dg_append $g $trial
-                    dg_delete $trial
-                }
-            }
-
-            dg_rename $g simdg
-            return $g
-        }
+          set n_obs [expr [llength $nplanks] * $nr]
+      
+          # Flatten any list-valued params across trials
+          foreach key {ball_start_x ball_start_y hitplanks} {
+              if {[dict exists $params $key]} {
+                  set val [dict get $params $key]
+                  if {[llength $val] > 1} {
+                      if {$key eq "hitplanks"} {
+                          dict set params $key [dl_repeat [dl_ilist $val] $n_obs]
+                      } else {
+                          dict set params $key [dl_repeat [dl_flist $val] $n_obs]
+                      }
+                  } else {
+                      dict set params $key [dl_repeat [dl_flist $val] $n_obs]
+                  }
+              }
+          }
+      
+          set g [dg_create]
+      
+          for {set i 0} {$i < $n_obs} {incr i} {
+              set trial_params [dict create]
+      
+              foreach key {ball_start_x ball_start_y hitplanks} {
+                  if {[dict exists $params $key]} {
+                      set val [dl_get [dict get $params $key] $i]
+                      # If val is still a list, flatten it
+                      if {[llength $val] == 1} {
+                          set val [lindex $val 0]
+                      }
+                      dict set trial_params $key $val
+                  }
+              }
+      
+              dict set trial_params nplanks $nplanks
+      
+              # Convert trial_params into option string
+              set p ""
+              dict for {k v} $trial_params {
+                  append p "$k $v "
+              }
+      
+              set trial [planko::generate_worlds 1 $p]
+              dl_set $trial:wrong_catcher_alpha [dl_flist $wrong_catcher_alpha]
+      
+              if {$i == 0} {
+                  set g $trial
+              } else {
+                  dg_append $g $trial
+                  dg_delete $trial
+              }
+          }
+      
+          dg_rename $g simdg
+          return $g
+      }
     }
 }
