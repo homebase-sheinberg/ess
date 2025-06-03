@@ -85,7 +85,7 @@ namespace eval planko {
 	    set stimon_time [now]
 	    ::ess::evt_put PATTERN ON $stimon_time
 	    ::ess::evt_put STIMTYPE STIMID $stimon_time $stimtype
-	    timerTick $stim_dur  ;# <-- HERE: start stim duration timer
+	    timerTick [my stim_dur]
 	}
 	$sys add_transition stim_on {
 	    if { [timerExpired] } { return wait_for_response }
