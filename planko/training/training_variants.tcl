@@ -68,13 +68,17 @@ namespace eval planko::training {
                     { default_hit3     { hitplanks 3 } }
                     { default_hit4     { hitplanks 4 } }
 
-                    { twozero_hit2     { ball_start_x {-2.0 0.0 0.0 2.0} hitplanks 2 } }
-                    { twozero_hit3     { ball_start_x {-2.0 0.0 0.0 2.0} hitplanks 3 } }
-                    { twozero_hit4     { ball_start_x {-2.0 0.0 0.0 2.0} hitplanks 4 } }
+                    { minusTwo_hit2     { ball_start_x {-2.0 } hitplanks 2 } }
+                    { plusTwo_hit2     { ball_start_x { 2.0 } hitplanks 2 } }
+                    { zero_hit2     { ball_start_x { 0.0 } hitplanks 2 } }
 
-                    { threeSeven_hit2  { ball_start_x {-3.0 -2.0 -1.0 0.0 1.0 2.0 3.0} hitplanks 2 } }
-                    { threeSeven_hit3  { ball_start_x {-3.0 -2.0 -1.0 0.0 1.0 2.0 3.0} hitplanks 3 } }
-                    { threeSeven_hit4  { ball_start_x {-3.0 -2.0 -1.0 0.0 1.0 2.0 3.0} hitplanks 4 } }
+                    { minusTwo_hit3     { ball_start_x {-2.0 } hitplanks 3 } }
+                    { plusTwo_hit3    { ball_start_x { 2.0 } hitplanks 3 } }
+                    { zero_hit3     { ball_start_x { 0.0 } hitplanks 3 } }
+                    
+                    { minusTwo_hit4     { ball_start_x {-2.0 } hitplanks 4 } }
+                    { plusTwo_hit4     { ball_start_x { 2.0 } hitplanks 4 } }
+                    { zero_hit4     { ball_start_x { 0.0 } hitplanks 4 } }
                 }
             }
         }
@@ -106,65 +110,6 @@ namespace eval planko::training {
             return $g
         }
 
-        $s add_method super_loader { nr nplanks wrong_catcher_alpha params } {
-          set n_obs [expr [llength $nplanks] * $nr]
-      
-          # Expand any list-valued inputs across trials
-          set flat_params [dict create]
-          foreach key {ball_start_x ball_start_y hitplanks} {
-              if {[dict exists $params $key]} {
-                  set val [dict get $params $key]
-                  if {[llength $val] > 1} {
-                      if {$key eq "hitplanks"} {
-                          dict set flat_params $key [dl_repeat [dl_ilist $val] $n_obs]
-                      } else {
-                          dict set flat_params $key [dl_repeat [dl_flist $val] $n_obs]
-                      }
-                  } else {
-                      # Single value repeated across all trials
-                      dict set flat_params $key [dl_repeat [dl_flist $val] $n_obs]
-                  }
-              }
-          }
-      
-          set g [dg_create]
-      
-          for {set i 0} {$i < $n_obs} {incr i} {
-              set trial_params [dict create]
-      
-              # Get one float or int per trial
-              foreach key [dict keys $flat_params] {
-                  set val [dl_get [dict get $flat_params $key] $i]
-                  # Force to scalar (extract from list if needed)
-                  if {[llength $val] > 1} {
-                      error "Expected scalar value for $key on trial $i, but got list: $val"
-                  }
-                  set scalar_val [lindex $val 0]
-                  dict set trial_params $key $scalar_val
-              }
-      
-              dict set trial_params nplanks $nplanks
-      
-              # Build argument string
-              set p ""
-              dict for {k v} $trial_params {
-                  append p "$k $v "
-              }
-      
-              set trial [planko::generate_worlds 1 $p]
-      
-              dl_set $trial:wrong_catcher_alpha [dl_flist $wrong_catcher_alpha]
-      
-              if {$i == 0} {
-                  set g $trial
-              } else {
-                  dg_append $g $trial
-                  dg_delete $trial
-              }
-          }
-      
-          dg_rename $g simdg
-          return $g
-      }
+        
     }
 }
