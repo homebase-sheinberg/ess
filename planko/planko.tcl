@@ -13,7 +13,7 @@ namespace eval planko {
 	$sys add_param n_rep               100    variable int
 	$sys add_param interblock_time    1000    time int
 	$sys add_param prestim_time        250    time int
-	$sys add_param stim_dur           1000    time int  ;# <- NEW PARAM
+	$sys add_param stim_dur           5000    time int  
 	$sys add_param response_timeout  25000    time int
 	$sys add_param post_feedback_time 1000    time int
 
