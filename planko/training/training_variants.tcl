@@ -86,8 +86,6 @@ namespace eval planko::training {
           if { [dg_exists stimdg] } { dg_delete stimdg }
       
           set n_obs [expr [llength $nplanks] * $n_rep]
-      
-          # ✅ Only pass world-generation-related params to planko
           set p "nplanks $nplanks $params"
           set g [planko::generate_worlds $n_obs $p]
       
@@ -96,16 +94,15 @@ namespace eval planko::training {
       
           dg_rename $g:id stimtype
           dl_set $g:remaining [dl_ones $n_obs]
-      
           dg_rename $g stimdg
       
-          # ✅ Set stim_dur system parameter only if specified
           if { $stim_dur ne "" } {
               $s set stim_dur $stim_dur
           }
       
           return $g
         }
+
 
         
     }
