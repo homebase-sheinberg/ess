@@ -54,6 +54,21 @@ namespace eval planko::training {
     		         { two_plank { ball_jitter_x 10 ball_start_y 5 ball_jitter_y 3 minplanks 2 } } }
 	    }
 	}
+	super_monkey {
+	  description "jitter X ball start, vary hitplanks, select stim_dur"
+      loader_proc basic_planko
+      loader_options {
+    nr { 10 20 30 40 50 60 70 80 90 100 }
+    # nhit { 2 3 4 } ****** PASS IN TO BASIC_PLANKO  —> “add_method basic_planko”
+    nplanks { 10 }
+    wrong_catcher_alpha { 1.0 }
+    # stim_dur { 500 750 1000 1500 2000 } 
+      
+    params {
+      { jittered { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 } }
+    }
+ 
+	}
     }	
 }
 
