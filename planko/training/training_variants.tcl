@@ -1,224 +1,105 @@
-package require ess
+#
+# VARIANTS
+#   planko training
+#
+# DESCRIPTION
+#   variant dictionary
+#
 
-namespace eval planko {
-    proc create {} {
-	set sys [::ess::create_system [namespace tail [namespace current]]]
+namespace eval planko::training {
+    package require planko
+    
+    variable params_defaults { n_rep 50 }
 
-	$sys set_version 1.0
+    variable variants {
+        single {
+            description "one plank"
+            loader_proc basic_planko
+            loader_options {
+                nr { 100 200 300 }
+                nplanks { 1 }
+                wrong_catcher_alpha 1
+                params { { defaults {} } }
+            }
+        }
+        jitter {
+            description "jitter ball start"
+            loader_proc basic_planko
+            loader_options {
+                nr { 50 100 200 }
+                nplanks { 1 }
+                wrong_catcher_alpha { 1 0.5 }
+                params { { jittered { ball_jitter_x 8 ball_start_y 5 ball_jitter_y 1 } } }
+            }
+        }
+        zero_one {
+            description "hit zero or one plank"
+            loader_proc basic_planko
+            loader_options {
+                nr { 50 100 200 400 800 }
+                nplanks { 1 }
+                wrong_catcher_alpha { 1.0 0.98 0.95 0.9 0.8 0.7 }
+                params { { jittered { ball_jitter_x 10 ball_start_y 0 ball_jitter_y 3 minplanks 0 } } }
+            }
+        }
+        two_plus {
+            description "show 2+ planks, hit 1+ plank"
+            loader_proc basic_planko
+            loader_options {
+                nr { 50 100 200 400 800 }
+                nplanks { 2 3 4 }
+                wrong_catcher_alpha { 1.0 0.98 0.95 0.9 0.8 0.7 }
+                params {
+                    { jittered { ball_jitter_x 10 ball_start_y 0 ball_jitter_y 3 minplanks 1 } }
+                    { higher   { ball_jitter_x 10 ball_start_y 5 ball_jitter_y 3 minplanks 1 } }
+                    { two_plank { ball_jitter_x 10 ball_start_y 5 ball_jitter_y 3 minplanks 2 } }
+                }
+            }
+        }
+        super_monkey {
+          description "jitter X ball start, vary hitplanks"
+          loader_proc basic_planko
+          loader_options {
+              nr { 10 20 30 40 50 60 70 80 90 100 }
+              nplanks { 10 }
+              wrong_catcher_alpha { 1.0 }
+              stim_dur { 500 750 1000 1500 2000 } 
+      
+              params {
+                  { jitter_hit2 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 2 } }
+                  { jitter_hit3 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 3 } }
+                  { jitter_hit4 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 4 } }
+              }
+          }
+      }
+    }
 
-	######################################################################
-	#                          System Parameters                         #
-	######################################################################
+    proc variants_init { s } {
+        $s add_method single_init {} {
+            rmtSend "setBackground 10 10 10"
+        }
 
-	$sys add_param n_rep               100    variable int
-	$sys add_param interblock_time    1000    time int
-	$sys add_param prestim_time        250    time int
-	$sys add_param stim_dur           5000    time int  
-	$sys add_param response_timeout  25000    time int
-	$sys add_param post_feedback_time 1000    time int
+        $s add_method single_deinit {} {}
 
-	$sys add_variable n_obs              100
-	$sys add_variable obs_count          0
-	$sys add_variable cur_id             0
-	$sys add_variable start_delay        0
-	$sys add_variable stimtype           0
-	$sys add_variable response           0
-	$sys add_variable first_time         1
-	$sys add_variable side              -1
-	$sys add_variable resp              -1
-	$sys add_variable correct           -1
-	$sys add_variable stimon_time        0
-	$sys add_variable rt                 0
+        $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
+            set n_rep $nr
+            if { [dg_exists stimdg] } { dg_delete stimdg }
 
-	######################################################################
-	#                            System States                           #
-	######################################################################
+            set n_obs [expr [llength $nplanks] * $n_rep]
 
-	$sys set_start start
+            set p "nplanks $nplanks $params"
+            set g [planko::generate_worlds $n_obs $p]
 
-	$sys add_state start {} { return start_delay }
+            dl_set $g:wrong_catcher_alpha \
+                [dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
 
-	$sys add_action start_delay {
-	    ::ess::evt_put SYSTEM_STATE RUNNING [now]
-	    timerTick $start_delay
-	}
-	$sys add_transition start_delay {
-	    if { [timerExpired] } { return inter_obs }
-	}
+            dg_rename $g:id stimtype
+            dl_set $g:remaining [dl_ones $n_obs]
 
-	$sys add_action inter_obs {
-	    set n_obs [my n_obs]
-	    if { !$first_time } {
-		set delay $interblock_time
-	    } else {
-		set first_time 0
-		set delay 0
-	    }
-	    set rt -1
-	    set correct -1
-	    set resp -1
-	    timerTick $delay
-	    my nexttrial
-	}
-	$sys add_transition inter_obs {
-	    if [my finished] { return finale }
-	    if { [timerExpired] } { return start_obs }
-	}
+            dg_rename $g stimdg
+            return $g
+        }
 
-	$sys add_action start_obs {
-	    ::ess::begin_obs $obs_count $n_obs
-	}
-	$sys add_transition start_obs {
-	    return pre_stim
-	}
-
-	$sys add_action pre_stim {
-	    timerTick $prestim_time
-	    my prestim
-	}
-	$sys add_transition pre_stim {
-	    if { [timerExpired] } { return stim_on }
-	}
-
-	$sys add_action stim_on {
-	    my stim_on
-	    set stimon_time [now]
-	    ::ess::evt_put PATTERN ON $stimon_time
-	    ::ess::evt_put STIMTYPE STIMID $stimon_time $stimtype
-	    timerTick [my stim_dur]
-	}
-	$sys add_transition stim_on {
-	    if { [timerExpired] } { return wait_for_response }
-	}
-
-	$sys add_action wait_for_response {
-	    timerTick $response_timeout
-	}
-	$sys add_transition wait_for_response {
-	    if [timerExpired] { return no_response }
-	    set response [my responded]
-	    if { $response != 0 } { return response }
-	}
-
-	$sys add_action response {
-	    set resp_time [now]
-	    ::ess::evt_put RESP $resp $resp_time
-	    set rt [expr {($resp_time-$stimon_time)/1000}]
-	}
-	$sys add_transition response {
-	    return feedback
-	}
-
-	$sys add_action feedback {
-	    my feedback $resp $correct
-	    timerTick 5000
-	}
-	$sys add_transition feedback {
-	    if { [timerExpired] || [my feedback_complete] } {
-		if { $correct } { return correct } { return incorrect }
-	    }
-	}
-
-	$sys add_action correct {
-	    set correct 1
-	    my reward
-	}
-	$sys add_transition correct { return post_feedback }
-
-	$sys add_action incorrect {
-	    set correct 0
-	    my noreward
-	}
-	$sys add_transition incorrect { return post_feedback }
-
-	$sys add_action post_feedback {
-	    timerTick $post_feedback_time
-	}
-	$sys add_transition post_feedback {
-	    if { [timerExpired] } {
-		return stimoff
-	    }
-	}
-
-	$sys add_action stimoff {
-	    my stim_off
-	    ::ess::evt_put PATTERN OFF [now]
-	}
-	$sys add_transition stimoff {
-	    return post_trial
-	}
-
-	$sys add_action no_response {
-	    my stim_off
-	    ::ess::evt_put PATTERN ON [now]
-	    ::ess::evt_put RESP NONE [now]
-	    set correct -1
-	}
-	$sys add_transition no_response {
-	    return post_trial
-	}
-
-	$sys add_action post_trial {
-	    ::ess::save_trial_info $correct $rt $stimtype
-	}
-	$sys add_transition post_trial {
-	    return finish
-	}
-
-	$sys add_action pre_finale {
-	    timerTick $finale_delay
-	}
-	$sys add_transition pre_finale {
-	    if { [timerExpired] } {
-		return finale
-	    }
-	}
-
-	$sys add_action finale { my finale }
-	$sys add_transition finale { return end }
-
-	$sys set_end {}
-
-	######################################################################
-	#                         System Callbacks                           #
-	######################################################################
-
-	$sys set_init_callback { ::ess::init }
-	$sys set_deinit_callback {}
-	$sys set_reset_callback {
-	    set n_obs [my n_obs]
-	    set obs_count 0
-	}
-	$sys set_start_callback { set first_time 1 }
-	$sys set_quit_callback { ::ess::end_obs QUIT }
-	$sys set_end_callback {}
-	$sys set_file_open_callback {}
-	$sys set_file_close_callback {}
-	$sys set_subject_callback {}
-
-	######################################################################
-	#                          System Methods                            #
-	######################################################################
-
-	$sys add_method n_obs { } { return 10 }
-	$sys add_method nexttrial { } {
-	    set cur_id $obs_count
-	    set stimtype $obs_count
-	}
-	$sys add_method finished { } {
-	    if { $obs_count == $n_obs } { return 1 } { return 0 }
-	}
-	$sys add_method endobs {} { incr obs_count }
-	$sys add_method prestim {} {}
-	$sys add_method stim_on {} {}
-	$sys add_method stim_off {} {}
-	$sys add_method feedback { resp correct } { print $resp/$correct }
-	$sys add_method feedback_complete {} { return 0 }
-	$sys add_method reward {} {}
-	$sys add_method noreward {} {}
-	$sys add_method finale {} {}
-	$sys add_method responded {} { return 0 }
-
-	return $sys
+        
     }
 }
