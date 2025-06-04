@@ -7,6 +7,8 @@
 ##
 
 namespace eval hapticvis::identify {
+    variable params_defaults { delay_time 100 }
+
     proc protocol_init { s } {
 	$s set_protocol [namespace tail [namespace current]]
 	
