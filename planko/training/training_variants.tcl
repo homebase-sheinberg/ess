@@ -55,7 +55,7 @@ namespace eval planko::training {
 	    }
 	}
 	super_monkey {
-	  description "jitter X ball start, vary hitplanks, select stim_dur"
+	    description "jitter X ball start, vary hitplanks, select stim_dur"
       loader_proc basic_planko
       loader_options {
         nr { 10 20 30 40 50 60 70 80 90 100 }
