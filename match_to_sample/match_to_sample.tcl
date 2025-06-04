@@ -5,7 +5,6 @@
 ##  DECRIPTION
 ##    System for creating match to sample paradigms
 ##
-## test on mobile
 
 package require ess
 
@@ -13,8 +12,6 @@ namespace eval match_to_sample {
     proc create {} {
 	set sys [::ess::create_system [namespace tail [namespace current]]]
 	
-	$sys set_version 1.0
-
 	######################################################################
 	#                          System Parameters                         #
 	######################################################################
