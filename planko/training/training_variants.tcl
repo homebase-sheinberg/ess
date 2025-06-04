@@ -60,16 +60,14 @@ namespace eval planko::training {
           description "jitter X ball start, vary hitplanks"
           loader_proc basic_planko
           loader_options {
-              nr { 10 20 30 40 50 60 70 80 90 100 }
-              nplanks { 10 }
-              wrong_catcher_alpha { 1.0 }
-              stim_dur { 500 750 1000 1500 2000 } 
-      
-              params {
-                  { jitter_hit2 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 2 } }
-                  { jitter_hit3 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 3 } }
-                  { jitter_hit4 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 4 } }
-              }
+            nr { 50 100 }
+            nplanks { 10 }
+            wrong_catcher_alpha { 1.0 }
+            nhit { 2 3 4 }  ;# top-level selection
+            params {
+            
+                { jittered { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 } }
+            }
           }
       }
     }
