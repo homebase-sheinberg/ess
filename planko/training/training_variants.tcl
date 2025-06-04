@@ -69,6 +69,6 @@ namespace eval planko::training {
     }
  
 	}
-    }	
+    
 }
 
