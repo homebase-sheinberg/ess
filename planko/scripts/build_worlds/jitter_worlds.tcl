@@ -94,14 +94,11 @@ proc jitter_world { dg id n } {
 	box2d::destroy all
 	set jittered_world [do_jitter $w $jittered_world]
 	lassign [planko::build_world $jittered_world] world ball
-  # Store jitter parameters
-  dl_set $s:jx    [dl_llist $jittered_world:tx]
-  dl_set $s:jy    [dl_llist $jittered_world:ty]
-  dl_set $s:angle [dl_llist $jittered_world:angle]
+	set s [run_simulation $world $ball]
 
-  # Store jittered ball trajectory as list of [x y] pairs
-  dl_local trajectory [dl_transpose [dl_llist $s:x $s:y]]
-  dl_set $s:trajectory $trajectory
+	dl_set $s:jx    [dl_llist $jittered_world:tx]
+	dl_set $s:jy    [dl_llist $jittered_world:ty]
+	dl_set $s:angle [dl_llist $jittered_world:angle]
 	
 	if { !$i } {
 	    set sim_dg $s
