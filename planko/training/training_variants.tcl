@@ -67,7 +67,7 @@ namespace eval planko::training {
             params {
             
                 { jittered { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 } }
-                { no_jitter { ball_jitter_x 0 ball_start_y 6 ball_jitter_y 0 } }
+                { static { ball_jitter_x 0 ball_start_y 6 ball_jitter_y 0 } }
             }
           }
       }
@@ -80,13 +80,13 @@ namespace eval planko::training {
 
         $s add_method single_deinit {} {}
 
-        $s add_method basic_planko { nr nplanks nhit wrong_catcher_alpha params } {
+        $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
             set n_rep $nr
             if { [dg_exists stimdg] } { dg_delete stimdg }
 
             set n_obs [expr [llength $nplanks] * $n_rep]
 
-            set p [concat nplanks $nplanks hitplanks $nhit $params]
+            set p "nplanks $nplanks $params"
             set g [planko::generate_worlds $n_obs $p]
 
             dl_set $g:wrong_catcher_alpha \
