@@ -4,7 +4,7 @@
 #
 # DESCRIPTION
 #   variant dictionary for planko::training
-#
+# test 
 
 namespace eval planko::training {
     variable variants {
