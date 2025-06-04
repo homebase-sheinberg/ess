@@ -16,7 +16,7 @@ namespace eval planko::training {
 	    description "one plank"
 	    loader_proc basic_planko
 	    loader_options {
-		nr { 100 200 300}
+		nr { 100 200 300 400 500}
 		nplanks { 1 }
 		wrong_catcher_alpha 1
 		params { { defaults {} } }
