@@ -7,6 +7,8 @@
 #
 
 namespace eval search::circles {
+    variable params_defaults          { n_rep 50 }
+
     proc protocol_init { s } {
 	$s set_protocol [namespace tail [namespace current]]
 	
