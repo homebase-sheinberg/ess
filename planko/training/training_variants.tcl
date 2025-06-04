@@ -79,13 +79,13 @@ namespace eval planko::training {
 
         $s add_method single_deinit {} {}
 
-        $s add_method basic_planko { nr nplanks wrong_catcher_alpha nhit params } {
+        $s add_method basic_planko { nr nplanks nhit wrong_catcher_alpha params } {
             set n_rep $nr
             if { [dg_exists stimdg] } { dg_delete stimdg }
 
             set n_obs [expr [llength $nplanks] * $n_rep]
 
-            set p "nplanks $nplanks hitplanks $nhit $params"
+            set p [concat nplanks $nplanks hitplanks $nhit $params]
             set g [planko::generate_worlds $n_obs $p]
 
             dl_set $g:wrong_catcher_alpha \
