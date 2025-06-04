@@ -67,6 +67,7 @@ namespace eval planko::training {
             params {
             
                 { jittered { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 } }
+                { no_jitter { ball_jitter_x 0 ball_start_y 6 ball_jitter_y 0 } }
             }
           }
       }
