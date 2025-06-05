@@ -272,7 +272,7 @@ namespace eval planko {
 	set planks [lmap c $contacts \
 			{ expr { [isPlank $c] ? [lindex [lindex $c 0] 0] : [continue] } }]
 	set planks [uniqueList $planks]
-	set nhit [llength $planks]
+	#set nhit [llength $planks]
 	if { $nhit < $params(minplanks) } { return -1 }
 	
 	return "$result $nhit"
