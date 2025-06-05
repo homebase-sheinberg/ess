@@ -18,7 +18,7 @@ namespace eval blob {
     #
     proc add_points { poly n { mindist 0.1 } } {
 	set maxtries 1000
-	set mind2 [expr $mindist*$mindist]
+	set mind2 [expr {$mindist*$mindist}]
 	for { set i 0 } { $i < $n } { incr i } {
 	    set done 0
 	    set tries 0
@@ -35,8 +35,8 @@ namespace eval blob {
 	    if { $tries == $maxtries } { error "unable to place points" }
 
 	    set index [curve::closestPoint $poly:x $poly:y $x $y]
-	    dl_insert $poly:x [expr $index+1] $x
-	    dl_insert $poly:y [expr $index+1] $y
+	    dl_insert $poly:x [expr {$index+1}] $x
+	    dl_insert $poly:y [expr {$index+1}] $y
 	}
 	return $poly
     }
@@ -53,8 +53,8 @@ namespace eval blob {
 	    dl_set $g:y [dl_sub [dl_mult 0.6 [dl_urand 3]] .3]
 	    add_points $g $n
 	    if { ![curve::polygonSelfIntersects $g:x $g:y] } {
-		set done 1 
-	    } 
+		set done 1
+	    }
 	}
 	return $g
     }
@@ -91,7 +91,7 @@ namespace eval blob {
 					    [dl_flist -.5 -.5 .5 .5]] $s]]
 	dl_local poly [dl_int [dl_mult $v $s]]
 	dl_local left_half [curve::clipper [dl_llist $poly] [dl_llist $clip]]
-	if { [dl_length $left_half] == 1 } { return 1 } { return 0 } 
+	if { [dl_length $left_half] == 1 } { return 1 } { return 0 }
     }
 
     # simple routine that creates a symmetric object by cutting in half
@@ -121,8 +121,8 @@ namespace eval blob {
 	    for { set i 0 } { $i < $npolys } { incr i } {
 		lappend ps [create_poly $nverts]
 	    }
-	    
-	    dl_local union [eval poly_union $nsteps $ps]
+
+	    dl_local union [poly_union $nsteps {*}$ps]
 	    if { [dl_length $union] == 1 &&
 		 [symmetrical_valid [dl_llist $union:0:0 $union:0:1]] } {
 		set done 1
@@ -131,7 +131,7 @@ namespace eval blob {
 	    }
 	    if { $tries == $maxtries } { error "unable to create single union" }
 	}
-	
+
 	dl_local control_points [dl_llist]
 	foreach p $ps {
 	    dl_append $control_points [dl_llist $p:x $p:y]
