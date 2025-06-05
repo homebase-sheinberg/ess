@@ -69,14 +69,13 @@ namespace eval planko::training {
             loader_proc basic_planko
             loader_options {
                 nr { 10 20 30 40 50 60 70 80 90 100 }
-                nhit { 2 3 4 }
                 nplanks { 10 }
                 wrong_catcher_alpha { 1.0 }
                 params {
-                    { jittered_hit1 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 3} }
-                    { jittered_hit2 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 4} }
-                    { jittered_hit3 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 5} }
-                    { jittered_hit4 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 nhit 6} }
+                    { jittered_hit1 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 3} }
+                    { jittered_hit2 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 4} }
+                    { jittered_hit3 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 5} }
+                    { jittered_hit4 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 6} }
                 }
             }
         }
