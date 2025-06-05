@@ -4,7 +4,7 @@
 #
 # DESCRIPTION
 #   variant dictionary
-#
+# edit!
 
 namespace eval search::circles {
     variable variants {
