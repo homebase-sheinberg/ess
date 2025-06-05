@@ -10,7 +10,7 @@ namespace eval planko::training {
     package require planko
 
     proc loaders_init { s } {
-        $s add_method basic_planko { nr nplanks nhit wrong_catcher_alpha params } {
+        $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
             set n_rep $nr
 
             if { [dg_exists stimdg] } {
