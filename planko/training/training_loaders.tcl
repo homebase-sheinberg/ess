@@ -22,7 +22,7 @@ namespace eval planko::training {
             set maxy [expr {$screen_halfy}]
 
             # this is a set of params to pass into generate_worlds
-            set p "nplanks $nplanks nhit $nhit $params"
+            set p "nplanks $nplanks $params"
             set g [planko::generate_worlds $n_obs $p]
 
             dl_set $g:wrong_catcher_alpha \
