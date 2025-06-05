@@ -59,7 +59,7 @@ namespace eval planko::training {
       loader_proc basic_planko
       loader_options {
         nr { 10 20 30 40 50 60 70 80 90 100 }
-    
+        nhit { 2 3 4 }
         nplanks { 10 }
         wrong_catcher_alpha { 1.0 }
     
