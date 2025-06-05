@@ -1,3 +1,5 @@
+
+
 namespace eval planko::training {
     package require planko
 
@@ -13,25 +15,22 @@ namespace eval planko::training {
             set maxx [expr {$screen_halfx}]
             set maxy [expr {$screen_halfy}]
 
-            # --- Unpack params and add nhit into the inner dictionary ---
-            set param_entry [lindex $params 0]
-            set param_key   [lindex $param_entry 0]
-            set param_dict  [lindex $param_entry 1]
+            # Build the main dictionary to send to generate_worlds
+            set p [dict create nplanks $nplanks nhit $nhit]
 
-            dict set param_dict nhit $nhit
+            # Expand params (e.g. jittered) into top-level dict
+            dict for {k v} [lindex $params 0] {
+                dict set p $k $v
+            }
 
-            set updated_params [list $param_key $param_dict]
-
-            # Build the final dictionary for generate_worlds
-            set p [dict create nplanks $nplanks $updated_params]
-
-            # Generate worlds
+            # Generate the worlds
             set g [planko::generate_worlds $n_obs $p]
 
-            # Set metadata
+            # Apply wrong_catcher_alpha
             dl_set $g:wrong_catcher_alpha \
                 [dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
 
+            # Final setup
             dg_rename $g:id stimtype
             dl_set $g:remaining [dl_ones $n_obs]
             dg_rename $g stimdg
