@@ -301,7 +301,7 @@ namespace eval planko {
 
 	    if { $result != -1 } {
 		dl_set $new_world:side     [dl_ilist $result]
-		dl_set $new_world:nhit     [dl_ilist $nhit]
+		dl_set $new_world:nhit     [dl_ilist $params(nhit)]
 		dl_set $new_world:nplanks  [dl_ilist $params(nplanks)]
 		dl_set $new_world:ball_start_x \
 		    [dl_flist $params(ball_xpos)]
