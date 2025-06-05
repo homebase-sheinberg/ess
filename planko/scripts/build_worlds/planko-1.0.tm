@@ -273,7 +273,8 @@ namespace eval planko {
 			{ expr { [isPlank $c] ? [lindex [lindex $c 0] 0] : [continue] } }]
 	set planks [uniqueList $planks]
 	#set nhit [llength $planks]
-	if { $nhit < [expr {$nhit + 1}]) } { return -1 } # this should ensure minplanks is always aligned to the user-inputed nhit
+
+	if { $nhit < [expr {$nhit + $params(minplanks) }] { return -1 } # should ensure minplanks is always aligned to user inputted nhit
 	
 	return "$result $nhit"
     }
