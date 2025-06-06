@@ -6,7 +6,6 @@
 ##    System for touch screen training
 ##
 
-
 package require ess
 package require points
 
