@@ -41,6 +41,8 @@ namespace eval emcalib {
 
 	$sys add_variable jump_time
 	$sys add_variable rt
+
+	$sys add_variable finale_delay       1000
 	
 	######################################################################
 	#                            System States                           #
@@ -85,7 +87,7 @@ namespace eval emcalib {
 	}
 	
 	$sys add_transition inter_obs {
-	    if [my finished] { return finale }
+	    if [my finished] { return pre_finale }
 	    if { [timerExpired] } { return start_obs }
 	}
 	
