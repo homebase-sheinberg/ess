@@ -42,6 +42,8 @@ namespace eval planko {
 	$sys add_variable correct           -1
 	$sys add_variable stimon_time        0
 	$sys add_variable rt                 0
+
+	$sys add_variable finale_delay       1000
 	
 	######################################################################
 	#                            System States                           #
@@ -87,7 +89,7 @@ namespace eval planko {
 	}
 	
 	$sys add_transition inter_obs {
-	    if [my finished] { return finale }
+	    if [my finished] { return pre_finale }
 	    if { [timerExpired] } { return start_obs }
 	}
 	
@@ -251,7 +253,7 @@ namespace eval planko {
 	$sys add_transition finish { return inter_obs }
 	
 	#
-	# finale
+	# pre_finale
 	#
 	$sys add_action pre_finale {
 	    timerTick $finale_delay

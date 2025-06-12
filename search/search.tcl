@@ -37,6 +37,8 @@ namespace eval search {
 	$sys add_variable correct           -1
 	$sys add_variable stimon_time
 	$sys add_variable rt
+
+	$sys add_variable finale_delay       500
 	
 	######################################################################
 	#                            System States                           #
@@ -81,7 +83,7 @@ namespace eval search {
 	}
 	
 	$sys add_transition inter_obs {
-	    if [my finished] { return finale }
+	    if [my finished] { return pre_finale }
 	    if { [timerExpired] } { return start_obs }
 	}
 	
@@ -211,7 +213,7 @@ namespace eval search {
 	$sys add_transition finish { return inter_obs }
 	
 	#
-	# finale
+	# pre_finale
 	#
 	$sys add_action pre_finale {
 	    timerTick $finale_delay
