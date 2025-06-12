@@ -63,7 +63,7 @@ namespace eval hapticvis::transfer {
             loader_options {
               subject_id { $subject_ids }
               subject_set { $subject_sets }
-              n_per_set { 6 }
+              n_per_set { 6 4 }
               shape_scale { 3 4 5 6 }
               noise_type { circles none }
               n_rep { 6 2 4 8 10 20 }
@@ -79,7 +79,7 @@ namespace eval hapticvis::transfer {
             loader_options {
               subject_id { $subject_ids }
               subject_set { $subject_sets }
-              n_per_set { 6 }
+              n_per_set { 6 4 }
               n_rep { 6 2 4 8 10 20 }
 		rotations {
                   {three {60 180 300}} {single {180}} 
