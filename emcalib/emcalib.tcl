@@ -125,7 +125,7 @@ namespace eval emcalib {
 	
 	$sys add_transition fixhold {
 	    if { [timerExpired] } { return fixjump }
-
+	    if [my out_of_start_win] { return abort }
 	}
 	
 	#
@@ -154,7 +154,6 @@ namespace eval emcalib {
 
 	$sys add_transition pre_sample {
 	    if [timerExpired] { return sample_position }
-	    if [my out_of_sample_win] { return abort }
 	}
 	
 	#
@@ -309,6 +308,7 @@ namespace eval emcalib {
 
 	$sys add_method sample_position {} {}
 	$sys add_method sample_position_complete {} { return 0 }
+	$sys add_method out_of_start_win {} { return 0 }
 	$sys add_method out_of_sample_win {} { return 0 }
 	$sys add_method store_calibration {} {}
 	$sys add_method fixation_off {} {}

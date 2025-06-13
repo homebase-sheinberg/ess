@@ -140,6 +140,10 @@ namespace eval emcalib::9point {
 	    return [::ess::em_eye_in_region 0]
 	}
 
+	$s add_method out_of_start_win {} {
+	    return [expr ![::ess::em_eye_in_region 0]]
+	}
+	
 	$s add_method fixjump {} {
 	    ::ess::em_region_off 0
 	    rmtSend "!fixjump"
