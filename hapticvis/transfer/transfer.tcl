@@ -16,6 +16,8 @@ namespace eval hapticvis::transfer {
 	$s add_param juice_ml            0.6       variable float
 	$s add_param use_joystick          1       variable bool
 	$s add_param use_touchscreen       1       variable bool
+
+	$s add_param jarvis_host          {}       variable ipaddr
 	
 	$s add_variable cur_id            -1
 	$s add_variable target_slot       -1
@@ -77,6 +79,12 @@ namespace eval hapticvis::transfer {
 	
 	$s set_start_callback {
 	    set first_time 1
+	    if { $jarvis_host != "" } {
+		set s [socket $jarvis_host 1234]
+		fconfigure $s -buffering line
+		puts $s "setRunMode 3"; gets $s
+		close $s
+	    }
 	}
 	
 	$s set_quit_callback {
@@ -113,11 +121,30 @@ namespace eval hapticvis::transfer {
 	    dservLoggerAddMatch $filename grasp/dial_angle      1 16 1
 	    dservLoggerAddMatch $filename grasp/available       1
 	    print "logging grasp events"
+
+	    #
+	    # open jarvis datafile if using video capture
+	    #
+	    if { $jarvis_host != "" } {
+		set s [socket $jarvis_host 1234]
+		fconfigure $s -buffering line
+		puts $s "setFilename $filename"; gets $s
+		close $s
+	    }
 	}
 	
 	$s set_file_close_callback {
-#	    my process_data $filename [file root $filename].json
+	    #	    my process_data $filename [file root $filename].json
 	    print "closed $filename"
+
+	    if { $jarvis_host != "" } {
+		set s [socket $jarvis_host 1234]
+		fconfigure $s -buffering line
+		puts $s "setRunMode 0"; gets $s
+		puts $s "setFilename {}"; gets $s
+		close $s
+	    }
+	    
 	}
 	
 
