@@ -79,12 +79,6 @@ namespace eval hapticvis::transfer {
 	
 	$s set_start_callback {
 	    set first_time 1
-	    if { $jarvis_host != "" } {
-		set s [socket $jarvis_host 1234]
-		fconfigure $s -buffering line
-		puts $s "setRunMode 3"; gets $s
-		close $s
-	    }
 	}
 	
 	$s set_quit_callback {
@@ -129,6 +123,7 @@ namespace eval hapticvis::transfer {
 		set s [socket $jarvis_host 1234]
 		fconfigure $s -buffering line
 		puts $s "setFilename [file root $filename]"; gets $s
+		puts $s "setRunMode 3"; gets $s
 		close $s
 	    }
 	}
@@ -141,7 +136,7 @@ namespace eval hapticvis::transfer {
 		set s [socket $jarvis_host 1234]
 		fconfigure $s -buffering line
 		puts $s "setRunMode 0"; gets $s
-		puts $s "setFilename \"\""; gets $s
+		puts $s "setFilename enter_filename"; gets $s
 		close $s
 	    }
 	    
