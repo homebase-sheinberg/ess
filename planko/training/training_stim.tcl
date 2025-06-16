@@ -51,6 +51,7 @@ proc make_stims { trial } {
 
     set ::left_catcher {}
     set ::right_catcher {}
+    set ::planks {}
     
     set n [dl_length $dg:name:$trial]
 
@@ -80,6 +81,7 @@ proc make_stims { trial } {
 	# track catcher bodies so we can give feedback
 	if { [string match catchl* $name] } { lappend ::left_catcher $body }
 	if { [string match catchr* $name] } { lappend ::right_catcher $body }
+	if { [string match plank* $name] } { lappend ::planks $body }
     }
 
     addPostScript $bworld [list check_contacts $bworld]
@@ -185,6 +187,20 @@ proc stimon {} {
 
 proc stimoff {} {
     glistSetVisible 0
+    redraw
+}
+
+proc plankson {} {
+    foreach p $::planks {
+	setVisible $p 1
+    }
+    redraw
+}
+
+proc planksoff {} {
+    foreach p $::planks {
+	setVisible $p 0
+    }
     redraw
 }
 

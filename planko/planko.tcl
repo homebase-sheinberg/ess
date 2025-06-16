@@ -22,6 +22,8 @@ namespace eval planko {
 	
 	$sys add_param response_timeout  25000    time int
 	$sys add_param post_feedback_time 1000	  time int
+
+	$sys add_param stimup_time          -1    time int
 	
 	##
 	## Local variables for this system
@@ -33,6 +35,9 @@ namespace eval planko {
 	$sys add_variable start_delay        0
 	$sys add_variable stimtype           0
 
+	$sys add_variable stim_timer         1
+	$sys add_variable stim_up            0
+	
 	$sys add_variable response           0
 	$sys add_variable first_time         1
 
@@ -120,8 +125,14 @@ namespace eval planko {
 	$sys add_action stim_on {
 	    my stim_on
 	    set stimon_time [now]
+	    set stim_up 1
 	    ::ess::evt_put PATTERN ON $stimon_time
 	    ::ess::evt_put STIMTYPE STIMID $stimon_time $stimtype
+
+	    timerTick $response_timeout
+	    if { $stimup_time != -1 } {
+		timerTick $stim_timer $stimup_time
+	    }
 	}
 	
 	$sys add_transition stim_on {
@@ -132,16 +143,32 @@ namespace eval planko {
 	# wait_for_response
 	#
 	$sys add_action wait_for_response {
-	    timerTick $response_timeout
 	}
 	
 	$sys add_transition wait_for_response {
 	    if [timerExpired] { return no_response }
+	    if { $stimup_time > 0 && $stim_up && [timerExpired $stim_timer] } {
+		return stim_hide
+	    }
+		
 	    set response [my responded]
 	    if { $response != 0 } { return response }
 	    
 	}
 	
+	#
+	# stim_hide
+	#
+	$sys add_action stim_hide {
+	    my stim_hide
+	    ::ess::evt_put PATTERN OFF [now]
+	    set stim_up 0
+	}
+
+	$sys add_transition stim_hide {
+	    return wait_for_response
+	}
+
 	#
 	# response
 	#
@@ -149,6 +176,12 @@ namespace eval planko {
 	    set resp_time [now]
 	    ::ess::evt_put RESP $resp $resp_time
 	    set rt [expr {($resp_time-$stimon_time)/1000}]
+
+	    if { !$stim_up } {
+		my stim_unhide
+		set stim_up 1
+		::ess::evt_put PATTERN ON [now]
+	    }
 	}
 
 	$sys add_transition response {
@@ -324,6 +357,8 @@ namespace eval planko {
 	$sys add_method prestim {} {}
 	$sys add_method stim_on {} {}
 	$sys add_method stim_off {} {}
+	$sys add_method stim_hide {} {}
+	$sys add_method stim_unhide {} {}
 	$sys add_method feedback { resp correct } { print $resp/$correct }
 	$sys add_method feedback_complete {} { return 0 }
 	$sys add_method reward {} {}

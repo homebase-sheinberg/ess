@@ -150,6 +150,14 @@ namespace eval planko::training {
 	$s add_method stim_off {} {
 	    rmtSend "!stimoff"
 	}
+	
+	$s add_method stim_hide {} {
+	    rmtSend "!planksoff"
+	}
+
+	$s add_method stim_unhide {} {
+	    rmtSend "!plankson"
+	}
 
 	$s add_method feedback { resp correct } {
 	    rmtSend "!show_response [expr $resp-1]"
