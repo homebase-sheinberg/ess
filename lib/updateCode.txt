@@ -1,6 +1,11 @@
 # to get all new task code
-sudo rm -rf systems/
-mkdir systems && cd systems && git clone https://github.com/homebase-sheinberg/ess
+cd ~
+git clone https://github.com/homebase-sheinberg/ess.git
+sudo git config --system --add safe.directory /home/lab/ess
+sudo nano /usr/local/dserv/local/pre-systemdir.tcl
+
+#add this line
+set env(ESS_SYSTEM_PATH) /home/lab/
 
 
 # updating dserv
@@ -14,3 +19,4 @@ sudo systemctl stop dserv
 sudo apt install ./dserv_latest_arm64.deb
 sudo systemctl start dserv
 sudo systemctl status dserv
+
