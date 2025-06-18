@@ -23,10 +23,11 @@ sudo systemctl status dserv
 
 #updating essgui
 cd /tmp
-wget -qO- https://api.github.com/repos/SheinbergLab/essgui/releases/latest \
-  | grep -m 1 '"browser_download_url":.*win-arm64\.exe"' \
+curl -s https://api.github.com/repos/SheinbergLab/dserv/releases/latest \
+  | grep browser_download_url \
+  | grep 'essgui_.*arm64\.deb' \
   | cut -d '"' -f 4 \
-  | xargs -n 1 wget -O essgui_latest_win_arm64.exe
-  
+  | xargs -n 1 -I {} wget -O essgui_latest_arm64.deb {}
+
   sudo apt install ./essgui_latest_arm64.deb
 
