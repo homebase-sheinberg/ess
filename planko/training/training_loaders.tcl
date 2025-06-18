@@ -1,5 +1,5 @@
 #
-# VARIANTS
+# LOADERS
 #   planko training
 #
 # DESCRIPTION
