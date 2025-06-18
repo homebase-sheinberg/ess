@@ -1,6 +1,6 @@
 #
 # LOADERS
-#   planko training
+#   planko training loaders
 #
 # DESCRIPTION
 #   loader functions for planko variants
