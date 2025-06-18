@@ -3,7 +3,7 @@
 #   planko training loaders
 #
 # DESCRIPTION
-#   loader functions for planko variants
+#   loader functions for planko::training
 #
 
 namespace eval planko::training {
