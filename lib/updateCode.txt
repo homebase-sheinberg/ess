@@ -1,0 +1,10 @@
+cd /tmp
+wget https://github.com/SheinbergLab/dserv/releases/download/0.8.5/dserv_0.8.5_arm64.debwget -qO- https://api.github.com/repos/SheinbergLab/dserv/releases/latest \
+  | grep -m 1 '"browser_download_url":.*arm64\.deb"' \
+  | cut -d '"' -f 4 \
+  | xargs -n 1 wget -O dserv_latest_arm64.deb
+  
+sudo systemctl stop dserv
+sudo apt install ./dserv_latest_arm64.deb
+sudo systemctl start dserv
+sudo systemctl status dserv
