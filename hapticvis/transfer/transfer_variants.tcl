@@ -6,7 +6,7 @@
 #   variants for hapticvis transfer task
 #
 
-#
+# This is the right one to edit Ayan
 # Currently only supports 4, 6, 8 choices properly
 #   The "correct_choice" is numbered 1-n_choices
 #    but the centers differ depending on the number of choices so
@@ -43,8 +43,8 @@ namespace eval hapticvis::transfer {
     set visual_cued_params {
 	interblock_time 500
 	pre_stim_time 100
-	cue_delay 250
-	cue_duration 6250
+	cue_delay 500
+	cue_duration 6000
 	sample_delay 1500
 	sample_duration 5000
 	choice_duration 30000
