@@ -16,7 +16,7 @@ namespace eval planko::change_of_mind {
                 nplanks { 8 }
                 wrong_catcher_alpha 1
                 params {
-                    { jittered { ball_jitter_x 10 ball_start_y 8 minplanks 2 planks_min_dist 1.4 planks_max_x 12.0 } }
+                    { jittered { ball_jitter_x 10 ball_start_y 8 minplanks 2 planks_min_dist 1.4 planks_max_x 12.0 lcatcher_x -3.25 rcatcher_x 3.25} }
                 }
             }
             init {
