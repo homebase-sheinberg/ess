@@ -15,6 +15,7 @@ namespace eval hapticvis::transfer {
 	$s add_param rmt_host     $::ess::rmt_host   stim ipaddr
 	$s add_param juice_ml            0.6       variable float
 	$s add_param use_joystick          1       variable bool
+	$s add_param joystick_side         0       variable int
 	$s add_param use_touchscreen       1       variable bool
 
 	$s add_param jarvis_host          {}       variable ipaddr
@@ -39,6 +40,11 @@ namespace eval hapticvis::transfer {
 
 	    if { $use_joystick } {
 		# initialize joystick here
+		if { $joystick_side == 0 } {
+		    dservSet joystick/lines { 1 23 2 19 4 22 8 20 }		    
+		} else {
+		    dservSet joystick/lines { 1 19 2 23 4 20 8 22 }		    
+		}
 		::ess::joystick_init
 	    }
 	    if { $use_touchscreen } {

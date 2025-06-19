@@ -11,6 +11,9 @@
 #   The "correct_choice" is numbered 1-n_choices
 #    but the centers differ depending on the number of choices so
 #
+
+# Ayan's version
+
 package require haptic
 
 namespace eval hapticvis::transfer {
@@ -25,30 +28,30 @@ namespace eval hapticvis::transfer {
 	
 	$s add_method setup_visual { subject_id subject_set n_per_set \
 					 shape_scale noise_type n_rep \
-					 rotations } \
+					 rotations joystick_side } \
 	    {
 		my setup_trials identity $subject_id $subject_set \
 		    $n_per_set visual \
-		    $shape_scale $noise_type $n_rep $rotations
+		    $shape_scale $noise_type $n_rep $rotations $joystick_side
 	    }
 	
 	$s add_method setup_haptic { subject_id subject_set n_per_set \
-					 n_rep rotations } \
+					 n_rep rotations joystick_side} \
 	    {
 		set shape_scale 1
 		set noise_type none
 		my setup_trials identity $subject_id \
 		    $subject_set $n_per_set haptic \
-		    $shape_scale $noise_type $n_rep $rotations
+		    $shape_scale $noise_type $n_rep $rotations $joystick_side
 	    }
 	
 	$s add_method setup_visual_cued { subject_id subject_set n_per_set \
 					      shape_scale noise_type \
-					      n_rep rotations } \
+					      n_rep rotations joystick_side } \
 	    {
 		my setup_trials identity $subject_id \
 		    $subject_set $n_per_set visual \
-		    $shape_scale $noise_type $n_rep $rotations
+		    $shape_scale $noise_type $n_rep $rotations $joystick_side
 		
 		# now create a column for cue centers
 		# for half the trials, the cue center matches the target
@@ -113,7 +116,7 @@ namespace eval hapticvis::transfer {
 	
 	$s add_method setup_trials { db_prefix subject_id subject_set n_per_set \
 					 trial_type shape_scale noise_type \
-					 n_rep rotations { use_dists 0 } } \
+					 n_rep rotations joystick_side { use_dists 0 } } \
 	    {
 		# find database
 		set db {}
@@ -199,6 +202,7 @@ namespace eval hapticvis::transfer {
 		dl_set stimdg:follow_pattern   [dl_slist]
 		dl_set stimdg:constrained      [dl_ilist]
 		dl_set stimdg:constraint_locked [dl_ilist]
+		dl_set stimdg:joystick_side       [dl_slist]
 		
 		
 		# go into table and find info about sets/subject
@@ -370,6 +374,7 @@ namespace eval hapticvis::transfer {
 		dl_set stimdg:constraint_locked [dl_zeros $n_obs]
 		
 		dl_set stimdg:remaining      [dl_ones $n_obs]
+		dl_set stimdg:joystick_side   [dl_repeat [dl_slist $joystick_side] $n_obs]
 		
 		return $g
 	    }
