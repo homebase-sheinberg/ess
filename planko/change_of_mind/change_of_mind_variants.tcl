@@ -1,0 +1,31 @@
+#
+# VARIANTS
+#   planko change_of_mind
+#
+# DESCRIPTION
+#   variant dictionary for planko::change_of_mind
+#
+
+namespace eval planko::change_of_mind {
+    variable variants {
+        standard {
+            description "standard board"
+            loader_proc basic_planko
+            loader_options {
+                nr { 60 120 }
+                nplanks { 8 }
+                wrong_catcher_alpha 1
+                params {
+                    { jittered { ball_jitter_x 10 ball_start_y 8 minplanks 2 planks_min_dist 1.4 planks_max_x 12.0 lcatcher_x -3.25 rcatcher_x 3.25} }
+                }
+            }
+            init {
+                rmtSend "setBackground 0 0 10"
+            }
+            deinit {}
+        }
+    }
+
+    set variants [subst $variants]
+}
+

@@ -1,11 +1,11 @@
 # NAME
-#   planko_stim.tcl
+#   change_of_mind_stim.tcl
 #
 # DESCRIPTION
-#   planko task stim code
+#   planko task stim code for change_of_mind
 #
 # REQUIRES
-#   box2d 
+#   box2d
 #   polygon
 #   metagroup
 #

@@ -36,7 +36,7 @@ namespace eval planko {
 	set params(minplanks)          1; # mininum number of planks hit
 	set params(ball_restitution) 0.2; # restitution of the ball
 	set params(step_size) \
-	    [expr 59.9/1000.0];	          # step size of simulation (sec)
+	    [expr 1.0/59.9];	          # step size of simulation (sec)
 	return
     }
     
@@ -159,12 +159,8 @@ namespace eval planko {
 	set ball [create_ball_dg]
 
 	if { !$params(floor_only) } {
-	    set params(lcatcher_x) -3.0
-	    set params(lcatcher_y) -7.5
 	    set left_catcher \
 		[create_catcher_dg $params(lcatcher_x) $params(lcatcher_y) catchl]
-	    set params(rcatcher_x) 3.0
-	    set params(rcatcher_y) -7.5
 	    set right_catcher \
 		[create_catcher_dg $params(rcatcher_x) $params(rcatcher_y) catchr]
 	    set parts "$ball $left_catcher $right_catcher"
@@ -240,7 +236,11 @@ namespace eval planko {
     }
     
     proc isPlank { pair } { return [string match plank* [lindex $pair 0]] }
-    
+
+    proc isCatcherBottom { pair } {
+	return [string match catch*_b [lindex $pair 0]]
+    }
+
     proc uniqueList {list} {
 	set new {}
 	foreach item $list {
@@ -257,14 +257,13 @@ namespace eval planko {
 	set y [dl_last $g:y]
 	set contacts [dl_tcllist $g:contact_bodies]
 
-	# assumes both catchers are at same y value
-	set catcher_y $params(lcatcher_y)
+	set catchers [lmap c $contacts \
+			  { expr { [isCatcherBottom $c] ? [lindex [lindex $c 0] 0] : [continue] } }]
 	
-	set upper [expr $catcher_y+0.01]
-	set lower [expr $catcher_y-0.01]
-	
-	if { [expr {$y < $upper && $y > $lower}] } {
-	    set result [expr {$x>0}]
+	if { [lsearch $catchers catchl_b] >= 0 } {
+	    set result 0
+	} elseif { [lsearch $catchers catchr_b] >= 0 } {
+	    set result 1
 	} else {
 	    return "-1 0"
 	}
