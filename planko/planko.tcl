@@ -1,10 +1,10 @@
-##
-##  NAME
-##    planko.tcl
-##
-##  DECRIPTION
-##    System for training planko
-##
+#
+#  NAME
+#    planko.tcl
+#
+#  DECRIPTION
+#    System for training planko
+#
 
 package require ess
 
@@ -20,7 +20,7 @@ namespace eval planko {
         $sys add_param prestim_time 250 time int
 
         $sys add_param response_timeout 25000 time int
-        $sys add_param max_feedback_time 8000 time int        
+        $sys add_param max_feedback_time 8000 time int
         $sys add_param post_feedback_time 1000 time int
 
         $sys add_param stimup_time -1 time int
