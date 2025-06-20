@@ -8,7 +8,8 @@
 
 namespace eval search::circles {
     proc loaders_init { s } {
-        $s add_method basic_search { nr nd targ_r dist_prop mindist targ_range targ_color {dist_color {}} } {
+      $s add_method basic_search { nr nd targ_r dist_prop mindist targ_range targ_color dist_color } {
+
 	    set n_rep $nr
 	    set ndists $nd
 	    
