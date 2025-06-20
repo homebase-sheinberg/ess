@@ -26,6 +26,7 @@ namespace eval hapticvis::transfer {
         $s add_variable trial_type visual
         $s add_variable shape_id -1
         $s add_variable shape_angle -1
+        $s add_variable shape_hand -1
         $s add_variable correct -1
         $s add_variable n_choices 0
         $s add_variable choices {}
@@ -194,6 +195,7 @@ namespace eval hapticvis::transfer {
                 set have_cue [dl_get stimdg:is_cued $cur_id]
                 set cue_valid [dl_get stimdg:cue_valid $cur_id]
 
+
                 if { $have_cue } {
                     foreach i "0 1" {
                         set choice_x [dl_get stimdg:lr_choice_centers:$cur_id:$i 0]
@@ -223,6 +225,7 @@ namespace eval hapticvis::transfer {
                 set trial_type [dl_get stimdg:trial_type $cur_id]
                 set shape_id [dl_get stimdg:shape_id $cur_id]
                 set shape_angle [dl_get stimdg:shape_rot_deg_cw $cur_id]
+                set shape_hand [dl_get stimdg:hand $cur_id]
 
                 rmtSend "nexttrial $cur_id"
 
@@ -282,7 +285,7 @@ namespace eval hapticvis::transfer {
             set res [rest::get $url [list function follow_dial_or_pattern follow false]]
         }
 
-        $s add_method haptic_show { shape_id a } {
+        $s add_method haptic_show { shape_id a { hand 1 } } {
             if { $simulate_grasp } {
                 dservSet ess/grasp/available 1
                 return
@@ -293,7 +296,7 @@ namespace eval hapticvis::transfer {
 
             set angle [expr {int($a)%360}]
             set url http://${ip}:${port}
-            set res [rest::get $url [list function pick_and_place hand 1 left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
+            set res [rest::get $url [list function pick_and_place hand $hand left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
 
             ]
             ]
@@ -324,7 +327,7 @@ namespace eval hapticvis::transfer {
                 rmtSend "!sample_on"
                 if { !$simulate_grasp && $follow_dial } { my dial_follow }
             } elseif { $trial_type == "haptic" } {
-                my haptic_show $shape_id $shape_angle
+                my haptic_show $shape_id $shape_angle $shape_hand
             }
         }
 

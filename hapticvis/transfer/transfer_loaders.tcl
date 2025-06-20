@@ -202,7 +202,9 @@ namespace eval hapticvis::transfer {
 		dl_set stimdg:follow_pattern   [dl_slist]
 		dl_set stimdg:constrained      [dl_ilist]
 		dl_set stimdg:constraint_locked [dl_ilist]
-		dl_set stimdg:joystick_side       [dl_slist]
+		dl_set stimdg:joystick_side    [dl_ilist]
+		dl_set stimdg:joystick_on      [dl_slist]
+		dl_set stimdg:hand             [dl_ilist]
 		
 		
 		# go into table and find info about sets/subject
@@ -373,9 +375,12 @@ namespace eval hapticvis::transfer {
 		dl_set stimdg:constrained    [dl_zeros $n_obs]
 		dl_set stimdg:constraint_locked [dl_zeros $n_obs]
 		
-		dl_set stimdg:remaining      [dl_ones $n_obs]
-		dl_set stimdg:joystick_side   [dl_repeat [dl_slist $joystick_side] $n_obs]
+		dl_set stimdg:joystick_side  [dl_repeat $joystick_side $n_obs]
+		dl_set stimdg:joystick_on    [dl_choose [dl_slist left right] stimdg:joystick_side]
+		dl_set stimdg:hand           [dl_not stimdg:joystick_side]
 		
+		dl_set stimdg:remaining      [dl_ones $n_obs]
+
 		return $g
 	    }
     }
