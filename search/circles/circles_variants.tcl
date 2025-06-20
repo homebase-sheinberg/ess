@@ -56,12 +56,13 @@ namespace eval search::circles {
 		dist_prop { 1.2 1.1 0.9 0.8 }
 		mindist { 2.0 3.0 }
 		targ_range { 8 9 10 }
-		targ_color {
-		    { cyan { 0 1 1 } }
-		    { red { 1 0 0 } }
-		}
-	    }
-	}
+                targ_color {
+                    { cyan { 0 1 1 } }
+                    { red { 1 0 0 } }
+                    { purple { 1 0 1 } }
+                }
+            }
+        }
     }
     # use subst to replace variables in variant definition above
     set variants [subst $variants]
