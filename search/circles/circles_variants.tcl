@@ -46,20 +46,38 @@ namespace eval search::circles {
 	    }
 	    params { interblock_time 750 }
 	}
-	distractors {
-	    description "fixed number of distractors"
-	    loader_proc basic_search
-	    loader_options {
-		nr { 100 200 }
-		nd { 4 6 8 }
-		targ_r { 1.5 2.0 }
-		dist_prop { 1.2 1.1 0.9 0.8 }
-		mindist { 2.0 3.0 }
-		targ_range { 8 9 10 }
+        distractors {
+            description "fixed number of distractors"
+            loader_proc basic_search
+            loader_options {
+                nr { 100 200 }
+                nd { 4 6 8 }
+                targ_r { 1.5 2.0 }
+                dist_prop { 1.2 1.1 0.9 0.8 }
+                mindist { 2.0 3.0 }
+                targ_range { 8 9 10 }
                 targ_color {
                     { cyan { 0 1 1 } }
                     { red { 1 0 0 } }
                     { purple { 1 0 1 } }
+                }
+            }
+        }
+        diff_color {
+            description "distractors marked by color"
+            loader_proc basic_search
+            loader_options {
+                nr { 100 }
+                nd { 4 }
+                targ_r { 1 }
+                dist_prop { 1 }
+                mindist { 2.0 }
+                targ_range { 8 9 10 }
+                targ_color {
+                    { blue { 0 0 1 } }
+                }
+                dist_color {
+                    { red { 1 0 0 } }
                 }
             }
         }
