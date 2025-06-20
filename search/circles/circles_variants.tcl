@@ -85,6 +85,24 @@ namespace eval search::circles {
                 }
             }
         }
+        diff_color {
+            description "distractors marked by color"
+            loader_proc basic_search
+            loader_options {
+                nr { 100 }
+                nd { 4 }
+                targ_r { 1 }
+                dist_prop { 1 }
+                mindist { 2.0 }
+                targ_range { 8 9 10 }
+                targ_color {
+                    { blue { 0 0 1 } }
+                }
+                dist_color {
+                    { red { 1 0 0 } }
+                }
+            }
+        }
     }
     # use subst to replace variables in variant definition above
     set variants [subst $variants]
