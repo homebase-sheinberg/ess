@@ -86,7 +86,8 @@ namespace eval hapticvis::transfer {
             if { $db_prefix == "identity" } {
                 # the number of sets depends on set size (4->8, 8->2, 6->3)
                 set n_sets [dict get {4 4 8 2 6 3} $n_per_set]
-                variable trialdb_file  [file join $p trial_db_${n_per_set}_${n_sets}]
+		#                variable trialdb_file  [file join $p trial_db_${n_per_set}_${n_sets}]
+                variable trialdb_file  [file join $p hand_transfer_db_${n_per_set}_${n_sets}]		
             } else {
                 # the number of sets depends on set size (4->4, 8->2, 6->3)
                 set n_sets [dict get {4 8 8 2 6 3} $n_per_set]
@@ -116,8 +117,11 @@ namespace eval hapticvis::transfer {
             if { $db_prefix == "identity" } {
                 set dists trial_db:dist_ids:$row:$subject_set
 
-                if { ![dl_exists $targets] || ![dl_exists $dists] } {
+                if { ![dl_exists $targets] } {
                     error "subject set does not exist"
+                }
+		if { $use_dists && ![dl_exists $dists] } {
+                    error "subject set does not include dists"
                 }
             } else {
                 if { ![dl_exists $targets] } {
