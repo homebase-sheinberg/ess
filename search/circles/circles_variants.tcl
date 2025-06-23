@@ -17,16 +17,12 @@ namespace eval search::circles {
 		targ_r { 1.5 2.0 }
 		dist_prop { 1 }
 		mindist { 1.5 }
-                targ_range { 8 9 10 }
-                targ_color {
-                    { cyan { 0 1 1 } }
-                    { red { 1 0 0 } }
-                }
-                dist_color {
-                    { cyan { 0 1 1 } }
-                    { red { 1 0 0 } }
-                }
-            }
+		targ_range { 8 9 10 }
+		targ_color {
+		    { cyan { 0 1 1 } }
+		    { red { 1 0 0 } }
+		}
+	    }
 	    init { rmtSend "setBackground 10 10 10" } 
 	    deinit {}
 	}
@@ -42,56 +38,30 @@ namespace eval search::circles {
 		targ_r { 1.5 2.0 }
 		dist_prop { 1.2 1.1 0.9 0.8 }
 		mindist {1.5 2.0}
-                targ_range { 8 9 10 }
-                targ_color {
-                    { cyan { 0 1 1 } }
-                    { red { 1 0 0 } }
-                }
-                dist_color {
-                    { cyan { 0 1 1 } }
-                    { red { 1 0 0 } }
-                }
-            }
-            params { interblock_time 750 }
-        }
-        distractors {
-            description "fixed number of distractors"
-            loader_proc basic_search
-            loader_options {
-                nr { 100 200 }
-                nd { 4 6 8 }
-                targ_r { 1.5 2.0 }
-                dist_prop { 1.2 1.1 0.9 0.8 }
-                mindist { 2.0 3.0 }
-                targ_range { 8 9 10 }
-                targ_color {
-                    { cyan { 0 1 1 } }
-                    { red { 1 0 0 } }
-                }
-                dist_color {
-                    { cyan { 0 1 1 } }
-                    { red { 1 0 0 } }
-                }
-            }
-        }
-        diff_color {
-            description "distractors identified by color"
-            loader_proc basic_search
-            loader_options {
-                nr { 100 200 }
-                nd { 4 6 8 }
-                targ_r { 1 }
-                dist_prop { 1 }
-                mindist { 1.5 }
-                targ_range { 8 9 10 }
-                targ_color {
-                    { blue { 0 0 1 } }
-                }
-                dist_color {
-                    { red { 1 0 0 } }
-                }
-            }
-        }
+		targ_range { 8 9 10 }
+		targ_color {
+		    { cyan { 0 1 1 } }
+		    { red { 1 0 0 } }
+		}
+	    }
+	    params { interblock_time 750 }
+	}
+	distractors {
+	    description "fixed number of distractors"
+	    loader_proc basic_search
+	    loader_options {
+		nr { 100 200 }
+		nd { 4 6 8 }
+		targ_r { 1.5 2.0 }
+		dist_prop { 1.2 1.1 0.9 0.8 }
+		mindist { 2.0 3.0 }
+		targ_range { 8 9 10 }
+		targ_color {
+		    { cyan { 0 1 1 } }
+		    { red { 1 0 0 } }
+		}
+	    }
+	}
     }
     # use subst to replace variables in variant definition above
     set variants [subst $variants]
