@@ -23,6 +23,7 @@ namespace eval planko::change_of_mind {
                 rmtSend "setBackground 0 0 10"
             }
             deinit {}
+            params { use_buttons 1 left_button 20 right_button 22 }
         }
     }
 

@@ -50,44 +50,26 @@ proc create_worlds {} {
 	    }
 	    set ::auto_path [linsert $::auto_path [set auto_path 0] $base/lib]
 	    
-	    tcl::tm::path add .
+	    tcl::tm::path add ../../../lib
 	    package require box2d
 	    package require planko
 	    
 	    namespace eval planko {
-		proc accept_board { g } {
-		    variable params
-		    set x [dl_last $g:x]
-		    set y [dl_last $g:y]
-		    set contacts [dl_tcllist $g:contact_bodies]
-		    
-		    # assumes both catchers are at same y value
-		    set catcher_y $params(lcatcher_y)
-		    
-		    set upper [expr $catcher_y+0.01]
-		    set lower [expr $catcher_y-0.01]
-		    
-		    if { [expr {$y < $upper && $y > $lower}] } {
-			set result [expr {$x>0}]
-		    } else {
-			return "-1 0"
-		    }
-		    
-		    set planks [lmap c $contacts \
-				    { expr { [isPlank $c] ? [lindex [lindex $c 0] 0] : [continue] } }]
-		    set planks [uniqueList $planks]
-		    set nhit [llength $planks]
-		    if { $nhit != $params(hitplanks) } { return -1 }
-		    
-		    return "$result $nhit"
-		}
+		# could override accept_board here
 	    }
 
 	    proc do_work { nboards nplanks nhit } {
-
+		
 		# Generate the boards
-		set g [planko::generate_worlds $nboards [list nplanks $nplanks hitplanks $nhit]]
-
+		set params [dict create set params \
+				ball_jitter_x 10 ball_start_y 8 minplanks 2 \
+				planks_min_dist 1.4 planks_max_x 12.0 \
+				lcatcher_x -3.25 rcatcher_x 3.25 \
+				planks_min_len 1.5 planks_max_len 1.5 \
+				nplanks $nplanks hitplanks $nhit]
+		
+		set g [planko::generate_worlds $nboards $params]
+		
 		# Add result to shared memory 
 		set tid [thread::id]
 		dg_toString $g result_$tid

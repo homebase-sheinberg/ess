@@ -8,18 +8,18 @@
 
 namespace eval emcalib::9point {
     proc loaders_init { s } {
-        $s add_method basic_calib { nr } {
+        $s add_method basic_calib { nr radius } {
             set n_rep $nr
 
             if { [dg_exists stimdg] } { dg_delete stimdg }
             set g [dg_create stimdg]
             dg_rename $g stimdg
 
-            set targ_radius 0.3
+            set targ_radius $radius
             set jump_scale 5
 
-            dl_local xlocs  [dl_mult $jump_scale [dl_replicate [dl_ilist -1 0 1] 3]]
-            dl_local ylocs  [dl_mult $jump_scale [dl_repeat [dl_ilist -1 0 1] 3]]
+            dl_local xlocs [dl_mult $jump_scale [dl_replicate [dl_ilist -1 0 1] 3]]
+            dl_local ylocs [dl_mult $jump_scale [dl_repeat [dl_ilist -1 0 1] 3]]
             set npos [dl_length $xlocs]
             set n_obs [expr $npos*$n_rep]
 
