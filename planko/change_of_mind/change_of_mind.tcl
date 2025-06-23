@@ -110,10 +110,8 @@ namespace eval planko::change_of_mind {
 
         $s add_method button_pressed {} {
             if { $use_buttons } {
-                if { [dservGet gpio/input/$left_button] ||
-                    [dservGet gpio/input/$right_button] } {
-                    return 1
-                }
+                if { [dservGet gpio/input/$left_button] } { return 1 }
+                if { [dservGet gpio/input/$right_button] } { return 2 }
             }
             return 0
         }
@@ -201,8 +199,13 @@ namespace eval planko::change_of_mind {
         }
 
         $s add_method responded {} {
-            if { [my button_pressed] } { return 1 }
-            
+            set button_response [my button_pressed]
+            if { $button_response != 0 } {
+                set resp $button_response
+                if { $side == [expr {$resp-1}] } { set correct 1 } { set correct 0 }
+                return 1
+            }
+
             if { [::ess::touch_in_win 0] } {
                 if { $side == 0 } { set correct 1 } { set correct 0 }
                 set resp 1
