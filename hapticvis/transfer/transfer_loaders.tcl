@@ -99,7 +99,7 @@ namespace eval hapticvis::transfer {
             set g [dg_create stimdg]
             dg_rename $g stimdg
 
-            # shape coords are in shapedb_file
+            # shape coords are in shape_db file
             if {![file exists $shapedb_file]} { error "db file not found" }
             if { [dg_exists shape_db] } { dg_delete shape_db }
             dg_rename [dg_read $shapedb_file] shape_db
