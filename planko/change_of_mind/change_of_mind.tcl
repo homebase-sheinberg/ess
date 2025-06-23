@@ -53,6 +53,17 @@ namespace eval planko::change_of_mind {
             rmtClose
         }
 
+        $s set_final_init_callback {
+            # wait until variants have potentially changed buttons
+            if { $use_buttons } {
+                foreach b "$left_button $right_button" {
+                    dservAddExactMatch gpio/input/$b
+                    dservTouch gpio/input/$b
+                    dpointSetScript gpio/input/$b ess::do_update
+                }
+            }
+        }
+
         $s set_reset_callback {
             dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
             set obs_count 0
@@ -97,11 +108,21 @@ namespace eval planko::change_of_mind {
             set buttons_changed 0
         }
 
+        $s add_method button_pressed {} {
+            if { $use_buttons } {
+                if { [dservGet gpio/input/$left_button] ||
+                    [dservGet gpio/input/$right_button] } {
+                    return 1
+                }
+            }
+            return 0
+        }
+
         $s add_method n_obs {} { return [dl_length stimdg:stimtype] }
 
         $s add_method nexttrial {} {
             if { [dl_sum stimdg:remaining] } {
-                dl_local left_to_show  [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
+                dl_local left_to_show [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
                 set cur_id [dl_pickone $left_to_show]
                 set stimtype [dl_get stimdg:stimtype $cur_id]
 
@@ -180,6 +201,8 @@ namespace eval planko::change_of_mind {
         }
 
         $s add_method responded {} {
+            if { [my button_pressed] } { return 1 }
+            
             if { [::ess::touch_in_win 0] } {
                 if { $side == 0 } { set correct 1 } { set correct 0 }
                 set resp 1
