@@ -63,6 +63,7 @@ namespace eval search::circles {
                     { red { 1 0 0 } }
                 }
                 dist_color { { same {} } }
+
             }
         }
         diff_color {
