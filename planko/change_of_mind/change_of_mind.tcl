@@ -13,6 +13,7 @@ namespace eval planko::change_of_mind {
 
         $s add_param rmt_host $::ess::rmt_host stim ipaddr
         $s add_param juice_ml .6 variable float
+	$s add_param save_ems 0 variable bool
         $s add_param use_buttons 0 variable int
         $s add_param left_button 24 variable int
         $s add_param right_button 25 variable int
@@ -31,7 +32,7 @@ namespace eval planko::change_of_mind {
             # open connection to rmt and upload ${protocol}_stim.tcl
             my configure_stim $rmt_host
 
-            # initialize touch processor
+	    # initialize touch processor
             ::ess::touch_init
 
             # listen for planko/complete event
@@ -54,7 +55,12 @@ namespace eval planko::change_of_mind {
         }
 
         $s set_final_init_callback {
-            # wait until variants have potentially changed buttons
+	    if { $save_ems } {
+		# initialize eye movements
+		::ess::em_init
+	    }
+
+	    # wait until variants have potentially changed buttons
             if { $use_buttons } {
                 foreach b "$left_button $right_button" {
                     dservAddExactMatch gpio/input/$b
