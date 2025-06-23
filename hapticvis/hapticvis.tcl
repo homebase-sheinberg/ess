@@ -36,7 +36,6 @@ namespace eval hapticvis {
 
 	$sys add_param post_response_time 1000     time int
 
-	$sys add_param finale_delay       500      time int
 	$sys add_param simulate_grasp       0      variable bool
 
 	##
@@ -67,6 +66,7 @@ namespace eval hapticvis {
 	$sys add_variable sample_on_time
 	$sys add_variable choice_on_time  
 
+	$sys add_variable finale_delay       500
 
 	######################################################################
 	#                            System States                           #
