@@ -24,8 +24,7 @@ namespace eval search::circles {
                 }
                 dist_color { { same {} } }
             }
-	    init { rmtSend "setBackground 10 10 10" } 
-	    deinit {}
+	    init { rmtSend "setBackground 10 10 10" }
 	}
 	variable {
 	    description "variable number of distractors"
