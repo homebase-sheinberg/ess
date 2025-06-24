@@ -8,7 +8,7 @@
 
 namespace eval search::circles {
     proc loaders_init { s } {
-        $s add_method basic_search { nr nd targ_r dist_prop mindist targ_range targ_color } {
+        $s add_method basic_search { nr nd targ_r dist_prop mindist targ_range targ_color dist_color } {
             set n_rep $nr
             set ndists $nd
 
@@ -44,7 +44,8 @@ namespace eval search::circles {
             dl_set $g:dist_ys  [dl_unpack [dl_choose $g:dists_pos [dl_llist [dl_llist 1]]]]
 
             set dist_r [expr $scale*$dist_prop]
-            set dist_color $targ_color
+
+            if { $dist_color eq {} } { set dist_color $targ_color }
 
             dl_set $g:dist_rs [dl_repeat $dist_r [dl_llength $g:dist_xs]]
             dl_set $g:dist_colors  [dl_repeat [dl_slist $dist_color] [dl_llength $g:dist_xs]]
