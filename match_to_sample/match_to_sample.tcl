@@ -12,8 +12,6 @@ namespace eval match_to_sample {
     proc create {} {
 	set sys [::ess::create_system [namespace tail [namespace current]]]
 	
-	$sys set_version 1.0
-
 	######################################################################
 	#                          System Parameters                         #
 	######################################################################
@@ -23,7 +21,6 @@ namespace eval match_to_sample {
 	$sys add_param sample_pre_time     0      time int
 	$sys add_param sample_time      15000      time int
 	$sys add_param delay_time       1000      time int
-	$sys add_param finale_delay      500      time int
 	
 	$sys add_param response_timeout 10000      time int
 	
@@ -39,6 +36,8 @@ namespace eval match_to_sample {
 	$sys add_variable correct           -1
 	$sys add_variable choice_on_time  
 	$sys add_variable rt
+
+	$sys add_variable finale_delay      500
 	
 	######################################################################
 	#                            System States                           #

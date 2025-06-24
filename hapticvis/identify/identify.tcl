@@ -7,14 +7,16 @@
 ##
 
 namespace eval hapticvis::identify {
+    variable params_defaults { delay_time 100 }
+
     proc protocol_init { s } {
 	$s set_protocol [namespace tail [namespace current]]
 	
-	$s add_param rmt_host     $::ess::rmt_host   stim ipaddr
 	$s add_param juice_ml            0.6       variable float
 	$s add_param use_joystick          1       variable bool
 	$s add_param use_touchscreen       1       variable bool
 	
+	$s add_variable rmt_host          $::ess::rmt_host
 	$s add_variable cur_id            -1
 	$s add_variable target_slot       -1
 	$s add_variable trial_type        visual
@@ -124,9 +126,12 @@ namespace eval hapticvis::identify {
 	
 	$s add_method nexttrial {} {
 	    if { [dl_sum stimdg:remaining] } {
-		dl_local left_to_show \
-		    [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
-		set cur_id [dl_pickone $left_to_show]
+		dl_local rem [dl_gt stimdg:remaining 0]
+		set curgroup [dl_min [dl_select stimdg:group $rem]]
+		dl_local in_curgroup \
+		    [dl_select stimdg:stimtype \
+			 [dl_and [dl_eq stimdg:group $curgroup] $rem]]
+		set cur_id [dl_pickone $in_curgroup]
 		set stimtype [dl_get stimdg:stimtype $cur_id]
 		set n_choices [dl_get stimdg:n_choices $cur_id]
 		set choices [my get_choices $n_choices]
@@ -303,6 +308,7 @@ namespace eval hapticvis::identify {
 	
 	$s add_method highlight_response {} {
 	    set p [dservGet ess/joystick/position]
+	    ::ess::evt_put DECIDE SELECT [now] $p
 	    rmtSend "highlight_response $p"
 	}
 	

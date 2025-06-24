@@ -11,8 +11,6 @@ package require ess
 namespace eval hapticvis {
     proc create {} {
 	set sys [::ess::create_system [namespace tail [namespace current]]]
-	
-	$sys set_version 0.9
 
 	######################################################################
 	#                          System Parameters                         #
@@ -25,6 +23,7 @@ namespace eval hapticvis {
 	$sys add_param stim_duration    10000      time int
 
 	$sys add_param have_cue             0      variable bool
+	$sys add_param cue_valid            0      variable bool
 	$sys add_param cue_delay            0      time int
 	$sys add_param cue_duration         0      time int
 
@@ -37,7 +36,6 @@ namespace eval hapticvis {
 
 	$sys add_param post_response_time 1000     time int
 
-	$sys add_param finale_delay       500      time int
 	$sys add_param simulate_grasp       0      variable bool
 
 	##
@@ -54,7 +52,8 @@ namespace eval hapticvis {
 	$sys add_variable sample_presented   0
 	$sys add_variable cue_up             0
 	$sys add_variable choices_up         0
-
+	$sys add_variable stim_update        0
+	
 	## timer ids
 	$sys add_variable sample_timer       1
 	$sys add_variable cue_timer          2
@@ -67,6 +66,7 @@ namespace eval hapticvis {
 	$sys add_variable sample_on_time
 	$sys add_variable choice_on_time  
 
+	$sys add_variable finale_delay       500
 
 	######################################################################
 	#                            System States                           #
@@ -164,6 +164,11 @@ namespace eval hapticvis {
 	    if { $sample_presented == 1 } {
 		return sample_presented
 	    }
+
+	    if { $stim_update } {
+		return stim_update
+	    }
+	    
 	    if { [timerExpired $sample_timer] } {
 		if { $sample_up == 0 } {
 		    return sample_on
@@ -178,7 +183,7 @@ namespace eval hapticvis {
 		    return choices_off
 		}
 	    }
-	    if { [timerExpired $cue_timer] } {
+	    if { $have_cue && [timerExpired $cue_timer] } {
 		if { $cue_up == 0 } {
 		    return cue_on
 		} elseif { $cue_up == 1 } {
@@ -191,7 +196,11 @@ namespace eval hapticvis {
 
 	    # allow responses after sample has appeared
 	    if { $sample_on_time >= 0 } {
-		set resp [my responded]
+		if { !$cue_up } {
+		    set resp [my responded]
+		} else {
+		    set resp [my responded_lr]
+		}
 		if { $resp >= 0 } { return response }
 		if { $resp == -2 } { return highlight_response }
 	    }
@@ -234,6 +243,16 @@ namespace eval hapticvis {
 	
 	$sys add_transition cue_off { return stim_wait }
 	
+	#
+	# stim_update: request stimulus update
+	#
+	$sys add_action stim_update {
+	    my stim_update
+	    set stim_update 0;	# reset
+	}
+	
+	$sys add_transition stim_update { return stim_wait }
+
 	#
 	# sample_on: request sample on
 	#
@@ -475,12 +494,14 @@ namespace eval hapticvis {
 	$sys add_method sample_off {} { print sample_off }
 	$sys add_method choices_on {} { print choices_on }
 	$sys add_method choices_off {} { print choices_off }
-
+	$sys add_method stim_update {} { print stim_update }
+	
 	$sys add_method reward {} { print reward }
 	$sys add_method noreward {} { print noreward }
 	$sys add_method finale {} { print finale }
 	
 	$sys add_method responded {} { return 0 }
+	$sys add_method responded_lr {} { return 0 }
 	$sys add_method response_correct {} { return 1 }
 	
 	

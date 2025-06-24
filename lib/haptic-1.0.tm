@@ -14,6 +14,9 @@ namespace eval haptic {
                         2014 2031 2023 2058 2087 2007 2018 2062 2032 2033 \
                         2030 2053 2016 2069 2024 2082 2074 2102 2061"
 
+    variable shape_ids_subset "2051 2018 2065 2016 2066 2031 2050 2013 \
+                               2037 2074 2070 2067 2060 2021 2032 2092"
+    
     # Given a source shape_list and target shape_ids, return indices of targets
     proc get_shape_indices { shape_list shape_ids } {
 #	dl_return [dl_findIndices $shape_list $shape_ids]
@@ -25,8 +28,7 @@ namespace eval haptic {
     }
 
     # Create shape database give shape ids by extracting coords
-    proc create_shape_db { db } {
-	variable shape_ids
+    proc create_shape_db { db shape_ids } {
 	set dg [dg_create]
 	dl_set $dg:id [dl_ilist]
 	dl_set $dg:x  [dl_llist]
@@ -98,6 +100,10 @@ namespace eval haptic {
 	dg_delete trialdb
     }
 
+    proc add_hand_transfer_trials { shapedb_file trialdb_file n { n_per_set 4 } { n_sets 4 } } {
+	add_contour_trials $shapedb_file $trialdb_file $n $n_per_set $n_sets
+    }
+    
     # create persistent contour trials for subjects
     proc add_contour_trials { shapedb_file trialdb_file n { n_per_set 4 } { n_sets 8 } } {
 
@@ -134,7 +140,6 @@ namespace eval haptic {
 	dg_write trialdb $trialdb_file
 	dg_delete trialdb
     }
-    
 
     proc haptic_process_available { dpoint data } {
 	dservSet ess/grasp/available $data

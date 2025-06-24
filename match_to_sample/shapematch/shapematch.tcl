@@ -1,12 +1,12 @@
 #
 # PROTOCOL
-#   match_to_sample colormatch
+#   match_to_sample shapematch
 #
 # DESCRIPTION
-#   Present a target color and two choices
+#   Present a target shape and two choices
 #
 
-namespace eval match_to_sample::colormatch {
+namespace eval match_to_sample::shapematch {
     variable params_defaults { sample_time 2000 delay_time 0 }
 
     proc protocol_init { s } {
@@ -22,11 +22,11 @@ namespace eval match_to_sample::colormatch {
 	
 	$s add_variable targ_x             
 	$s add_variable targ_y             
-	$s add_variable targ_r             
+	$s add_variable targ_scale             
 	
 	$s add_variable dist_x             
 	$s add_variable dist_y             
-	$s add_variable dist_r             
+	$s add_variable dist_scale         
 	
 	$s add_variable buttons_changed    0
 	$s add_variable cur_id             0
@@ -133,17 +133,17 @@ namespace eval match_to_sample::colormatch {
 		# set these touching_response knows where choices are
 		set targ_x [dl_get stimdg:match_x $stimtype]
 		set targ_y [dl_get stimdg:match_y $stimtype]
-		set targ_r [dl_get stimdg:match_r $stimtype]
+		set targ_scale [dl_get stimdg:match_scale $stimtype]
 		set dist_x [dl_get stimdg:nonmatch_x $stimtype]
 		set dist_y [dl_get stimdg:nonmatch_y $stimtype]
-		set dist_r [dl_get stimdg:nonmatch_r $stimtype]
+		set dist_scale [dl_get stimdg:nonmatch_scale $stimtype]
 
 		::ess::touch_region_off 0
 		::ess::touch_region_off 1
 		::ess::touch_reset
 		
-		::ess::touch_win_set 0 $targ_x $targ_y $targ_r 0
-		::ess::touch_win_set 1 $dist_x $dist_y $dist_r 0
+		::ess::touch_win_set 0 $targ_x $targ_y $targ_scale 0
+		::ess::touch_win_set 1 $dist_x $dist_y $dist_scale 0
 
 		rmtSend "nexttrial $stimtype"
 
