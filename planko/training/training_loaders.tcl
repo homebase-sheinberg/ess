@@ -10,7 +10,7 @@ namespace eval planko::training {
     package require planko
     
     proc loaders_init { s } {
-	$s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
+	$s add_method basic_planko { nr nplanks wrong_catcher_alpha ball_restitution params } {
 	    set n_rep $nr
 	    
 	    if { [dg_exists stimdg] } { dg_delete stimdg }
@@ -22,7 +22,7 @@ namespace eval planko::training {
 	    set maxy [expr $screen_halfy]
 
 	    # this is a set of params to pass into generate_worlds
-	    set p "nplanks $nplanks $params"
+	    set p "nplanks $nplanks ball_restitution $ball_restitution $params"
 	    set g [planko::generate_worlds $n_obs $p]
 	    dl_set $g:wrong_catcher_alpha \
 		[dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
