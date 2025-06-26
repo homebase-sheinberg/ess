@@ -15,7 +15,14 @@ namespace eval planko::training {
 		nr { 100 200 300}
 		nplanks { 1 }
 		wrong_catcher_alpha 1
-		ball_restitution { {0.2} {0.4} {0.6} {0.8} {0.2 0.5} }
+		ball_preset { 
+		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
+		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
+		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
+		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
+		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
+		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		}
 		params { { defaults {} } }
 	    }
 	    init {
@@ -30,7 +37,14 @@ namespace eval planko::training {
 		nr { 50 100 200 }
 		nplanks { 1 }
 		wrong_catcher_alpha { 1 0.5 }
-		ball_restitution { {0.2} {0.4} {0.6} {0.8} {0.2 0.5} }
+		ball_preset { 
+		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
+		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
+		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
+		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
+		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
+		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		}
 		params { { jittered { ball_jitter_x 8 ball_start_y 5 ball_jitter_y 1 } } }
 	    }
 	}
@@ -41,7 +55,14 @@ namespace eval planko::training {
 		nr { 50 100 200 400 800}
 		nplanks { 1 }
 		wrong_catcher_alpha { 1.0 0.98 0.95 0.9 0.8 0.7 }
-		ball_restitution { {0.2} {0.4} {0.6} {0.8} {0.2 0.5} }
+		ball_preset { 
+		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
+		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
+		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
+		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
+		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
+		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		}
 		params { { jittered { ball_jitter_x 10 ball_start_y 0 ball_jitter_y 3 minplanks 0 } } }
 	    }
 	}
@@ -52,7 +73,14 @@ namespace eval planko::training {
 		nr { 50 100 200 400 800}
 		nplanks { 2 3 4}
 		wrong_catcher_alpha { 1.0 0.98 0.95 0.9 0.8 0.7 }
-		ball_restitution { {0.2} {0.4} {0.6} {0.8} {0.2 0.5} {0.2 0.4 0.6} }
+		ball_preset { 
+		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
+		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
+		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
+		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
+		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
+		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		}
 		params { { jittered { ball_jitter_x 10 ball_start_y 0 ball_jitter_y 3 minplanks 1 } } 
   		 	 { higher { ball_jitter_x 10 ball_start_y 5 ball_jitter_y 3 minplanks 1 } } 
     		         { two_plank { ball_jitter_x 10 ball_start_y 5 ball_jitter_y 3 minplanks 2 } } }

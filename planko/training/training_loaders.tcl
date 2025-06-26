@@ -10,10 +10,16 @@ namespace eval planko::training {
     package require planko
     
     proc loaders_init { s } {
-	$s add_method basic_planko { nr nplanks wrong_catcher_alpha ball_restitution params } {
+	$s add_method basic_planko { nr nplanks wrong_catcher_alpha ball_preset params } {
 	    set n_rep $nr
 	    
 	    if { [dg_exists stimdg] } { dg_delete stimdg }
+
+	    # Extract ball_restitution and ball_color from the selected preset
+	    # ball_preset is a dictionary like: { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} }
+	    array set preset_params $ball_preset
+	    set ball_restitution $preset_params(ball_restitution)
+	    set ball_color $preset_params(ball_color)
 
 	    # Calculate total number of observations
 	    # Each element in nplanks gets n_rep repetitions
@@ -47,6 +53,27 @@ namespace eval planko::training {
 		} else {
 		    # Single value - just repeat it
 		    dl_set $g:ball_restitution [dl_repeat [dl_flist $ball_restitution] $n_rep]
+		}
+		
+		# Create mixed ball_color values for this group  
+		# If ball_color has multiple values, cycle through them to match ball_restitution
+		if { [llength $ball_color] > 1 } {
+		    # Multiple colors - create cycling pattern
+		    set color_list {}
+		    for { set i 0 } { $i < $n_rep } { incr i } {
+			set idx [expr $i % [llength $ball_color]]
+			lappend color_list [lindex $ball_color $idx]
+		    }
+		    # Convert to space-separated RGB values for each trial
+		    set color_strings {}
+		    foreach color $color_list {
+			lappend color_strings [join $color " "]
+		    }
+		    dl_set $g:ball_color [dl_slist {*}$color_strings]
+		} else {
+		    # Single color - repeat it for all trials
+		    set color_string [join $ball_color " "]
+		    dl_set $g:ball_color [dl_repeat [dl_slist $color_string] $n_rep]
 		}
 		
 		# Add wrong_catcher_alpha for this group
