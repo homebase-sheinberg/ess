@@ -40,19 +40,20 @@ namespace eval planko::training {
 		set p "nplanks $nplank_val ball_restitution $first_ball_rest $params"
 		set g [planko::generate_worlds $n_rep $p]
 		
-		# Create mixed ball_restitution values for this group
-		# If ball_restitution has multiple values, cycle through them
+		# Modify the restitution column to apply mixed ball_restitution values
+		# The restitution column contains arrays where index 1 is the ball's restitution
 		if { [llength $ball_restitution] > 1 } {
-		    # Multiple values - create cycling pattern
-		    set rest_list {}
+		    # Multiple values - create cycling pattern for ball restitution
+		    set restitution_arrays [dl_tcllist $g:restitution]
 		    for { set i 0 } { $i < $n_rep } { incr i } {
 			set idx [expr $i % [llength $ball_restitution]]
-			lappend rest_list [lindex $ball_restitution $idx]
+			set ball_rest [lindex $ball_restitution $idx]
+			# Update the ball's restitution (index 1) in this trial's array
+			set current_array [lindex $restitution_arrays $i]
+			set current_array [lreplace $current_array 1 1 $ball_rest]
+			lset restitution_arrays $i $current_array
 		    }
-		    dl_set $g:ball_restitution [dl_flist {*}$rest_list]
-		} else {
-		    # Single value - just repeat it
-		    dl_set $g:ball_restitution [dl_repeat [dl_flist $ball_restitution] $n_rep]
+		    dl_set $g:restitution [dl_llist {*}$restitution_arrays]
 		}
 		
 		# Create mixed ball_color values for this group  
@@ -93,6 +94,11 @@ namespace eval planko::training {
 	    # rename id column to stimtype and add remaining column
 	    dg_rename $combined_dg:id stimtype 
 	    dl_set $combined_dg:remaining [dl_ones [dl_length $combined_dg:stimtype]]
+	    
+	    # Remove the unused ball_restitution column (we use restitution instead)
+	    if { [dl_exists $combined_dg:ball_restitution] } {
+		dl_delete $combined_dg:ball_restitution
+	    }
 	    
 	    dg_rename $combined_dg stimdg
 	    return $combined_dg

@@ -62,7 +62,7 @@ proc make_stims { trial } {
     }
 
     for { set i 0 } { $i < $n } { incr i } {
-        foreach v "name shape type tx ty sx sy angle restitution" {
+        foreach v "name shape type tx ty sx sy angle restitution ball_color" {
             set $v [dl_get $dg:$v:$trial $i]
         }
         if { $shape == "Box" } {
@@ -70,7 +70,7 @@ proc make_stims { trial } {
             if { [string match $wrong_catcher $name] } { set alpha $wrong_catcher_alpha } { set alpha 1.0 }
             set body [create_box $bworld $name $type $tx $ty $sx $sy $angle [list 9. 9. 9. $alpha ]]
         } elseif { $shape == "Circle" } {
-            set body [create_circle $bworld $name $type $tx $ty $sx $angle { 0 1 1 1 }]
+            set body [create_circle $bworld $name $type $tx $ty $sx $angle $ball_color]
         }
         Box2D_setRestitution $bworld [setObjProp $body body] $restitution
 

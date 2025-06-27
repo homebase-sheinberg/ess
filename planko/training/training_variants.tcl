@@ -16,12 +16,13 @@ namespace eval planko::training {
 		nplanks { 1 }
 		wrong_catcher_alpha 1
 		ball_preset { 
-		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
-		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
-		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
-		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
-		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
-		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		    { cold { ball_restitution {0.2} ball_color {0.0 1.0 1.0} } }
+		    { cool { ball_restitution {0.4} ball_color {0.6 1.0 0.3} } }
+		    { warm { ball_restitution {0.6} ball_color {0.86 0.77 0.19} } }
+		    { hot { ball_restitution {0.8} ball_color {1.0 0.67 0.12} } }
+		    { cold_cool { ball_restitution {0.2 0.4} ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}} } }
+		    { cold_warm { ball_restitution {0.2 0.6} ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}} } }
+		    { cold_hot { ball_restitution {0.2 0.8} ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}} } }
 		}
 		params { { defaults {} } }
 	    }
@@ -38,12 +39,13 @@ namespace eval planko::training {
 		nplanks { 1 }
 		wrong_catcher_alpha { 1 0.5 }
 		ball_preset { 
-		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
-		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
-		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
-		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
-		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
-		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		    { cold { ball_restitution {0.2} ball_color {0.0 1.0 1.0} } }
+		    { cool { ball_restitution {0.4} ball_color {0.6 1.0 0.3} } }
+		    { warm { ball_restitution {0.6} ball_color {0.86 0.77 0.19} } }
+		    { hot { ball_restitution {0.8} ball_color {1.0 0.67 0.12} } }
+		    { cold_cool { ball_restitution {0.2 0.4} ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}} } }
+		    { cold_warm { ball_restitution {0.2 0.6} ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}} } }
+		    { cold_hot { ball_restitution {0.2 0.8} ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}} } }
 		}
 		params { { jittered { ball_jitter_x 8 ball_start_y 5 ball_jitter_y 1 } } }
 	    }
@@ -56,12 +58,13 @@ namespace eval planko::training {
 		nplanks { 1 }
 		wrong_catcher_alpha { 1.0 0.98 0.95 0.9 0.8 0.7 }
 		ball_preset { 
-		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
-		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
-		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
-		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
-		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
-		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		    { cold { ball_restitution {0.2} ball_color {0.0 1.0 1.0} } }
+		    { cool { ball_restitution {0.4} ball_color {0.6 1.0 0.3} } }
+		    { warm { ball_restitution {0.6} ball_color {0.86 0.77 0.19} } }
+		    { hot { ball_restitution {0.8} ball_color {1.0 0.67 0.12} } }
+		    { cold_cool { ball_restitution {0.2 0.4} ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}} } }
+		    { cold_warm { ball_restitution {0.2 0.6} ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}} } }
+		    { cold_hot { ball_restitution {0.2 0.8} ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}} } }
 		}
 		params { { jittered { ball_jitter_x 10 ball_start_y 0 ball_jitter_y 3 minplanks 0 } } }
 	    }
@@ -74,12 +77,13 @@ namespace eval planko::training {
 		nplanks { 2 3 4}
 		wrong_catcher_alpha { 1.0 0.98 0.95 0.9 0.8 0.7 }
 		ball_preset { 
-		    { blue_low { ball_restitution {0.2} ball_color {0 1 1} } }
-		    { blue_medium { ball_restitution {0.4} ball_color {0 1 1} } }
-		    { blue_high { ball_restitution {0.6} ball_color {0 1 1} } }
-		    { orange_medium { ball_restitution {0.4} ball_color {1 0.5 0} } }
-		    { orange_high { ball_restitution {0.6} ball_color {1 0.5 0} } }
-		    { mixed_blue_orange { ball_restitution {0.2 0.5} ball_color {{0 1 1} {1 0.5 0}} } }
+		    { cold { ball_restitution {0.2} ball_color {0.0 1.0 1.0} } }
+		    { cool { ball_restitution {0.4} ball_color {0.6 1.0 0.3} } }
+		    { warm { ball_restitution {0.6} ball_color {0.86 0.77 0.19} } }
+		    { hot { ball_restitution {0.8} ball_color {1.0 0.67 0.12} } }
+		    { cold_cool { ball_restitution {0.2 0.4} ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}} } }
+		    { cold_warm { ball_restitution {0.2 0.6} ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}} } }
+		    { cold_hot { ball_restitution {0.2 0.8} ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}} } }
 		}
 		params { { jittered { ball_jitter_x 10 ball_start_y 0 ball_jitter_y 3 minplanks 1 } } 
   		 	 { higher { ball_jitter_x 10 ball_start_y 5 ball_jitter_y 3 minplanks 1 } } 
