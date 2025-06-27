@@ -34,41 +34,33 @@ namespace eval planko::training {
 	    # For each nplanks value
 	    foreach nplank_val $nplanks {
 		
-		# For combo presets with multiple restitution values, we need to generate separate worlds
-		# for each restitution to ensure trajectory consistency
+		# For combo presets with multiple restitution values, generate worlds trial by trial
+		# to ensure proper alternation of restitution and color
 		if { [llength $ball_restitution] > 1 } {
-		    # Multiple restitution values - generate separate worlds for each
-		    set worlds_per_restitution [expr $n_rep / [llength $ball_restitution]]
-		    set remaining_worlds [expr $n_rep % [llength $ball_restitution]]
-		    
-		    for { set rest_idx 0 } { $rest_idx < [llength $ball_restitution] } { incr rest_idx } {
+		    # Multiple restitution values - generate worlds alternating trial by trial
+		    for { set trial 0 } { $trial < $n_rep } { incr trial } {
+			# Alternate between restitution/color combinations
+			set rest_idx [expr $trial % [llength $ball_restitution]]
 			set current_rest [lindex $ball_restitution $rest_idx]
 			set current_color [lindex $ball_color $rest_idx]
 			
-			# Calculate how many worlds for this restitution value
-			set n_worlds $worlds_per_restitution
-			if { $rest_idx < $remaining_worlds } { incr n_worlds }
+			# Generate single world with this specific restitution
+			set p "nplanks $nplank_val ball_restitution $current_rest $params"
+			set g [planko::generate_worlds 1 $p]
 			
-			if { $n_worlds > 0 } {
-			    # Generate worlds with this specific restitution
-			    set p "nplanks $nplank_val ball_restitution $current_rest $params"
-			    set g [planko::generate_worlds $n_worlds $p]
-			    
-			    # Set ball_color for these trials (all the same color for this restitution group)
-			    set color_string [join $current_color " "]
-			    dl_set $g:ball_color [dl_repeat [dl_slist $color_string] $n_worlds]
-			    
-			    # Add wrong_catcher_alpha for this group
-			    dl_set $g:wrong_catcher_alpha \
-				[dl_repeat [dl_flist $wrong_catcher_alpha] $n_worlds]
-			    
-			    # Append to combined datagram
-			    if { $combined_dg != "" } {
-				dg_append $combined_dg $g
-				dg_delete $g
-			    } else {
-				set combined_dg $g
-			    }
+			# Set ball_color for this trial
+			set color_string [join $current_color " "]
+			dl_set $g:ball_color [dl_slist $color_string]
+			
+			# Add wrong_catcher_alpha for this trial
+			dl_set $g:wrong_catcher_alpha [dl_flist $wrong_catcher_alpha]
+			
+			# Append to combined datagram
+			if { $combined_dg != "" } {
+			    dg_append $combined_dg $g
+			    dg_delete $g
+			} else {
+			    set combined_dg $g
 			}
 		    }
 		} else {
