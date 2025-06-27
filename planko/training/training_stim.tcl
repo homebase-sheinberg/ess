@@ -63,6 +63,19 @@ proc make_stims { trial } {
 
     # get ball_color for this trial (only applies to ball object)
     set ball_color [dl_get $dg:ball_color $trial]
+    
+    # Convert ball_color to proper format for polycolor (ensure it's a list of 3 RGB values)
+    # If ball_color is a single string, we need to create a proper RGB triplet
+    if {[llength $ball_color] == 1} {
+        # If it's a single component, assume it's malformed - use default blue
+        set ball_color {0 1 1}
+    } elseif {[llength $ball_color] == 3} {
+        # Already a proper RGB triplet
+        set ball_color $ball_color
+    } else {
+        # Fallback to blue
+        set ball_color {0 1 1}
+    }
 
     for { set i 0 } { $i < $n } { incr i } {
         foreach v "name shape type tx ty sx sy angle restitution" {
