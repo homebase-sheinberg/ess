@@ -61,8 +61,11 @@ proc make_stims { trial } {
         set $v [dl_get $dg:$v $trial]
     }
 
+    # get ball_color for this trial (only applies to ball object)
+    set ball_color [dl_get $dg:ball_color $trial]
+
     for { set i 0 } { $i < $n } { incr i } {
-        foreach v "name shape type tx ty sx sy angle restitution ball_color" {
+        foreach v "name shape type tx ty sx sy angle restitution" {
             set $v [dl_get $dg:$v:$trial $i]
         }
         if { $shape == "Box" } {
