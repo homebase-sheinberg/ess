@@ -90,6 +90,11 @@ namespace eval planko::training {
 	    # rename id column to stimtype and add remaining column
 	    if { $combined_dg != "" } {
 		dg_rename $combined_dg:id stimtype 
+		
+		# Fix stimtype values - ensure they are sequential (0, 1, 2, ...)
+		set n_trials [dl_length $combined_dg:stimtype]
+		dl_set $combined_dg:stimtype [dl_fromto 0 [expr $n_trials - 1]]
+		
 		dl_set $combined_dg:remaining [dl_ones [dl_length $combined_dg:stimtype]]
 		
 		# Remove the unused ball_restitution column (we use restitution instead)
