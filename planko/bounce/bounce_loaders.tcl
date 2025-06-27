@@ -1,12 +1,12 @@
 #
 # LOADERS
-#   planko change_of_mind loaders
+#   planko bounce loaders
 #
 # DESCRIPTION
-#   loader functions for planko::change_of_mind
+#   loader functions for planko::bounce
 #
 
-namespace eval planko::change_of_mind {
+namespace eval planko::bounce {
     package require planko
 
     proc loaders_init { s } {

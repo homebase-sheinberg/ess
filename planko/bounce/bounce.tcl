@@ -1,12 +1,12 @@
 #
 # PROTOCOL
-#   planko change_of_mind
+#   planko bounce
 #
 # DESCRIPTION
 #   Allow change of mind during response
 #
 
-namespace eval planko::change_of_mind {
+namespace eval planko::bounce {
 
     proc protocol_init { s } {
         $s set_protocol [namespace tail [namespace current]]

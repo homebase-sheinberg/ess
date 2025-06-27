@@ -1,8 +1,8 @@
 # NAME
-#   change_of_mind_stim.tcl
+#   bounce_stim.tcl
 #
 # DESCRIPTION
-#   planko task stim code for change_of_mind
+#   planko task stim code for bounce
 #
 # REQUIRES
 #   box2d

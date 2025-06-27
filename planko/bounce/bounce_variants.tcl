@@ -1,12 +1,12 @@
 #
 # VARIANTS
-#   planko change_of_mind
+#   planko bounce
 #
 # DESCRIPTION
-#   variant dictionary for planko::change_of_mind
+#   variant dictionary for planko::bounce
 #
 
-namespace eval planko::change_of_mind {
+namespace eval planko::bounce {
     variable variants {
         standard {
             description "standard board"
