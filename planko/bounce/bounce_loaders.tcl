@@ -10,11 +10,10 @@ namespace eval planko::bounce {
     package require planko
 
     proc loaders_init { s } {
-        $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
+        $s add_method basic_planko { nr nplanks params } {
             set n_rep $nr
 
             if { [dg_exists stimdg] } { dg_delete stimdg }
-
 
             set n_obs [expr [llength $nplanks]*$n_rep]
 
@@ -24,15 +23,48 @@ namespace eval planko::bounce {
             # this is a set of params to pass into generate_worlds
             set p "nplanks $nplanks $params"
             set g [planko::generate_worlds $n_obs $p]
-            dl_set $g:wrong_catcher_alpha  [dl_repeat [dl_flist $wrong_catcher_alpha] $n_obs]
 
             # rename id column to stimtytpe
-            dg_rename $g:id stimtype
+            dl_set $g:id [dl_fromto 0 $n_obs]
+            dl_set $g:stimtype $g:id
             dl_set $g:remaining [dl_ones $n_obs]
 
             dg_rename $g stimdg
             return $g
         }
+        $s add_method setup_bounce { nr nplanks board_params ball_params } {
+            if { [dg_exists stimdg] } { dg_delete stimdg }
+
+            set ball_restitutions [dict get $ball_params ball_restitution]
+
+            set nn [llength $nplanks]; # number of "nplank" conditions
+            set nbr [llength $ball_restitutions]; # number bounciness conditions
+            set n_obs [expr {$nn*$nbr*$nr}]
+            set maxx [expr {$screen_halfx}]
+            set maxy [expr {$screen_halfy}]
+
+            foreach br $ball_restitutions {
+                set p "ball_restitution $br $board_params"
+                foreach np $nplanks {
+                    lappend p nplanks $np
+                    set w [planko::generate_worlds $nr $p]
+                    if { ![info exists g]} { set g $w } { dg_append $g $w; dg_delete $w }
+                }
+            }
+
+            # add ball color(s) to stimdg
+            dl_local colors [dl_slist {*}[dict get $ball_params ball_color]]
+            dl_set $g:ball_color [dl_repeat $colors [expr {$n_obs/$nbr}]]
+
+            # rename id column to stimtytpe
+            dl_set $g:id [dl_fromto 0 $n_obs]
+            dl_set $g:stimtype $g:id
+            dl_set $g:remaining [dl_ones $n_obs]
+
+            dg_rename $g stimdg
+            return $g
+        }
+
     }
 }
 
