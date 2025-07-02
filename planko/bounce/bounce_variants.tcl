@@ -9,13 +9,13 @@
 namespace eval planko::bounce {
 
     set ball_presets {
-        { cold { ball_restitution {0.2} ball_color {{0.0 1.0 1.0}} } }
-        { cool { ball_restitution {0.4} ball_color {{0.6 1.0 0.3}} } }
-        { warm { ball_restitution {0.6} ball_color {{0.86 0.77 0.19}} } }
-        { hot { ball_restitution {0.8} ball_color {{1.0 0.67 0.12}} } }
-        { cold_cool { ball_restitution {0.2 0.4} ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}} } }
-        { cold_warm { ball_restitution {0.2 0.6} ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}} } }
-        { cold_hot { ball_restitution {0.2 0.8} ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}} } }
+        { cold { plank_restitution {0.2} ball_color {{0.0 1.0 1.0}} } }
+        { cool { plank_restitution {0.4} ball_color {{0.6 1.0 0.3}} } }
+        { warm { plank_restitution {0.6} ball_color {{0.86 0.77 0.19}} } }
+        { hot { plank_restitution {0.8} ball_color {{1.0 0.67 0.12}} } }
+        { cold_cool { plank_restitution {0.2 0.4} ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}} } }
+        { cold_warm { plank_restitution {0.2 0.6} ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}} } }
+        { cold_hot { plank_restitution {0.2 0.8} ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}} } }
     }
 
     variable variants {

@@ -32,14 +32,14 @@ namespace eval planko::bounce {
         $s add_method setup_bounce { nr nplanks board_params ball_params } {
             if { [dg_exists stimdg] } { dg_delete stimdg }
 
-            set ball_restitutions [dict get $ball_params ball_restitution]
+            set plank_restitutions [dict get $ball_params plank_restitution]
 
             set nn [llength $nplanks]; # number of "nplank" conditions
-            set nbr [llength $ball_restitutions]; # number bounciness conditions
+            set nbr [llength $plank_restitutions]; # number bounciness conditions
             set n_obs [expr {$nn*$nbr*$nr}]
 
-            foreach br $ball_restitutions {
-                set p "ball_restitution $br $board_params"
+            foreach br $plank_restitutions {
+                set p "plank_restitution $br $board_params"
                 foreach np $nplanks {
                     lappend p nplanks $np
                     set w [planko::generate_worlds $nr $p]

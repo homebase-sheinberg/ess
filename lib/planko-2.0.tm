@@ -34,7 +34,9 @@ namespace eval planko {
 	set params(ball_radius)      0.5; # radius of ball
 	set params(nplanks)           10; # number of planks in world
 	set params(minplanks)          1; # mininum number of planks hit
-	set params(ball_restitution) 0.2; # restitution of the ball
+	set params(ball_restitution) 0.0; # restitution of the ball
+	set params(plank_restitution) 0.2; # restitution of the ball
+	set params(catcher_restitution) 0.05; # restitution of the ball
 	set params(step_size) \
 	    [expr 1.0/59.9];	          # step size of simulation (sec)
 	return
@@ -61,6 +63,7 @@ namespace eval planko {
     }
     
     proc create_catcher_dg { tx ty name } {
+	variable params
 	set b2_staticBody 0
 
 	set y [expr $ty-(0.5+0.5/2)]
@@ -76,7 +79,7 @@ namespace eval planko {
 	dl_set $g:sx [dl_flist 5 0.5 0.5]
 	dl_set $g:sy [dl_flist 0.5 2 2]
 	dl_set $g:angle [dl_zeros 3.]
-	dl_set $g:restitution [dl_zeros 3.]
+	dl_set $g:restitution [dl_float [dl_repeat $params(catcher_restitution) 3]]
 	
 	return $g
     }
@@ -146,7 +149,7 @@ namespace eval planko {
 	dl_set $g:sx $plank_lengths
 	dl_set $g:sy [dl_repeat .5 $n]
 	dl_set $g:angle [dl_mult 2 $::pi [dl_urand $n]]
-	dl_set $g:restitution [dl_zeros $n.]
+	dl_set $g:restitution [dl_float [dl_repeat $params(plank_restitution) $n]]
     
 	return $g
     }
