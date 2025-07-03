@@ -175,6 +175,7 @@ namespace eval match_to_sample::shapematch {
 	}
 
 	$s add_method choices_on {} {
+	    logMessage "DEBUG: choices_on method called"
 	    rmtSend "!choices_on"
 	    ::ess::touch_region_on 0
 	    ::ess::touch_region_on 1
