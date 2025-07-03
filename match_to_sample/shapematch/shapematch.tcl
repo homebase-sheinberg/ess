@@ -19,6 +19,9 @@ namespace eval match_to_sample::shapematch {
 	$s add_param use_buttons        1       variable int
 	$s add_param left_button       24       variable int
 	$s add_param right_button      25       variable int
+
+        # Add show_feedback as a protocol parameter (default 0, int)
+        $s add_param show_feedback 0 variable int
 	
 	$s add_variable targ_x             
 	$s add_variable targ_y             
