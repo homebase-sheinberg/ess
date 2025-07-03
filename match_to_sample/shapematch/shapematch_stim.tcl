@@ -135,6 +135,7 @@ proc show_feedback_circle { status } {
     logMessage "DEBUG: show_feedback_circle called with status = $status"
     global feedback_circle
     if { ![info exists feedback_circle(green)] } {
+        logMessage "DEBUG: Creating green feedback circle for the first time."
         set feedback_circle(green) [create_circle 0 1 0 0.8]
         scaleObj $feedback_circle(green) 1.5
         translateObj $feedback_circle(green) 0 -3.5
@@ -142,20 +143,28 @@ proc show_feedback_circle { status } {
         glistAddObject $feedback_circle(green) 1
     }
     if { ![info exists feedback_circle(red)] } {
+        logMessage "DEBUG: Creating red feedback circle for the first time."
         set feedback_circle(red) [create_circle 1 0 0 0.8]
         scaleObj $feedback_circle(red) 1.5
         translateObj $feedback_circle(red) 0 -3.5
         setVisible $feedback_circle(red) 0
         glistAddObject $feedback_circle(red) 1
     }
+
     if { $status } {
+        logMessage "DEBUG: Showing GREEN feedback circle."
         setVisible $feedback_circle(green) 1
         setVisible $feedback_circle(red) 0
     } else {
+        logMessage "DEBUG: Showing RED feedback circle."
         setVisible $feedback_circle(green) 0
         setVisible $feedback_circle(red) 1
     }
     redraw
+
+   # Schedule the circle to be cleared after 700ms
+   logMessage "DEBUG: Scheduling clear_feedback_circle in 700ms."
+   after 700 [list clear_feedback_circle]
 }
 
 proc clear_feedback_circle {} {
