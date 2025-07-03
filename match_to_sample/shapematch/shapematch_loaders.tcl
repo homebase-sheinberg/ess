@@ -11,8 +11,6 @@ package require blob; # for creating random shapes
 namespace eval match_to_sample::shapematch {
     proc loaders_init { s } {
         $s add_method setup_trials { n_rep targ_scale shape_choices shape_params show_feedback } {
-            logMessage "DEBUG: setup_trials loader started. show_feedback = $show_feedback"
-
             # could specify these in shape_params
             set npolys 3
             set nverts 5
