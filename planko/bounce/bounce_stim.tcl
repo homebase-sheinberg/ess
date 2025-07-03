@@ -1,8 +1,8 @@
 # NAME
-#   change_of_mind_stim.tcl
+#   bounce_stim.tcl
 #
 # DESCRIPTION
-#   planko task stim code for change_of_mind
+#   planko task stim code for bounce
 #
 # REQUIRES
 #   box2d
@@ -57,7 +57,7 @@ proc make_stims { trial } {
     set n [dl_length $dg:name:$trial]
 
     # get side and show_only_correct_side flag for this trial
-    foreach v "side wrong_catcher_alpha" {
+    foreach v "side ball_color" {
         set $v [dl_get $dg:$v $trial]
     }
 
@@ -66,11 +66,9 @@ proc make_stims { trial } {
             set $v [dl_get $dg:$v:$trial $i]
         }
         if { $shape == "Box" } {
-            if { $side == "0" } { set wrong_catcher catchr_* } { set wrong_catcher catchl_* }
-            if { [string match $wrong_catcher $name] } { set alpha $wrong_catcher_alpha } { set alpha 1.0 }
-            set body [create_box $bworld $name $type $tx $ty $sx $sy $angle [list 9. 9. 9. $alpha ]]
+            set body [create_box $bworld $name $type $tx $ty $sx $sy $angle [list 9. 9. 9. 1.0 ]]
         } elseif { $shape == "Circle" } {
-            set body [create_circle $bworld $name $type $tx $ty $sx $angle { 0 1 1 1 }]
+            set body [create_circle $bworld $name $type $tx $ty $sx $angle $ball_color]
         }
         Box2D_setRestitution $bworld [setObjProp $body body] $restitution
 

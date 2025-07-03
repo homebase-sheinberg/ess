@@ -1,18 +1,19 @@
 #
 # PROTOCOL
-#   planko change_of_mind
+#   planko bounce
 #
 # DESCRIPTION
 #   Allow change of mind during response
 #
 
-namespace eval planko::change_of_mind {
+namespace eval planko::bounce {
 
     proc protocol_init { s } {
         $s set_protocol [namespace tail [namespace current]]
 
         $s add_param rmt_host $::ess::rmt_host stim ipaddr
         $s add_param juice_ml .6 variable float
+        $s add_param save_ems 0 variable bool
         $s add_param use_buttons 0 variable int
         $s add_param left_button 24 variable int
         $s add_param right_button 25 variable int
@@ -54,12 +55,22 @@ namespace eval planko::change_of_mind {
         }
 
         $s set_final_init_callback {
+            if { $save_ems } {
+                # initialize eye movements
+                ::ess::em_init
+            }
+
             # wait until variants have potentially changed buttons
-            if { $use_buttons } {
-                foreach b "$left_button $right_button" {
+            foreach b "$left_button $right_button" {
+                if { $use_buttons } {
                     dservAddExactMatch gpio/input/$b
                     dservTouch gpio/input/$b
                     dpointSetScript gpio/input/$b ess::do_update
+                    if { ![dservExists gpio/input/$b] } {
+                        dservSet gpio/input/$b 0
+                    }
+                } else {
+                    dservSet gpio/input/$b 0
                 }
             }
         }
@@ -112,6 +123,7 @@ namespace eval planko::change_of_mind {
             if { $use_buttons } {
                 if { [dservGet gpio/input/$left_button] } { return 1 }
                 if { [dservGet gpio/input/$right_button] } { return 2 }
+                return 0
             }
             return 0
         }
@@ -222,4 +234,3 @@ namespace eval planko::change_of_mind {
         return
     }
 }
-
