@@ -119,6 +119,48 @@ proc choices_off {} {
     redraw
 }
 
+# Create a filled circle polygon of radius 1, with specified color and alpha
+proc create_circle { r g b { a 1 } } {
+    set c [polygon]
+    polycirc $c 1
+    polycolor $c $r $g $b $a
+    return $c
+}
+
+# Show feedback circle: status=1 (green), status=0 (red)
+proc show_feedback_circle { status } {
+    global feedback_circle
+    if { ![info exists feedback_circle(green)] } {
+        set feedback_circle(green) [create_circle 0 1 0 0.8]
+        scaleObj $feedback_circle(green) 1.5
+        translateObj $feedback_circle(green) 0 -3.5
+        setVisible $feedback_circle(green) 0
+        glistAddObject $feedback_circle(green) 1
+    }
+    if { ![info exists feedback_circle(red)] } {
+        set feedback_circle(red) [create_circle 1 0 0 0.8]
+        scaleObj $feedback_circle(red) 1.5
+        translateObj $feedback_circle(red) 0 -3.5
+        setVisible $feedback_circle(red) 0
+        glistAddObject $feedback_circle(red) 1
+    }
+    if { $status } {
+        setVisible $feedback_circle(green) 1
+        setVisible $feedback_circle(red) 0
+    } else {
+        setVisible $feedback_circle(green) 0
+        setVisible $feedback_circle(red) 1
+    }
+    redraw
+}
+
+proc clear_feedback_circle {} {
+    global feedback_circle
+    if {[info exists feedback_circle(green)]} { setVisible $feedback_circle(green) 0 }
+    if {[info exists feedback_circle(red)]} { setVisible $feedback_circle(red) 0 }
+    redraw
+}
+
 proc reset { } {
     glistSetVisible 0; redraw;
 }
