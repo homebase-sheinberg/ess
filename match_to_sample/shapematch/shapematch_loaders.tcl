@@ -44,6 +44,12 @@ namespace eval match_to_sample::shapematch {
                 dl_local sample_id [dl_repeat "0 1" [expr {$n_rep/2}]]
                 dl_local match_id $sample_id
                 dl_local nonmatch_id [dl_repeat "1 0" [expr {$n_rep/2}]]
+            } elseif { $shape_choices == "single_pair_arbitrary" } {
+                set nshapes 4
+                # Arbitrary pairings: 0 -> 2, 1 -> 3
+                dl_local sample_id [dl_repeat "0 1" [expr {$n_rep/2}]]
+                dl_local match_id [dl_add $sample_id 2]
+                dl_local nonmatch_id [dl_add [dl_sub 1 $sample_id] 2]
             }
 
             set blob_table [blob::create_blobs $nshapes $npolys $nverts]
