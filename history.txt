@@ -1,1 +1,0 @@
-::ess::set_variant_args {params { { test_high_bounce { ball_restitution 0.8 } } } }; ::ess::reload_variant
