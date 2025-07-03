@@ -298,13 +298,13 @@ namespace eval hapticvis::transfer {
             set url http://${ip}:${port}
             set zero_pt -177.4
             if {$hand == 0} {
-                set arm_offset zero_pt+25
-                set res [rest::get $url [list function pick_and_place hand 0 xoffset arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
+                set arm_offset $zero_pt+25
+                set res [rest::get $url [list function pick_and_place hand 0 xoffset $arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
                 ]
                 ]
             } else {
-                set arm_offset zero_pt-25
-                set res [rest::get $url [list function pick_and_place hand 0 xoffset arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
+                set arm_offset $zero_pt-25
+                set res [rest::get $url [list function pick_and_place hand 0 xoffset $arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
                 ]
                 ]
             }
