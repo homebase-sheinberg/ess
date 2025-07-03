@@ -116,12 +116,14 @@ proc choices_on {} {
 }
 
 proc choices_off {} {
+    logMessage "DEBUG: choices_off called"
     glistSetVisible 0
     redraw
 }
 
 # Create a filled circle polygon of radius 1, with specified color and alpha
 proc create_circle { r g b { a 1 } } {
+    logMessage "DEBUG: create_circle called"
     set c [polygon]
     polycirc $c 1
     polycolor $c $r $g $b $a
