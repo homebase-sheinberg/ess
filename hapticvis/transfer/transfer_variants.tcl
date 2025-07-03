@@ -54,7 +54,7 @@ namespace eval hapticvis::transfer {
     }
 
     set subject_ids [dl_tcllist [dl_fromto 0 30]]
-    set subject_sets [dl_tcllist [dl_fromto 0 5]]
+    set subject_sets [dl_tcllist [dl_fromto 0 4]]
 
     variable variants {
         visual_learn_left {
@@ -63,7 +63,7 @@ namespace eval hapticvis::transfer {
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
-                n_per_set { 6 4 }
+                n_per_set { 4 }
                 shape_scale { 3 4 5 6 }
                 noise_type { circles none }
                 n_rep { 6 1 2 4 8 10 20 }
@@ -71,6 +71,7 @@ namespace eval hapticvis::transfer {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { left 0 } }
+                subject_handedness { { right 1 } { left 0 } }
             }
             params [list "$visual_params joystick_side 0"]
         }
@@ -80,14 +81,15 @@ namespace eval hapticvis::transfer {
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
-                n_per_set { 6 4 }
+                n_per_set { 4 }
                 shape_scale { 3 4 5 6 }
                 noise_type { circles none }
                 n_rep { 6 1 2 4 8 10 20 }
                 rotations {
                     {three {60 180 300}} {single {180}}
                 }
-                joystick_side { { right 1} }
+                joystick_side { { right 1 } }
+               subject_handedness { { right 1 } { left 0 } }
             }
             params [list "$visual_params joystick_side 1"]
         }
@@ -97,14 +99,15 @@ namespace eval hapticvis::transfer {
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
-                n_per_set { 6 4 }
+                n_per_set { 4 }
                 n_rep { 6 1 2 4 8 10 20 }
                 rotations {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { left 0 } }
+               subject_handedness { { right 1 } { left 0 } }
             }
-            params [list "$haptic_params joystick_side 0 jarvis_host 192.168.88.81"]
+            params [list "$haptic_params joystick_side 0"]
         }
         haptic_learn_right {
             description "learn haptic objects (right side)"
@@ -112,14 +115,15 @@ namespace eval hapticvis::transfer {
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
-                n_per_set { 6 4 }
+                n_per_set { 4 }
                 n_rep { 6 1 2 4 8 10 20 }
                 rotations {
                     {three {60 180 300}} {single {180}}
                 }
-                joystick_side { { right 1} }
+                joystick_side { { right 1 } }
+                subject_handedness { { right 1 } { left 0 } }              
             }
-            params [list "$haptic_params joystick_side 1 jarvis_host 192.168.88.81"]
+            params [list "$haptic_params joystick_side 1"]
         }
         visual_cued_left {
             description "respond to cued visual objects"
@@ -135,6 +139,7 @@ namespace eval hapticvis::transfer {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { left 0 } }
+               subject_handedness { { right 1 } { left 0 } }
             }
             params [list "$visual_cued_params joystick_side 0"]
         }
@@ -152,6 +157,7 @@ namespace eval hapticvis::transfer {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { right 1 } }
+               subject_handedness { { right 1 } { left 0 } }
             }
             params [list "$visual_cued_params joystick_side 1"]
         }
@@ -161,7 +167,7 @@ namespace eval hapticvis::transfer {
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
-                n_per_set { 6 }
+                n_per_set { 4 }
                 n_rep { 3 6 2 4 8 10 20 }
                 rotations {
                     {three {60 180 300}} {single {180}}
@@ -175,7 +181,7 @@ namespace eval hapticvis::transfer {
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
-                n_per_set { 6 }
+                n_per_set { 4 }
                 shape_scale { 3 4 5 6 }
                 noise_type { circles none }
                 n_rep { 3 6 2 4 8 10 20 }
