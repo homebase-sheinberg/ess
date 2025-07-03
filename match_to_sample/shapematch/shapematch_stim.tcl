@@ -104,6 +104,7 @@ proc sample_on {} {
 }
 
 proc sample_off {} {
+    logMessage "DEBUG: sample_off called"
     glistSetVisible 0
     redraw
 }
@@ -129,7 +130,7 @@ proc create_circle { r g b { a 1 } } {
 
 # Show feedback circle: status=1 (green), status=0 (red)
 proc show_feedback_circle { status } {
-    # logMessage "DEBUG: show_feedback_circle called with status = $status"
+    logMessage "DEBUG: show_feedback_circle called with status = $status"
     global feedback_circle
     if { ![info exists feedback_circle(green)] } {
         set feedback_circle(green) [create_circle 0 1 0 0.8]
@@ -156,7 +157,7 @@ proc show_feedback_circle { status } {
 }
 
 proc clear_feedback_circle {} {
-    # logMessage "DEBUG: clear_feedback_circle called"
+    logMessage "DEBUG: clear_feedback_circle called"
     global feedback_circle
     if {[info exists feedback_circle(green)]} { setVisible $feedback_circle(green) 0 }
     if {[info exists feedback_circle(red)]} { setVisible $feedback_circle(red) 0 }
