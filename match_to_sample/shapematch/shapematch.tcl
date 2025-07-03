@@ -175,7 +175,6 @@ namespace eval match_to_sample::shapematch {
 	}
 
 	$s add_method choices_on {} {
-	    logMessage "DEBUG: choices_on method called"
 	    rmtSend "!choices_on"
 	    ::ess::touch_region_on 0
 	    ::ess::touch_region_on 1
@@ -202,7 +201,6 @@ namespace eval match_to_sample::shapematch {
 	$s add_method response_correct {} { return $correct }
 	
 	$s add_method responded {} {
-	    logMessage "DEBUG: responded method entered"
 	    if { $use_buttons && $buttons_changed } {
 		return -1
 	    }
@@ -210,9 +208,7 @@ namespace eval match_to_sample::shapematch {
 	    if { [::ess::touch_in_win 0] } {
 		set correct 1
 		set show_feedback [expr {[info exists ::match_to_sample::shapematch::show_feedback] ? $::match_to_sample::shapematch::show_feedback : 0}]
-		logMessage "DEBUG: Correct choice. show_feedback = $show_feedback"
 		if { $show_feedback } {
-		    logMessage "DEBUG: Calling show_feedback_circle for CORRECT"
 		    show_feedback_circle 1
 		    after 700 [list clear_feedback_circle]
 		}
@@ -220,9 +216,7 @@ namespace eval match_to_sample::shapematch {
 	    } elseif { [::ess::touch_in_win 1] } {
 		set correct 0
 		set show_feedback [expr {[info exists ::match_to_sample::shapematch::show_feedback] ? $::match_to_sample::shapematch::show_feedback : 0}]
-		logMessage "DEBUG: Incorrect choice. show_feedback = $show_feedback"
 		if { $show_feedback } {
-		    logMessage "DEBUG: Calling show_feedback_circle for INCORRECT"
 		    show_feedback_circle 0
 		    after 700 [list clear_feedback_circle]
 		}
