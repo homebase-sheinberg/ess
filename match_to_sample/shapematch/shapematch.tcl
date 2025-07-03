@@ -213,8 +213,7 @@ namespace eval match_to_sample::shapematch {
 		if { $show_feedback } {
 		    print "DEBUG: Calling show_feedback_circle for CORRECT"
 		    show_feedback_circle 1
-		    after 700
-		    clear_feedback_circle
+		    after 700 [list clear_feedback_circle]
 		}
 		return 0
 	    } elseif { [::ess::touch_in_win 1] } {
@@ -224,8 +223,7 @@ namespace eval match_to_sample::shapematch {
 		if { $show_feedback } {
 		    print "DEBUG: Calling show_feedback_circle for INCORRECT"
 		    show_feedback_circle 0
-		    after 700
-		    clear_feedback_circle
+		    after 700 [list clear_feedback_circle]
 		}
 		return 1
 	    } else {
