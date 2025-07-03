@@ -55,6 +55,9 @@ namespace eval match_to_sample::shapematch {
             set blob_table [blob::create_blobs $nshapes $npolys $nverts]
 
             # Store show_feedback as a protocol variable for use during the trial
+            if {![namespace exists ::match_to_sample::shapematch]} {
+                namespace eval ::match_to_sample::shapematch {}
+            }
             if {[info exists show_feedback]} {
                 set ::match_to_sample::shapematch::show_feedback $show_feedback
             } else {
