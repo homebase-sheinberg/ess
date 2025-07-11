@@ -8,6 +8,8 @@
 
 namespace eval planko::training {
     package require planko
+    
+    source "[file join [file dirname [info script]] jitter_worlds.tcl]"
 
     proc loaders_init { s } {
         $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
@@ -25,6 +27,8 @@ namespace eval planko::training {
             set p "nplanks $nplanks $params"
             set g [planko::generate_worlds $n_obs $p]
             
+
+
             # Run jitter simulations
             set njitter 10
             set jittered [world_jitter $g $njitter 0 [dl_length $g:id]]
