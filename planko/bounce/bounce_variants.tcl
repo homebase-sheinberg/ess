@@ -9,13 +9,43 @@
 namespace eval planko::bounce {
 
     set ball_presets {
-        { cold { plank_restitution {0.2} ball_color {{0.0 1.0 1.0}} } }
-        { cool { plank_restitution {0.4} ball_color {{0.6 1.0 0.3}} } }
-        { warm { plank_restitution {0.6} ball_color {{0.86 0.77 0.19}} } }
-        { hot { plank_restitution {0.8} ball_color {{1.0 0.67 0.12}} } }
-        { cold_cool { plank_restitution {0.2 0.4} ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}} } }
-        { cold_warm { plank_restitution {0.2 0.6} ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}} } }
-        { cold_hot { plank_restitution {0.2 0.8} ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}} } }
+        { cold {
+                plank_restitution {0.2}
+                ball_color {{0.0 1.0 1.0}}
+            }
+        }
+        { cool {
+                plank_restitution {0.4}
+                ball_color {{0.6 1.0 0.3}}
+            }
+        }
+        { warm {
+                plank_restitution {0.6}
+                ball_color {{0.86 0.77 0.19}
+                }
+            }
+        }
+        { hot {
+                plank_restitution {0.8}
+                ball_color {{1.0 0.67 0.12}
+                }
+            }
+        }
+        { cold_cool {
+                plank_restitution {0.2 0.4}
+                ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}}
+            }
+        }
+        { cold_warm {
+                plank_restitution {0.2 0.6}
+                ball_color {{0.0 1.0 1.0} {0.86 0.77 0.19}}
+            }
+        }
+        { cold_hot {
+                plank_restitution {0.2 0.8}
+                ball_color {{0.0 1.0 1.0} {1.0 0.67 0.12}}
+            }
+        }
     }
 
     variable variants {
@@ -26,7 +56,16 @@ namespace eval planko::bounce {
                 nr { 4 20 60 120 }
                 nplanks { 8 }
                 params {
-                    { jittered { ball_jitter_x 10 ball_start_y 8 minplanks 2 planks_min_dist 1.4 planks_max_x 12.0 lcatcher_x -3.25 rcatcher_x 3.25} }
+                    { jittered {
+                            ball_jitter_x 10
+                            ball_start_y 8
+                            minplanks 2
+                            planks_min_dist 1.4
+                            planks_max_x 12.0
+                            lcatcher_x -3.25
+                            rcatcher_x 3.25
+                        }
+                    }
                 }
             }
             init {
@@ -42,7 +81,16 @@ namespace eval planko::bounce {
                 nr { 4 10 25 30 }
                 nplanks { {4 4} {8 8} {4+8 {4 8}} }
                 board_params {
-                    { jittered { ball_jitter_x 10 ball_start_y 8 minplanks 2 planks_min_dist 1.4 planks_max_x 12.0 lcatcher_x -3.25 rcatcher_x 3.25} }
+                    { jittered {
+                            ball_jitter_x 10
+                            ball_start_y 8
+                            minplanks 2
+                            planks_min_dist 1.4
+                            planks_max_x 12.0
+                            lcatcher_x -3.25
+                            rcatcher_x 3.25
+                        }
+                    }
                 }
                 ball_params { $ball_presets }
             }
@@ -56,4 +104,5 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
+
 
