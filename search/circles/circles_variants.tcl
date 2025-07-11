@@ -12,16 +12,16 @@ namespace eval search::circles {
 	    description "no distractors"
 	    loader_proc basic_search
 	    loader_options {
-		nr { 200 100 50 }
-		nd { 0 }
-		targ_r { 1.5 2.0 }
-		dist_prop { 1 }
-		mindist { 1.5 }
-		targ_range { 8 9 10 }
-		targ_color {
-		    { cyan { 0 1 1 } }
-		    { red { 1 0 0 } }
-		}
+    		nr { 200 100 50 }
+    		nd { 0 }
+    		targ_r { 1.5 2.0 }
+    		dist_prop { 1 }
+    		mindist { 1.5 }
+    		targ_range { 8 9 10 }
+    		targ_color {
+    		    { cyan { 0 1 1 } }
+    		    { red { 1 0 0 } }
+    		}
 	    }
 	    init { rmtSend "setBackground 10 10 10" } 
 	    deinit {}
@@ -66,4 +66,5 @@ namespace eval search::circles {
     # use subst to replace variables in variant definition above
     set variants [subst $variants]
 }
+
 
