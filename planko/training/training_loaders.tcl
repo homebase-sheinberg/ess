@@ -8,8 +8,6 @@
 
 namespace eval planko::training {
     package require planko
-    package require jitter_worlds_STORAGE
-
     
     proc loaders_init { s } {
         $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
