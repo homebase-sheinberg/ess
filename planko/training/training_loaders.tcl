@@ -9,9 +9,6 @@
 namespace eval planko::training {
     package require planko
     
-    source "[file join [file dirname [info script]] jitter_worlds.tcl]"
-
-    
     proc loaders_init { s } {
         $s add_method basic_planko { nr nplanks wrong_catcher_alpha params } {
             set n_rep $nr
