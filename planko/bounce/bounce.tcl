@@ -93,6 +93,8 @@ namespace eval planko::bounce {
         }
 
         $s set_end_callback {
+            ::ess::touch_region_off 0
+            ::ess::touch_region_off 1
             ::ess::evt_put SYSTEM_STATE STOPPED [now]
         }
 
@@ -234,3 +236,5 @@ namespace eval planko::bounce {
         return
     }
 }
+
+
