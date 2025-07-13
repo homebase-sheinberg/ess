@@ -26,7 +26,7 @@ namespace eval emcalib {
         $sys add_param sample_count 500 variable int
 
         ##
-        ## Local variables for this system
+        ## Local variables
         ##
         $sys add_variable n_obs 100
         $sys add_variable obs_count 0
@@ -319,5 +319,6 @@ namespace eval emcalib {
         return $sys
     }
 }
+
 
 
