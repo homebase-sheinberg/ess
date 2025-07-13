@@ -33,7 +33,7 @@ namespace eval planko::bounce {
         }
         { cold_cool {
                 plank_restitution {0.2 0.4}
-                ball_color {{0.0 1.0 1.0} {0.6 1.0 0.3}}
+                ball_color {{0.0 1.0 1.0} {0.6 1.0 0.25}}
             }
         }
         { cold_warm {
@@ -104,5 +104,6 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
+
 
 
