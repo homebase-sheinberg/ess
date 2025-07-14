@@ -20,16 +20,7 @@ namespace eval planko::training {
             set n_obs [expr {[llength $nplanks] * $n_rep}]
             set maxx [expr {$screen_halfx}]
             set maxy [expr {$screen_halfy}]
-            
-            # 👇 Check if params includes "minplanks random"
-            if { [string match "*minplanks random*" $params] } {
-                # Replace "minplanks random" with actual random trialwise values
-                set randlist [dl_ilist]
-                for {set i 0} {$i < $n_obs} {incr i} {
-                    dl_append $randlist [expr {1 + int(rand() * 4)}]
-                }
-                regsub "minplanks random" $params "minplanks $randlist" params
-            }
+        
             
             # this is a set of params to pass into generate_worlds
             set p "nplanks $nplanks $params"
