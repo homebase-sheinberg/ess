@@ -21,7 +21,7 @@ namespace eval planko::training {
             set maxx [expr {$screen_halfx}]
             set maxy [expr {$screen_halfy}]
             
-            # 👇 Check if params includes "minplanks random"
+          # 👇 Check if params includes "minplanks random"
             if { [string match "*minplanks random*" $params] } {
                 # Replace "minplanks random" with actual random trialwise values
                 set randlist [dl_ilist]
