@@ -79,5 +79,22 @@ namespace eval planko::training {
                 }
             }
         }
+        
+        
+        monkey_mixer {
+            description "random trial-wise minplanks"
+            loader_proc random_hit_loader
+            loader_options {
+                nr { 50 100 }
+                nplanks { 10 }
+                wrong_catcher_alpha { 1.0 }
+                params {
+                    { default { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 } }
+                }
+            }
+        }
+
+
+
     }
 }
