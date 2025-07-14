@@ -76,7 +76,6 @@ namespace eval planko::training {
                     { jittered_hit2 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 2} }
                     { jittered_hit3 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 3} }
                     { jittered_hit4 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 4} }
-                    { monkey_mixer { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks mixer} }
                 }
             }
         }
