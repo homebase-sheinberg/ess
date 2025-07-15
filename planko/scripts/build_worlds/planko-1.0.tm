@@ -23,9 +23,9 @@ namespace eval planko {
 	set params(planks_min_len)   2.0; # all planks at least this long
 	set params(planks_max_len)   3.0; # no planks longer than this
 	set params(floor_only)         0; # floor in place of catchers
-	set params(lcatcher_x)        -4.75; # x location of left catcher
+	set params(lcatcher_x)        -4.25; # x location of left catcher
 	set params(lcatcher_y)      -7.5; # y location of left catcher
-	set params(rcatcher_x)         4.75; # x location of right catcher
+	set params(rcatcher_x)         4.25; # x location of right catcher
 	set params(rcatcher_y)      -7.5; # y location of right catcher
 	set params(ball_start_x)       0; # x location of ball start
 	set params(ball_start_y)     9.0; # y location of ball start
