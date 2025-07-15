@@ -3,7 +3,7 @@
 #    emcalib
 #
 #  DECRIPTION
-#    System for calibrating eye position
+#    System for calibrating eye position signal
 #
 
 package require ess
@@ -319,6 +319,7 @@ namespace eval emcalib {
         return $sys
     }
 }
+
 
 
 
