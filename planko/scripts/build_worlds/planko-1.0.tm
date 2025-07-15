@@ -34,7 +34,7 @@ namespace eval planko {
     	set params(ball_radius)      0.5; # radius of ball
     	set params(nplanks)           10; # number of planks in world
     	set params(minplanks)          1; # mininum number of planks hit
-    	set params(ball_restitution) 0.2; # restitution of the ball
+    	set params(ball_restitution) 0.3; # restitution of the ball
     	set params(step_size) \
     	    [expr 59.9/1000.0];	          # step size of simulation (sec)
     	return
