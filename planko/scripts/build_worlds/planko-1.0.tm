@@ -16,11 +16,11 @@ namespace eval planko {
     	variable params
     	set params(xrange)          15.0; # x range for selecting plank locations
 	set params(yrange)          15.0; # y range for selecting plank locations
-	set params(planks_min_dist)  2.0; # minimum distance between planks
-	set params(planks_max_x)     12; # maximum x position
-	set params(planks_max_y)     12; # maximum y position
+	set params(planks_min_dist)  3.0; # minimum distance between planks
+	set params(planks_max_x)     14; # maximum x position
+	set params(planks_max_y)     14; # maximum y position
 	set params(planks_offset_y)  2.0; # offset y value away from catchers
-	set params(planks_min_len)   2.0; # all planks at least this long
+	set params(planks_min_len)   1.75; # all planks at least this long
 	set params(planks_max_len)   3.0; # no planks longer than this
 	set params(floor_only)         0; # floor in place of catchers
 	set params(lcatcher_x)        -5; # x location of left catcher
@@ -28,10 +28,10 @@ namespace eval planko {
 	set params(rcatcher_x)         5; # x location of right catcher
 	set params(rcatcher_y)      -7.5; # y location of right catcher
 	set params(ball_start_x)       0; # x location of ball start
-	set params(ball_start_y)     9.0; # y location of ball start
+	set params(ball_start_y)     10.0; # y location of ball start
 	set params(ball_jitter_x)      2; # x jitter for ball start
 	set params(ball_jitter_y)      0; # y jitter for ball start
-	set params(ball_radius)      0.75; # radius of ball
+	set params(ball_radius)      1; # radius of ball
 	set params(nplanks)           10; # number of planks in world
 	set params(minplanks)          1; # mininum number of planks hit
 	set params(ball_restitution) 0.2; # restitution of the ball
