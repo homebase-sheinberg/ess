@@ -69,7 +69,7 @@ namespace eval planko::training {
             loader_proc basic_planko
             loader_options {
                 nr { 10 20 30 40 50 60 70 80 90 100 }
-                nplanks { 10 }
+                nplanks { 8 }
                 wrong_catcher_alpha { 1.0 }
                 params {
                     { jittered_hit1 { ball_jitter_x 2 ball_start_y 9 ball_jitter_y 0 minplanks 1} }
@@ -86,7 +86,7 @@ namespace eval planko::training {
             loader_proc random_minplanks_loader
             loader_options {
                 nr { 50 100 }
-                nplanks { 10 }
+                nplanks { 8 }
                 wrong_catcher_alpha { 1.0 }
                 params {
                     { default { ball_jitter_x 2 ball_start_y 9 ball_jitter_y 0 } }
