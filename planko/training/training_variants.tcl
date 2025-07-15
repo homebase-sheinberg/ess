@@ -72,16 +72,16 @@ namespace eval planko::training {
                 nplanks { 10 }
                 wrong_catcher_alpha { 1.0 }
                 params {
-                    { jittered_hit1 { ball_jitter_x 6 ball_start_y 10 ball_jitter_y 0 minplanks 1} }
-                    { jittered_hit2 { ball_jitter_x 6 ball_start_y 10 ball_jitter_y 0 minplanks 2} }
-                    { jittered_hit3 { ball_jitter_x 6 ball_start_y 10 ball_jitter_y 0 minplanks 3} }
-                    { jittered_hit4 { ball_jitter_x 6 ball_start_y 10 ball_jitter_y 0 minplanks 4} }
+                    { jittered_hit1 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 1} }
+                    { jittered_hit2 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 2} }
+                    { jittered_hit3 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 3} }
+                    { jittered_hit4 { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 minplanks 4} }
                 }
             }
         }
         
         
-        monkey_mixer {
+        monkey_mix {
             description "random trial-wise minplanks"
             loader_proc random_hit_loader
             loader_options {
@@ -89,7 +89,7 @@ namespace eval planko::training {
                 nplanks { 10 }
                 wrong_catcher_alpha { 1.0 }
                 params {
-                    { default { ball_jitter_x 6 ball_start_y 10 ball_jitter_y 0 } }
+                    { default { ball_jitter_x 6 ball_start_y 6 ball_jitter_y 0 } }
                 }
             }
         }
