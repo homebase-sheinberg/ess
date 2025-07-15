@@ -14,18 +14,18 @@ namespace eval planko {
     
     proc default_params {} {
     	variable params
-    	set params(xrange)          12.0; # x range for selecting plank locations
-	set params(yrange)          12.0; # y range for selecting plank locations
+    	set params(xrange)          16.0; # x range for selecting plank locations
+	set params(yrange)          16.0; # y range for selecting plank locations
 	set params(planks_min_dist)  1.0; # minimum distance between planks
-	set params(planks_max_x)     9.0; # maximum x position
-	set params(planks_max_y)     6.0; # maximum y position
+	set params(planks_max_x)     14; # maximum x position
+	set params(planks_max_y)     14; # maximum y position
 	set params(planks_offset_y)  2.0; # offset y value away from catchers
 	set params(planks_min_len)   2.0; # all planks at least this long
 	set params(planks_max_len)   3.2; # no planks longer than this
 	set params(floor_only)         0; # floor in place of catchers
-	set params(lcatcher_x)        -3; # x location of left catcher
+	set params(lcatcher_x)        -4; # x location of left catcher
 	set params(lcatcher_y)      -7.5; # y location of left catcher
-	set params(rcatcher_x)         3; # x location of right catcher
+	set params(rcatcher_x)         4; # x location of right catcher
 	set params(rcatcher_y)      -7.5; # y location of right catcher
 	set params(ball_start_x)       0; # x location of ball start
 	set params(ball_start_y)     8.0; # y location of ball start
