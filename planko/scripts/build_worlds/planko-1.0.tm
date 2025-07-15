@@ -14,8 +14,8 @@ namespace eval planko {
     
     proc default_params {} {
     	variable params
-    	set params(xrange)          15.0; # x range for selecting plank locations
-	set params(yrange)          15.0; # y range for selecting plank locations
+    	set params(xrange)          14.0; # x range for selecting plank locations
+	set params(yrange)          14.0; # y range for selecting plank locations
 	set params(planks_min_dist)  2.0; # minimum distance between planks
 	set params(planks_max_x)     12; # maximum x position
 	set params(planks_max_y)     12; # maximum y position
