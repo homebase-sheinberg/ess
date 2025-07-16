@@ -208,7 +208,7 @@ $s set_visualization_scripts {
                         type: 'circle',
                         id: name,
                         x: x, y: y,
-                        radius: width / 2,
+                        radius: width,
                         fillColor: fillColor,
                         strokeColor: strokeColor,
                         lineWidth: 1,
@@ -429,6 +429,7 @@ $s set_visualization_scripts {
         return
     }
 }
+
 
 
 
