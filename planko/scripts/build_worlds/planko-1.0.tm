@@ -19,7 +19,7 @@ namespace eval planko {
 	set params(planks_min_dist)  2.0; # minimum distance between planks
 	set params(planks_max_x)     14; # maximum x position
 	set params(planks_max_y)     14; # maximum y position
-	set params(planks_offset_y)  2.0; # offset y value away from catchers
+	set params(planks_offset_y)  3.0; # offset y value away from catchers
 	set params(planks_min_len)   2.0; # all planks at least this long
 	set params(planks_max_len)   3.0; # no planks longer than this
 	set params(floor_only)         0; # floor in place of catchers
