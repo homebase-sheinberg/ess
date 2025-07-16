@@ -29,7 +29,7 @@ namespace eval planko {
 	set params(rcatcher_y)      -7.5; # y location of right catcher
 	set params(ball_start_x)       0; # x location of ball start
 	set params(ball_start_y)     10.0; # y location of ball start
-	set params(ball_jitter_x)      2; # x jitter for ball start
+	set params(ball_jitter_x)      3; # x jitter for ball start
 	set params(ball_jitter_y)      0; # y jitter for ball start
 	set params(ball_radius)        2; # radius of ball
 	set params(nplanks)           8; # number of planks in world
