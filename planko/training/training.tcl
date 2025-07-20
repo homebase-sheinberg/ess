@@ -174,19 +174,45 @@ namespace eval planko::training {
 	    soundPlay 6 60 400
 	}
 	
-	$s add_method responded {} {
-	    if { [::ess::touch_in_win 0] } {
-		if { $side == 0 } { set correct 1 } { set correct 0 }
-		set resp 1
-		return 1
-	    } elseif { [::ess::touch_in_win 1] } {
-		if { $side == 1 } { set correct 1 } { set correct 0 }
-		set resp 2
-		return 1
-	    } else {
-		return 0
-	    } 
-	}
+  $s add_method responded {} {
+      set resp -1
+      set correct 0
+  
+      # Joystick logic
+      if { $use_joystick } {
+          # 8 = right, 4 = left
+          set mapdict { 8 0 4 1 }
+  
+          set joy_position [dservGet ess/joystick/value]
+  
+          if { [dict exists $mapdict $joy_position] } {
+              set slot [dict get $mapdict $joy_position]
+  
+              if { [dservGet ess/joystick/button] } {
+                  set resp [expr {$slot + 1}]  ;# resp = 1 or 2 (like touch)
+                  if { $side == $slot } {
+                      set correct 1
+                  } else {
+                      set correct 0
+                  }
+                  return 1
+              }
+          }
+      }
+  
+      # Touchscreen logic
+      if { [::ess::touch_in_win 0] } {
+          if { $side == 0 } { set correct 1 } { set correct 0 }
+          set resp 1
+          return 1
+      } elseif { [::ess::touch_in_win 1] } {
+          if { $side == 1 } { set correct 1 } { set correct 0 }
+          set resp 2
+          return 1
+      } else {
+          return 0
+      }
+  }
 
 	return
     }
