@@ -36,6 +36,30 @@ proc check_contacts { w } {
 }
 
 ##############################################################
+###                    update_position                     ###
+##############################################################
+
+proc update_position { ball body start } {
+    global curtrial
+    set now [expr {($::StimTime-$start)/1000.}]
+    set i [dl_first [dl_indices [dl_gt stimdg:ball_t:$curtrial $now]]]
+    if { $i != "" } {
+        set x [dl_get stimdg:ball_x:$curtrial $i]
+        set y [dl_get stimdg:ball_y:$curtrial $i]
+        Box2D_setTransform $::world $body $x $y 
+    }
+    if { ![setObjProp $ball landed] } {
+        if { [expr {$now > [dl_get stimdg:land_time $curtrial]}] } {
+            setObjProp $ball landed 1
+            set side [dl_get stimdg:side $curtrial]
+            if { $side } { set hit right } { set hit left }
+             qpcs::dsSet $::dservhost planko/complete $hit
+        }        
+    }
+}
+
+
+##############################################################
 ###                     Show Worlds                        ###
 ##############################################################
 
@@ -75,7 +99,10 @@ proc make_stims { trial } {
         glistAddObject $body 0
 
         # track this so we can set in motion
-        if { $name == "ball" } { set ::ball $body }
+        if { $name == "ball" } { 
+            set ::ball $body 
+            setObjProp $body landed 0
+        }
 
         # track catcher bodies so we can give feedback
         if { [string match catchl* $name] } { lappend ::left_catcher $body }
@@ -156,11 +183,18 @@ proc nexttrial { id } {
     glistInit 1
     resetObjList
     set ::world [make_stims $id]
+    set ::curtrial $id
 }
 
 proc show_response { resp } {
+    set simulate 0; # used stored trajectory to replay as built
     set body [setObjProp $::ball body]
-    Box2D_setBodyType $::world $body 2
+    if { $simulate } {
+        Box2D_setBodyType $::world $body 2; # dynamic
+    } else {
+        Box2D_setBodyType $::world $body 1; # kinematic 
+        addPreScript $::ball "update_position $::ball $body $::StimTime"
+    } 
     if { $resp == 0 } { set c $::left_catcher } { set c $::right_catcher }
     set color "0.7 0.7 0.7"
     foreach p $c {
@@ -210,6 +244,19 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
