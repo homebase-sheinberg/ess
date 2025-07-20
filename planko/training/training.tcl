@@ -175,43 +175,41 @@ namespace eval planko::training {
 	}
 	
   $s add_method responded {} {
-      set resp -1
-      set correct 0
-  
-      # Joystick logic
-      if { $use_joystick } {
-          # 8 = right, 4 = left
-          set mapdict { 8 0 4 1 }
-  
-          set joy_position [dservGet ess/joystick/value]
-  
-          if { [dict exists $mapdict $joy_position] } {
-              set slot [dict get $mapdict $joy_position]
-  
-              if { [dservGet ess/joystick/button] } {
-                  set resp [expr {$slot + 1}]  ;# resp = 1 or 2 (like touch)
-                  if { $side == $slot } {
-                      set correct 1
-                  } else {
-                      set correct 0
-                  }
-                  return 1
-              }
-          }
-      }
-  
-      # Touchscreen logic
-      if { [::ess::touch_in_win 0] } {
-          if { $side == 0 } { set correct 1 } { set correct 0 }
-          set resp 1
-          return 1
-      } elseif { [::ess::touch_in_win 1] } {
-          if { $side == 1 } { set correct 1 } { set correct 0 }
-          set resp 2
-          return 1
-      } else {
-          return 0
-      }
+    set resp -1
+    set correct 0
+
+    # -- JOYSTICK HANDLING --
+    if { $use_joystick } {
+        set joy_position [dservGet ess/joystick/value]
+        set joy_button [dservGet ess/joystick/button]
+
+        # Joystick: Right (8) → slot 0, Left (4) → slot 1
+        if { $joy_button } {
+            if { $joy_position == 8 } {
+                set resp 1
+                if { $side == 0 } { set correct 1 } { set correct 0 }
+                return 1
+            } elseif { $joy_position == 4 } {
+                set resp 2
+                if { $side == 1 } { set correct 1 } { set correct 0 }
+                return 1
+            }
+        }
+    }
+
+    # -- TOUCHSCREEN HANDLING --
+    if { [::ess::touch_in_win 0] } {
+        set resp 1
+        if { $side == 0 } { set correct 1 } { set correct 0 }
+        return 1
+    } elseif { [::ess::touch_in_win 1] } {
+        set resp 2
+        if { $side == 1 } { set correct 1 } { set correct 0 }
+        return 1
+    }
+
+    # -- NO RESPONSE --
+    return 0
   }
 
 	return
