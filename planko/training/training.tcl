@@ -185,7 +185,7 @@ namespace eval planko::training {
 		return 1
 	    } else {
 		return 0
-	    }
+	    } 
 	}
 
 	return
