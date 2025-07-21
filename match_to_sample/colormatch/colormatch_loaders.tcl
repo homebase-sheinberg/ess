@@ -46,14 +46,10 @@ namespace eval match_to_sample::colormatch {
         dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
         dl_local l [dl_repeat 85. $n_obs]
         dl_local c [dl_repeat 95. $n_obs]
-
-        # Sample/match colors (fully opaque, same as "easy")
         dl_local sample_colors \
             [dl_div [dl_transpose \
                         [dlg_polarlabcolors $l $c [dl_float $sample_hues]]] \
                  255.]
-
-        # Nonmatch colors (same hues but with alpha = 0.3)
         dl_local nonmatch_rgb \
             [dl_div [dl_transpose \
                         [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] \
@@ -61,7 +57,6 @@ namespace eval match_to_sample::colormatch {
         dl_local alpha [dl_repeat 0.3 $n_obs]
         dl_local nonmatch_colors \
             [dl_reshape [dl_interleave $nonmatch_rgb $alpha] - 4]
-	    
 	    } elseif { $color_choices == "easy" } {
 		dl_local sample_hues [dl_irand $n_obs 360]
 		dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
