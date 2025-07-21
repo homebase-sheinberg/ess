@@ -48,12 +48,11 @@ namespace eval match_to_sample::colormatch {
         dl_local c [dl_repeat 95. $n_obs]
         dl_local sample_colors \
             [dl_div [dl_transpose \
-                        [dlg_polarlabcolors $l $c [dl_float $sample_hues]]] \
+              [dlg_polarlabcolors $l $c [dl_float $sample_hues]]] \
                  255.]
         dl_local nonmatch_rgb \
             [dl_div [dl_transpose \
-                        [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] \
-                 255.]
+                        [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] 255.]
         dl_local alpha [dl_repeat 0.3 $n_obs]
         dl_local nonmatch_colors \
             [dl_reshape [dl_interleave $nonmatch_rgb $alpha] - 4]
