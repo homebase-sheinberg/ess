@@ -54,8 +54,7 @@ namespace eval match_to_sample::colormatch {
             [dl_div [dl_transpose \
                         [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] 255.]
         dl_local alpha [dl_repeat 0.3 $n_obs]
-        dl_local nonmatch_colors \
-            [dl_reshape [dl_interleave $nonmatch_rgb $alpha] - 4]
+        dl_local nonmatch_colors [dl_reshape [dl_interleave $nonmatch_rgb $alpha] -4]
 	    } elseif { $color_choices == "easy" } {
 		dl_local sample_hues [dl_irand $n_obs 360]
 		dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
