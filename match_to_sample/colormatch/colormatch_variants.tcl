@@ -46,7 +46,7 @@ namespace eval match_to_sample::colormatch {
 	}
 	
 	easyDistractor {
-	    description "nonmatch is alpha"
+	    description "nonmatch is lower alpha"
 	    loader_proc setup_trials
 	    loader_options {
 		n_rep { 50 100 }
