@@ -49,7 +49,7 @@ namespace eval match_to_sample::colormatch {
 	    description "nonmatch is alpha = 0.3"
 	    loader_proc setup_trials
 	    loader_options {
-		n_rep { 50 100 200 400 800 }
+		n_rep { 50 100 }
 		targ_scale 1.5
 		color_choices easyDistractor
 	    }
