@@ -18,9 +18,12 @@ namespace eval planko::training {
                 params { { defaults {} } }
             }
             init {
+                planko::enable_threading 4
                 rmtSend "setBackground 0 0 10"
             }
-            deinit {}
+            deinit {
+                 planko::disable_threading
+            }
         }
         jitter {
             description "jitter ball start"
@@ -56,6 +59,7 @@ namespace eval planko::training {
         }
     }
 }
+
 
 
 

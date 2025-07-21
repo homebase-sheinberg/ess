@@ -691,6 +691,7 @@ namespace eval planko {
                 dl_set $new_world:ball_start_y  [dl_flist $params(ball_ypos)]
                 dl_set $new_world:ball_radius  [dl_flist $params(ball_radius)]
                 dl_set $new_world:ball_restitution  [dl_flist $params(ball_restitution)]
+                dl_set $new_world:plank_restitution  [dl_flist $params(plank_restitution)]
                 dl_set $new_world:lcatcher_x [dl_flist $params(lcatcher_x)]
                 dl_set $new_world:lcatcher_y [dl_flist $params(lcatcher_y)]
                 dl_set $new_world:rcatcher_x [dl_flist $params(rcatcher_x)]
