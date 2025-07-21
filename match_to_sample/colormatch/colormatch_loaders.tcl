@@ -42,20 +42,24 @@ namespace eval match_to_sample::colormatch {
 		dl_local sample_colors [dl_urand [dl_repeat 3 $n_obs]]
 		dl_local nonmatch_colors [dl_urand [dl_repeat 3 $n_obs]]
 	    } elseif { $color_choices == "easyDistractor" } {
-        dl_local sample_hues [dl_irand $n_obs 360]
-        dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
-        dl_local l [dl_repeat 85. $n_obs]
-        dl_local c [dl_repeat 95. $n_obs]
-        dl_local sample_colors \
-            [dl_div [dl_transpose \
-              [dlg_polarlabcolors $l $c [dl_float $sample_hues]]] \
-                 255.]
-        dl_local nonmatch_rgb \
-            [dl_div [dl_transpose \
-                        [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] 255.]
-        dl_local alpha [dl_repeat 0.3 $n_obs]
-        dl_local nonmatch_colors [dl_reshape [dl_interleave $nonmatch_rgb $alpha] -4]
-	    } elseif { $color_choices == "easy" } {
+    dl_local sample_hues [dl_irand $n_obs 360]
+    dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
+    dl_local l [dl_repeat 85. $n_obs]
+    dl_local c [dl_repeat 95. $n_obs]
+    dl_local sample_colors \
+        [dl_div [dl_transpose \
+                    [dlg_polarlabcolors $l $c [dl_float $sample_hues]]] \
+             255.]
+    dl_local nonmatch_rgb \
+        [dl_div [dl_transpose \
+                    [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] \
+             255.]
+    dl_local alpha [dl_repeat 0.3 $n_obs]
+
+    # FIX: Reshape nonmatch_rgb to n_obs x 3 before interleaving
+    dl_local nonmatch_rgb_matrix [dl_reshape $nonmatch_rgb 3]
+    dl_local nonmatch_colors [dl_reshape [dl_interleave $nonmatch_rgb_matrix $alpha] -4]
+} elseif { $color_choices == "easy" } {
 		dl_local sample_hues [dl_irand $n_obs 360]
 		dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
 		dl_local l [dl_repeat 85. $n_obs]
