@@ -174,7 +174,7 @@ namespace eval planko::training {
 	    soundPlay 6 60 400
 	}
 	
-  $s add_method responded_lr {} {
+  $s add_method responded {} {
             # if no response to report, return -1
             set r -1
             set made_selection 0
