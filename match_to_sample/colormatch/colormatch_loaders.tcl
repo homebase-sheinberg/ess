@@ -59,17 +59,20 @@ namespace eval match_to_sample::colormatch {
     dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
     dl_local l [dl_repeat 85. $n_obs]
     dl_local c [dl_repeat 95. $n_obs]
-
     dl_local sample_colors \
         [dl_div [dl_transpose \
                     [dlg_polarlabcolors $l $c [dl_float $sample_hues]]] \
              255.]
-
     dl_local nonmatch_colors \
         [dl_div [dl_transpose \
                     [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] \
              255.]
     dl_set $g:nonmatch_alpha [dl_repeat 0.3 $n_obs]
+    dl_local side [dl_mod [dl_fromto 0 $n_obs] 2]
+    dl_set $g:side $side
+    dl_set $g:nonmatch_x [dl_mult 2 [dl_sub [dl_sub 1 $side] .5] $xoff]
+    dl_set $g:nonmatch_y [dl_repeat [expr -1*$yoff] $n_obs]
+    dl_set $g:nonmatch_r [dl_repeat $targ_scale $n_obs]
       }
 	    
 	    dl_set $g:sample_x [dl_repeat 0. $n_obs]
