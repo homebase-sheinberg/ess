@@ -175,13 +175,14 @@ namespace eval planko::training {
 	}
 	
   $s add_method responded {} {
-            # if no response to report, return -1
+            
             set r -1
             set made_selection 0
             set updated_position 0
 
             if { $use_joystick } {
                 set joy_position [dservGet ess/joystick/value]
+                ## 8 LEFT, 4 RIGHT; make sure to adjust numbered inputs on system settings in psychophys room
                 if { $joy_position != 8 && $joy_position != 4 && $joy_position != 0 } {
                     if { [dservExists ess/joystick/position] } {
                         if { [dservGet ess/joystick/position] != 0 } {
