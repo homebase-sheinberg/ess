@@ -8,42 +8,46 @@
 
 namespace eval match_to_sample::colormatch {
     variable variants {
-	noDistractor     {
-	    description "no distractor"
-	    loader_proc setup_trials
-	    loader_options {
-		n_rep { 50 100 200 400 800}
-		targ_scale 1.5
-		color_choices noDistractor
-	    }
-	}
-	easy     {
-	    description "easy comparisons"
-	    loader_proc setup_trials
-	    loader_options {
-		n_rep { 50 100 200 400 800}
-		targ_scale 1.5
-		color_choices easy
-	    }
-	}
-	random   {
-	    description "random comparisons"
-	    loader_proc setup_trials
-	    loader_options {
-		n_rep { 50 100 }
-		targ_scale 1.5
-		color_choices random
-	    }
-	}
-	redgreen {
-	    description "red/green MTS"
-	    loader_proc setup_trials
-	    loader_options {
-		n_rep { 50 100 }
-		targ_scale 1.5
-		color_choices redgreen
-	    }
-	}
+        noDistractor {
+            description "no distractor"
+            loader_proc setup_transparent_trials
+            loader_options {
+                n_rep { 50 100 200 400 800}
+                targ_scale 1.5
+                transparency { {off 0.0} {0.2 0.2} {mixed {0.0 0.2}} {full 1.0} }
+            }
+        }
+        easy {
+            description "easy comparisons"
+            loader_proc setup_trials
+            loader_options {
+                n_rep { 50 100 200 400 800}
+                targ_scale 1.5
+                color_choices easy
+            }
+        }
+        random {
+            description "random comparisons"
+            loader_proc setup_trials
+            loader_options {
+                n_rep { 50 100 }
+                targ_scale 1.5
+                color_choices random
+            }
+        }
+        redgreen {
+            description "red/green MTS"
+            loader_proc setup_trials
+            loader_options {
+                n_rep { 50 100 }
+                targ_scale 1.5
+                color_choices redgreen
+            }
+        }
     }
 }
+
+
+
+
 
