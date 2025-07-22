@@ -174,42 +174,65 @@ namespace eval planko::training {
 	    soundPlay 6 60 400
 	}
 	
-  $s add_method responded {} {
-    set resp -1
-    set correct 0
+  $s add_method responded_lr {} {
+            # if no response to report, return -1
+            set r -1
+            set made_selection 0
+            set updated_position 0
 
-    # -- JOYSTICK HANDLING --
-    if { $use_joystick } {
-        set joy_position [dservGet ess/joystick/value]
-        set joy_button [dservGet ess/joystick/button]
+            if { $use_joystick } {
+                set joy_position [dservGet ess/joystick/value]
+                if { $joy_position != 8 && $joy_position != 4 && $joy_position != 0 } {
+                    if { [dservExists ess/joystick/position] } {
+                        if { [dservGet ess/joystick/position] != 0 } {
+                            dservSet ess/joystick/position 0
+                            return -2
+                        } else {
+                            return -1
+                        }
+                    } else {
+                        dservSet ess/joystick/position 0
+                        return -2
+                    }
+                }
+                # note which position has been activated
+                if { [dservExists ess/joystick/position] } {
+                    set cur_position [dservGet ess/joystick/position]
+                } else {
+                    set cur_position -1
+                }
+                if { $joy_position != $cur_position } {
+                    dservSet ess/joystick/position $joy_position
+                    set updated_position 1
+                }
 
-        # Joystick: Right (8) → slot 0, Left (4) → slot 1
-        if { $joy_button } {
-            if { $joy_position == 8 } {
-                set resp 1
-                if { $side == 0 } { set correct 1 } { set correct 0 }
-                return 1
-            } elseif { $joy_position == 4 } {
-                set resp 2
-                if { $side == 1 } { set correct 1 } { set correct 0 }
-                return 1
+                # only if the button is pressed should we count as response
+                if { [dservGet ess/joystick/button] } {
+                    set made_selection 1
+                } else {
+                    if { $updated_position } { set r -2 } { set r -1 }
+                }
             }
-        }
-    }
+            if { $use_touchscreen && $r == -1 } {
+                foreach w "0 1" {
+                    if { [::ess::touch_in_win $w] } {
+                        set r $w
+                        break
+                    }
+                }
+                if { $r != -1 } {
+                    set made_selection 1
+                }
+            }
 
-    # -- TOUCHSCREEN HANDLING --
-    if { [::ess::touch_in_win 0] } {
-        set resp 1
-        if { $side == 0 } { set correct 1 } { set correct 0 }
-        return 1
-    } elseif { [::ess::touch_in_win 1] } {
-        set resp 2
-        if { $side == 1 } { set correct 1 } { set correct 0 }
-        return 1
-    }
+            if { $made_selection } {
+                rmtSend "cue_off; choices_off; feedback_off all"
+                # r should be 0 for cue_valid == 1, 1 for cue_valid == 0
+                set correct [expr {$r == (1-$cue_valid)}]
+                set r 0
+            }
 
-    # -- NO RESPONSE --
-    return 0
+            return $r
   }
 
 	return
