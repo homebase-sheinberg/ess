@@ -5,7 +5,7 @@
 #   planko task stim code
 #
 # REQUIRES
-#   box2d 
+#   box2d
 #   polygon
 #   metagroup
 #
@@ -46,15 +46,15 @@ proc update_position { ball body start } {
     if { $i != "" } {
         set x [dl_get stimdg:ball_x:$curtrial $i]
         set y [dl_get stimdg:ball_y:$curtrial $i]
-        Box2D_setTransform $::world $body $x $y 
+        Box2D_setTransform $::world $body $x $y
     }
     if { ![setObjProp $ball landed] } {
         if { [expr {$now > [dl_get stimdg:land_time $curtrial]}] } {
             setObjProp $ball landed 1
             set side [dl_get stimdg:side $curtrial]
             if { $side } { set hit right } { set hit left }
-             qpcs::dsSet $::dservhost planko/complete $hit
-        }        
+            qpcs::dsSet $::dservhost planko/complete $hit
+        }
     }
 }
 
@@ -101,8 +101,8 @@ proc make_stims { trial } {
         glistAddObject $body 0
 
         # track this so we can set in motion
-        if { $name == "ball" } { 
-            set ::ball $body 
+        if { $name == "ball" } {
+            set ::ball $body
             setObjProp $body landed 0
         }
 
@@ -194,9 +194,9 @@ proc show_response { resp } {
     if { $simulate } {
         Box2D_setBodyType $::world $body 2; # dynamic
     } else {
-        Box2D_setBodyType $::world $body 1; # kinematic 
+        Box2D_setBodyType $::world $body 1; # kinematic
         addPreScript $::ball "update_position $::ball $body $::StimTime"
-    } 
+    }
     if { $resp == 0 } { set c $::left_catcher } { set c $::right_catcher }
     set color "0.7 0.7 0.7"
     foreach p $c {
@@ -246,13 +246,4 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
-
-
-
-
-
-
-
-
-
 
