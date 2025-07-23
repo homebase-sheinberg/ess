@@ -8,7 +8,7 @@
 
 namespace eval planko::bounce {
     package require planko
-
+      
     proc loaders_init { s } {
         $s add_method basic_planko { nr nplanks params } {
             set n_rep $nr
@@ -19,7 +19,7 @@ namespace eval planko::bounce {
 
             # this is a set of params to pass into generate_worlds
             set p "nplanks $nplanks $params"
-            set g [planko::generate_worlds $n_obs $p]
+            set g [planko::generate_worlds $n_obs $p accept_board]
 
             # rename id column to stimtytpe
             dl_set $g:id [dl_fromto 0 $n_obs]
@@ -29,10 +29,11 @@ namespace eval planko::bounce {
             dg_rename $g stimdg
             return $g
         }
+
         $s add_method setup_bounce { nr nplanks board_params ball_params } {
             if { [dg_exists stimdg] } { dg_delete stimdg }
-	    set g stimdg
-	    
+            set g stimdg
+
             set plank_restitutions [dict get $ball_params plank_restitution]
 
             set nn [llength $nplanks]; # number of "nplank" conditions
@@ -44,14 +45,14 @@ namespace eval planko::bounce {
                 foreach np $nplanks {
                     lappend p nplanks $np
                     puts "generating worlds for $br/$np"
-                    set w [planko::generate_worlds $nr $p]
-                    if { ![dg_exists stimdg]} { 
+                    set w [planko::generate_worlds $nr $p accept_board]
+                    if { ![dg_exists stimdg]} {
                         dg_copy $w stimdg
-                    } else { 
+                    } else {
                         puts "following group created ([dl_length $w:id]->[dl_length $g:id])"
                         dg_append stimdg $w
                     }
-		    dg_delete $w
+                    dg_delete $w
                 }
             }
 
@@ -69,6 +70,7 @@ namespace eval planko::bounce {
 
     }
 }
+
 
 
 
