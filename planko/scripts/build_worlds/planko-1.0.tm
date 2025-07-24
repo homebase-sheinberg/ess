@@ -31,10 +31,10 @@ namespace eval planko {
 	set params(ball_start_y)     10.0; # y location of ball start
 	set params(ball_jitter_x)      3; # x jitter for ball start
 	set params(ball_jitter_y)      0; # y jitter for ball start
-	set params(ball_radius)        2; # radius of ball
+	set params(ball_radius)        3.5; # radius of ball
 	set params(nplanks)           8; # number of planks in world
 	set params(minplanks)          1; # mininum number of planks hit
-	set params(ball_restitution) 0.2; # restitution of the ball
+	set params(ball_restitution) 0.3; # restitution of the ball
 	set params(step_size) \
 	    [expr 59.9/1000.0];	          # step size of simulation (sec)
     	return
