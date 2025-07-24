@@ -16,7 +16,7 @@ namespace eval planko {
     	variable params
     	set params(xrange)          15.0; # x range for selecting plank locations
 	set params(yrange)          15.0; # y range for selecting plank locations
-	set params(planks_min_dist)  2.5; # minimum distance between planks
+	set params(planks_min_dist)  3.25; # minimum distance between planks
 	set params(planks_max_x)     14; # maximum x position
 	set params(planks_max_y)     14; # maximum y position
 	set params(planks_offset_y)  2.0; # offset y value away from catchers
