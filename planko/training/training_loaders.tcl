@@ -53,7 +53,7 @@ namespace eval planko::training {
     # Build randomized minplanks list (values 1 to 4)
     set randlist [dl_ilist]
     for {set i 0} {$i < $n_obs} {incr i} {
-        dl_append $randlist [expr {1 + int(rand() * 4)}]
+        dl_append $randlist [expr {2 + int(rand() * 4)}]
     }
 
     # Append randomized minplanks list to params
