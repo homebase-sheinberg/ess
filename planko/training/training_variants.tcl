@@ -94,7 +94,17 @@ namespace eval planko::training {
             }
         }
 
-
-
+        super_monkey_custom {
+            description "super monkey with custom plank and ball geometry"
+            loader_proc basic_planko
+            loader_options {
+                nr { 10 20 30 40 50 60 70 80 90 100 }
+                nplanks { 8 10 }
+                wrong_catcher_alpha { 1.0 }
+                params {
+                    { humanWorld { ball_jitter_x 2 ball_start_y 10 minplanks 2 xrange 14.0 yrange 12.0 planks_min_dist 3 planks_min_len 2 planks_max_len 3 plank_restitution 0.3 ball_radius 0.6 } }
+                }
+            }
+        }
     }
 }
