@@ -102,7 +102,18 @@ namespace eval planko::training {
                 nplanks { 8 10 }
                 wrong_catcher_alpha { 1.0 }
                 params {
-                    { humanWorld { ball_jitter_x 2 ball_start_y 10 minplanks 2 xrange 14.0 yrange 12.0 planks_min_dist 3 planks_min_len 2 planks_max_len 3 plank_restitution 0.3 ball_radius 0.6 } }
+                    { humanWorld { \
+                        ball_jitter_x 2 \
+                        ball_start_y 10 \
+                        minplanks 2 \
+                        xrange 14.0 \
+                        yrange 12.0 \
+                        planks_min_dist 3 \
+                        planks_min_len 2 \
+                        planks_max_len 3 \
+                        plank_restitution 0.3 \
+                        ball_radius 0.6 \
+                    } }
                 }
             }
         }
