@@ -23,7 +23,7 @@ namespace eval planko::training {
         
             
             # this is a set of params to pass into generate_worlds
-            set p "nplanks $nplanks $params"
+            set p [concat [list nplanks $nplanks] $params]
             set g [planko::generate_worlds $n_obs $p]
             
 
