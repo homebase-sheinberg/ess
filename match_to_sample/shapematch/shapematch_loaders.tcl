@@ -34,7 +34,7 @@ namespace eval match_to_sample::shapematch {
             
             if { $options_side == "fixed" } {
                 dl_set $g:side [dl_repeat "0 1" $n_per_side]
-            } elseif { $options_side == "random" }{
+            } elseif { $options_side == "random" } {
                 dl_set $g:side [dl_irand $n_obs 2]
             }
 
