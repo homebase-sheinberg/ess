@@ -103,10 +103,41 @@ namespace eval planko::bounce {
             }
             params { use_buttons 1 left_button 20 right_button 22 save_ems 1 }
         }
+        multiworld {
+            description "worlds that work with different balls"
+            loader_proc setup_multiworld
+            loader_options {
+                nr { 4 10 20 25 30 }
+                nplanks { {4 4} {8 8} {4+8 {4 8}} }
+                board_params {
+                    { jittered {
+                            ball_jitter_x 10
+                            ball_start_y 8
+                            minplanks 2
+                            planks_min_dist 1.4
+                            planks_max_x 12.0
+                            lcatcher_x -3.25
+                            rcatcher_x 3.25
+                        }
+                    }
+                }
+                ball_params { $ball_presets }
+            }
+            init {
+                planko::enable_threading 4
+                rmtSend "setBackground 0 0 10"
+            }
+            deinit {
+                planko::disable_threading
+            }
+            params { use_buttons 1 left_button 20 right_button 22 save_ems 1 }
+        }
     }
 
     set variants [subst $variants]
 }
+
+
 
 
 

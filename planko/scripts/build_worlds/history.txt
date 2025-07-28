@@ -1,7 +1,3 @@
-time { cluster_jittered_trajectories jitters 3 250 2 25 }
-dg_dir
-dl_tcllist [dl_sortedFunc group5:cluster group5:cluster dl_lengths]
-cluster_jittered_trajectories jitters 7 250 2 25
 dl_tcllist [dl_sortedFunc group6:cluster group6:cluster dl_lengths]
 cluster_jittered_trajectories jitters 7 250 1 25
 dl_tcllist [dl_sortedFunc group7:cluster group7:cluster dl_lengths]
@@ -98,3 +94,6 @@ source test_planko3.tcl
 dg_dir
 string length temp_session_1752934808723559_tid0x16cf8f000
 source test_planko3.tcl
+load_system planko bounce multiball
+evalNoReply
+set errorInfo

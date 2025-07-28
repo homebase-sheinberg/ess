@@ -57,6 +57,7 @@ namespace eval planko {
         set params(plank_restitution) 0.2; # restitution of the ball
         set params(catcher_restitution) 0.05; # restitution of the ball
         set params(step_size) [expr 1.0/200]; # step size of simulation (200Hz)
+        set params(accept_proc) accept_board
         return
     }
 
@@ -130,12 +131,12 @@ namespace eval planko {
             package require box2d
             package require planko
 
-            proc do_planko_work { n d acc worker_id } {
+            proc do_planko_work { n d worker_id } {
                 puts "Worker $worker_id starting generation of $n worlds"
 
                 if {[catch {
                         # Generate worlds in this thread's context
-                        set g [planko::generate_worlds_serial $n $d $acc]
+                        set g [planko::generate_worlds_serial $n $d]
 
                         set tid [thread::id]
                         puts "Worker $worker_id (thread $tid) completed $n worlds successfully"
@@ -173,12 +174,12 @@ namespace eval planko {
     }
 
     # Parallel world generation
-    proc generate_worlds_parallel { n d { acc accept_board } } {
+    proc generate_worlds_parallel { n d } {
         variable num_threads
 
         # Don't use threading for small jobs
         if {$n < $num_threads * 2} {
-            return [generate_worlds_serial $n $d $acc]
+            return [generate_worlds_serial $n $d]
         }
 
         puts "Generating $n worlds using $num_threads threads"
@@ -209,7 +210,7 @@ namespace eval planko {
             } tsv_error]} {
             puts "TSV initialization error: $tsv_error"
             # Fallback to serial if TSV fails
-            return [generate_worlds_serial $n $d $acc]
+            return [generate_worlds_serial $n $d]
         }
 
         # Set global session ID for check_completion to access
@@ -249,7 +250,7 @@ namespace eval planko {
             catch {thread::release $tid}
             }
             # Fallback to serial
-            return [generate_worlds_serial $n $d $acc]
+            return [generate_worlds_serial $n $d]
         }
 
         # Start work in each thread
@@ -259,7 +260,7 @@ namespace eval planko {
                     lassign [lindex $thread_args $thread_index] thread_n thread_d worker_id
                     thread::send $tid [list set main_tid [thread::id]]
                     thread::send $tid [list set session_id $session_id]
-                    thread::send -async $tid [list do_planko_work $thread_n $thread_d $acc $worker_id]
+                    thread::send -async $tid [list do_planko_work $thread_n $thread_d $worker_id]
                     incr thread_index
                 }
             } work_dispatch_error]} {
@@ -268,7 +269,7 @@ namespace eval planko {
             foreach tid $threads {
             catch {thread::release $tid}
             }
-            return [generate_worlds_serial $n $d $acc]
+            return [generate_worlds_serial $n $d]
         }
 
         # Wait for completion with timeout
@@ -338,7 +339,7 @@ namespace eval planko {
         # Verify we got some results
         if {$all_worlds eq "" || $successful_threads == 0} {
             puts "No successful parallel results, falling back to serial generation"
-            return [generate_worlds_serial $n $d $acc]
+            return [generate_worlds_serial $n $d]
         }
 
         # Renumber IDs sequentially across all threads
@@ -369,16 +370,104 @@ namespace eval planko {
         return $all_worlds
     }
 
+    proc update_world { w d } {
+	# for now, just handle plank_restitution, but this need to be expanded
+	dict for { k v } $d {
+	    if { $k == "plank_restitution" } {
+		dl_set $w:restitution [dl_replace $w:restitution [dl_regmatch $w:name plank*] $v]
+	    }
+	}
+    }
+    
     # Serial world generation
-    proc generate_worlds_serial { n d { acc accept_board } } {
+    proc generate_worlds_serial_multi { n d } {
+        variable params
+
+	set results {}
+	
+	if { ![dict exists $d multi_settings] } { return }
+
+	# add dictionary defaults and then d for all worlds
+        default_params
+        dict for { k v } $d { set params($k) $v }
+
+	# now update params with first of multi_settings
+	set initial_settings [lindex $params(multi_settings) 0]
+	dict for { k v } $initial_settings { set params($k) $v }
+
+	set nsettings [llength $params(multi_settings)]
+
+	set total_worlds 0
+	
+        for { set i 0 } { $i < $n } { } {
+
+	    set done 0	
+	    while { !$done } {
+		set worlds(0) [generate_world]
+		dl_set $worlds(0):world_id $i
+
+		# if we can't create a satisfactory world, clean up and return
+		if { $worlds(0) == "" } {
+		    if { $results != "" } {
+			dg_delete $results
+		    }
+		    return
+		}
+
+		# now pass a copy of the world with setting updates to verify
+		for { set j 1 } { $j < $nsettings } { incr j } {
+		    set msetting [lindex $params(multi_settings) $j]
+		    set worlds($j) [verify_world $worlds(0) $msetting]
+		    if { $worlds($j) == "" } {
+			foreach k [array names worlds] {
+			    if { $worlds($k) != "" } { dg_delete $worlds($k) }
+			}
+			unset worlds
+			break
+		    }
+		    dl_set $worlds($j):world_id $i
+		}
+
+		if { [info exists worlds] } { 
+		    set done 1
+		}
+	    }
+
+	    # store resulting worlds
+	    foreach k [array names worlds] {
+		if { $results == "" } {
+		    set results [pack_world $worlds($k)]
+		} else {
+		    set w [pack_world $worlds($k)]
+		    dg_append $results $w
+		    dg_delete $w
+		}
+		incr total_worlds
+	    }
+	    incr i
+	}
+
+        # first column is id - set to unique ids between 0 and n
+        dl_set $results:id [dl_fromto 0 $total_worlds]
+
+        return $results
+    }
+    
+    proc generate_worlds_serial { n d } {
         variable params
         default_params
 
+	# multi_settings means we have multiple criteria for acceptable worlds
+	if { [dict exists $d multi_settings] } {
+	    return [generate_worlds_serial_multi $n $d]
+	}
+	    
+	# add dictionary defaults and then update with multi_settings:0 if present
         dict for { k v } $d { set params($k) $v }
-
-        set worlds [pack_world [generate_world $acc]]
+	
+        set worlds [pack_world [generate_world]]
         for { set i 1 } { $i < $n } { incr i } {
-            set world [pack_world [generate_world $acc]]
+            set world [pack_world [generate_world]]
             if { $world != "" } {
                 dg_append $worlds $world
                 dg_delete $world
@@ -394,16 +483,16 @@ namespace eval planko {
     }
 
     # Main world generation dispatcher
-    proc generate_worlds { n d { acc accept_board } } {
+    proc generate_worlds { n d } {
         variable use_threading
         variable num_threads
         variable min_threading_batch
 
         # Use threading if enabled and batch is large enough
         if {$use_threading && $n >= $min_threading_batch && $n >= $num_threads} {
-            return [generate_worlds_parallel $n $d $acc]
+            return [generate_worlds_parallel $n $d]
         } else {
-            return [generate_worlds_serial $n $d $acc]
+            return [generate_worlds_serial $n $d]
         }
     }
 
@@ -613,7 +702,7 @@ namespace eval planko {
         return $new
     }
 
-    proc generate_world { accept_proc } {
+    proc generate_world {} {
         variable params
         set done 0
         while { !$done } {
@@ -630,7 +719,7 @@ namespace eval planko {
             lassign [build_world $new_world] world ball
 
             set sim_dg [test_simulation $world $ball]
-            set outcome [$accept_proc $sim_dg]
+            set outcome [$params(accept_proc) $sim_dg]
             set result [dict get $outcome result]
             set nhit [dict get $outcome nhit]
             set land_time [dict get $outcome land_time]
@@ -663,6 +752,53 @@ namespace eval planko {
                 dg_delete $new_world
                 box2d::destroy $world
             }
+        }
+    }
+
+    # see if this world works with settings in dictionary d
+    proc verify_world { w d } {
+        variable params
+        set new_world [dg_copy $w]
+
+	# change the world to reflect criteria in d being tested
+	update_world $new_world $d
+
+	# create the world for simulation
+        lassign [build_world $new_world] world ball
+
+        set sim_dg [test_simulation $world $ball]
+        set outcome [$params(accept_proc) $sim_dg]
+        set result [dict get $outcome result]
+        set nhit [dict get $outcome nhit]
+        set land_time [dict get $outcome land_time]
+        
+        if { $result != -1 } {
+            dl_set $new_world:side [dl_ilist $result]
+            dl_set $new_world:nhit [dl_ilist $nhit]
+            dl_set $new_world:land_time [dl_flist $land_time]
+            dl_set $new_world:nplanks [dl_ilist $params(nplanks)]
+            dl_set $new_world:ball_start_x [dl_flist $params(ball_xpos)]
+            dl_set $new_world:ball_start_y [dl_flist $params(ball_ypos)]
+            dl_set $new_world:ball_radius [dl_flist $params(ball_radius)]
+            dl_set $new_world:ball_restitution [dl_flist $params(ball_restitution)]
+            dl_set $new_world:plank_restitution [dl_flist $params(plank_restitution)]
+            dl_set $new_world:lcatcher_x [dl_flist $params(lcatcher_x)]
+            dl_set $new_world:lcatcher_y [dl_flist $params(lcatcher_y)]
+            dl_set $new_world:rcatcher_x [dl_flist $params(rcatcher_x)]
+            dl_set $new_world:rcatcher_y [dl_flist $params(rcatcher_y)]
+            dl_set $new_world:ball_t $sim_dg:t
+            dl_set $new_world:ball_x $sim_dg:x
+            dl_set $new_world:ball_y $sim_dg:y
+            dl_set $new_world:contact_t $sim_dg:contact_t
+            dl_set $new_world:contact_bodies $sim_dg:contact_bodies
+            dg_delete $sim_dg
+            
+            box2d::destroy $world
+            return $new_world
+        } else {
+            dg_delete $new_world
+            box2d::destroy $world
+            return
         }
     }
 
@@ -789,7 +925,7 @@ namespace eval planko {
     proc register_accept_function {name description params body {dependencies {}}} {
         variable accept_functions
 
-        set func_info [dict create  name $name  description $description  params $params  body $body  dependencies $dependencies  created [clock seconds]]
+        set func_info [dict create name $name description $description params $params body $body dependencies $dependencies created [clock seconds]]
 
         dict set accept_functions $name $func_info
 
@@ -875,7 +1011,7 @@ namespace eval planko {
     # Initialize default accept functions when module loads
     proc init_default_accept_functions {} {
         # Register the original accept_board function
-        register_accept_function "accept_board"  "Original planko accept function - ball must land in catcher and hit minimum planks"  {g} {
+        register_accept_function "accept_board" "Original planko accept function - ball must land in catcher and hit minimum planks" {g} {
             variable params
 
             set x [dl_last $g:x]
@@ -928,7 +1064,7 @@ namespace eval planko {
     # Update the namespace export to include new functions
     namespace export default_params create_ball_dg create_catcher_dg create_floor_dg
     namespace export create_plank_dg make_world build_world test_simulation
-    namespace export accept_board generate_world pack_world generate_worlds
+    namespace export generate_world pack_world generate_worlds
     namespace export enable_threading disable_threading configure_threading
     namespace export get_threading_info benchmark_generation test_threading
     namespace export register_accept_function get_accept_functions

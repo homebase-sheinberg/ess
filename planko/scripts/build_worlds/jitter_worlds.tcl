@@ -11,7 +11,7 @@ if { ![file exists $base] && [file exists $dlshlib] } {
     zipfs mount $dlshlib $base
 }
 set ::auto_path [linsert $::auto_path [set auto_path 0] $base/lib]
-tcl::tm::path add .
+tcl::tm::path add ../../../lib
 
 package require dlsh
 package require box2d
