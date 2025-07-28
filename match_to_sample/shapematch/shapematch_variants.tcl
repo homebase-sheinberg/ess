@@ -16,6 +16,7 @@ namespace eval match_to_sample::shapematch {
 				targ_scale 3
 				shape_choices single_pair
 				show_feedback {0 1}
+				options_side {fixed random}
 				shape_params {}			
 			}
 		}
@@ -27,6 +28,7 @@ namespace eval match_to_sample::shapematch {
 				targ_scale 3
 				shape_choices single_pair_arbitrary
 				show_feedback {0 1}
+				options_side {fixed random}
 				shape_params {}
 			}
 		}
