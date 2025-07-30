@@ -175,17 +175,24 @@ namespace eval planko::training {
 	}
 	
   $s add_method responded {} {
-     if { [::ess::touch_in_win 0] } {
-         if { $side == 0 } { set correct 1 } { set correct 0 }
+      set button_response [my button_pressed]
+      if { $button_response != 0 } {
+          set resp $button_response
+          if { $side == [expr {$resp-1}] } { set correct 1 } { set correct 0 }
+          return 1
+      }
+
+      if { [::ess::touch_in_win 0] } {
+          if { $side == 0 } { set correct 1 } { set correct 0 }
           set resp 1
-         return 1     
-         } elseif { [::ess::touch_in_win 1] } {
+          return 1
+      } elseif { [::ess::touch_in_win 1] } {
         if { $side == 1 } { set correct 1 } { set correct 0 }
-         set resp 2
-         return 1
-     } else {
+          set resp 2
+          return 1
+      } else {
         return 0
-    }
+      }
  }
 
 	return
