@@ -12,7 +12,7 @@ package require points
 
 namespace eval planko {
     variable params
-    variable use_threading 0
+    variable use_threading 1
     variable num_threads 6
     variable min_threading_batch 4
 
@@ -489,7 +489,7 @@ namespace eval planko {
         variable min_threading_batch
 
         # Use threading if enabled and batch is large enough
-        if {$use_threading && $n >= $min_threading_batch && $n >= $num_threads} {
+        if {$use_threading && $n >= $min_threading_batch } {
             return [generate_worlds_parallel $n $d]
         } else {
             return [generate_worlds_serial $n $d]
@@ -1069,4 +1069,14 @@ namespace eval planko {
     namespace export get_threading_info benchmark_generation test_threading
     namespace export register_accept_function get_accept_functions
     namespace export test_world_parameter_combinations generate_worlds_with_parameter_sweeps
+}
+
+# Ensure Thread package is loaded before using planko with threading
+if {[catch {package require Thread} err]} {
+    puts "Warning: Thread package not available: $err"
+    planko::disable_threading
+} else {
+    puts "Thread package loaded successfully"
+    # Now safe to enable threading
+    planko::enable_threading 4
 }
