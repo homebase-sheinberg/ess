@@ -207,17 +207,9 @@ namespace eval match_to_sample::shapematch {
 
 	    if { [::ess::touch_in_win 0] } {
 		set correct 1
-		set show_feedback [expr {[info exists ::match_to_sample::shapematch::show_feedback] ? $::match_to_sample::shapematch::show_feedback : 0}]
-		if { $show_feedback } {
-		    rmtSend "!show_feedback_circle 1"
-		}
 		return 0
 	    } elseif { [::ess::touch_in_win 1] } {
 		set correct 0
-		set show_feedback [expr {[info exists ::match_to_sample::shapematch::show_feedback] ? $::match_to_sample::shapematch::show_feedback : 0}]
-		if { $show_feedback } {
-		    rmtSend "!show_feedback_circle 0"
-		}
 		return 1
 	    } else {
 		return -1
