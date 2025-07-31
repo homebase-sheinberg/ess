@@ -1,6 +1,6 @@
 #
 # LOADERS
-#   planko bounce loaders
+#   planko bounce loaders (different restitutions)
 #
 # DESCRIPTION
 #   loader functions for planko::bounce
@@ -117,6 +117,7 @@ namespace eval planko::bounce {
 
     }
 }
+
 
 
 
