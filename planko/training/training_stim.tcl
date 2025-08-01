@@ -1,4 +1,5 @@
-# NAME
+#
+# STIM
 #   planko_stim.tcl
 #
 # DESCRIPTION
@@ -246,4 +247,5 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
+
 
