@@ -35,7 +35,6 @@ namespace eval emcalib::9point {
 
             # initialize eye movements
             ::ess::em_init
-            ::ess::em_sampler_enable $sample_count
 
             soundReset
             soundSetVoice 81 0 0
@@ -107,6 +106,7 @@ namespace eval emcalib::9point {
                     }
                 }
 
+                ::ess::em_sampler_configure $sample_count
                 ::ess::em_region_off 0
                 ::ess::em_region_off 1
                 ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 0
@@ -189,6 +189,8 @@ namespace eval emcalib::9point {
         return
     }
 }
+
+
 
 
 

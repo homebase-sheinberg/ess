@@ -23,8 +23,8 @@ namespace eval emcalib {
         $sys add_param fixhold_time 400 time int
         $sys add_param pre_sample_time 500 time int
 
-        $sys add_param sample_count 500 variable int
-
+        $sys add_param sample_count 100 variable int
+        $sys add_param ms_per_sample 4 variable int
         ##
         ## Local variables
         ##
@@ -162,15 +162,16 @@ namespace eval emcalib {
         #
         $sys add_action sample_position {
             my sample_position
-            timerTick [expr $sample_count+100]
+            timerTick [expr {$sample_count*$ms_per_sample+100}]
         }
 
         $sys add_transition sample_position {
-            if { [my out_of_sample_win] } { return abort }
+            set out [my out_of_sample_win]
             if { [my sample_position_complete] } {
                 return store_calibration
             }
-            if [timerExpired] { return reward }
+            if { [timerExpired] } { return reward }
+            if { $out } { return abort }
 
         }
 
@@ -321,6 +322,15 @@ namespace eval emcalib {
         return $sys
     }
 }
+
+
+
+
+
+
+
+
+
 
 
 
