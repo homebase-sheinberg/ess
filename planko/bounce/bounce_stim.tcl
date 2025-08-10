@@ -1,3 +1,4 @@
+#
 # NAME
 #   bounce_stim.tcl
 #
@@ -244,6 +245,7 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
+
 
 
 
