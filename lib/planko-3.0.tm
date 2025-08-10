@@ -371,10 +371,12 @@ namespace eval planko {
     }
 
     proc update_world { w d } {
+	variable params
 	# for now, just handle plank_restitution, but this need to be expanded
 	dict for { k v } $d {
 	    if { $k == "plank_restitution" } {
 		dl_set $w:restitution [dl_replace $w:restitution [dl_regmatch $w:name plank*] $v]
+		dl_set $w:plank_restitution [dl_flist $v]
 	    }
 	}
     }
@@ -776,16 +778,9 @@ namespace eval planko {
             dl_set $new_world:side [dl_ilist $result]
             dl_set $new_world:nhit [dl_ilist $nhit]
             dl_set $new_world:land_time [dl_flist $land_time]
-            dl_set $new_world:nplanks [dl_ilist $params(nplanks)]
-            dl_set $new_world:ball_start_x [dl_flist $params(ball_xpos)]
-            dl_set $new_world:ball_start_y [dl_flist $params(ball_ypos)]
-            dl_set $new_world:ball_radius [dl_flist $params(ball_radius)]
-            dl_set $new_world:ball_restitution [dl_flist $params(ball_restitution)]
-            dl_set $new_world:plank_restitution [dl_flist $params(plank_restitution)]
-            dl_set $new_world:lcatcher_x [dl_flist $params(lcatcher_x)]
-            dl_set $new_world:lcatcher_y [dl_flist $params(lcatcher_y)]
-            dl_set $new_world:rcatcher_x [dl_flist $params(rcatcher_x)]
-            dl_set $new_world:rcatcher_y [dl_flist $params(rcatcher_y)]
+
+	    # most settings come from original world
+	    
             dl_set $new_world:ball_t $sim_dg:t
             dl_set $new_world:ball_x $sim_dg:x
             dl_set $new_world:ball_y $sim_dg:y
