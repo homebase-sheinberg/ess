@@ -3,7 +3,7 @@
 #   emcalib 9point
 #
 # DESCRIPTION
-#   Present fixjumps at 9 locations for calibration task
+#   Present targets at 9 locations for calibration task
 #
 
 namespace eval emcalib::9point {
@@ -189,8 +189,5 @@ namespace eval emcalib::9point {
         return
     }
 }
-
-
-
 
 

@@ -3,7 +3,7 @@
 #   emcalib 9point
 #
 # DESCRIPTION
-#   variants/loaders for 9point version of emcalib
+#   Variants for 9point version of emcalib
 #
 
 namespace eval emcalib::9point {
@@ -21,4 +21,5 @@ namespace eval emcalib::9point {
         }
     }
 }
+
 
