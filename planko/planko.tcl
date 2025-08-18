@@ -1,5 +1,5 @@
 #
-#  NAME
+#  SYSTEM
 #    planko.tcl
 #
 #  DECRIPTION
@@ -370,3 +370,4 @@ namespace eval planko {
         return $sys
     }
 }
+

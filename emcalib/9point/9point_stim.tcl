@@ -2,7 +2,7 @@
 #   emcalib_9point.tcl
 #
 # DESCRIPTION
-#   calibration with 9 locations
+#   Stim code for calibration with 9 locations
 #
 # REQUIRES
 #   polygon
@@ -84,6 +84,7 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
+
 
 
 

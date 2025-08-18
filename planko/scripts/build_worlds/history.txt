@@ -1,13 +1,3 @@
-dl_tcllist [dl_sortedFunc group2:cluster group2:cluster dl_lengths]
-source jitter_worlds.tcl
-time { cluster_jittered_trajectories jitters 3 250 25 }
-dl_tcllist [dl_sortedFunc group3:cluster group3:cluster dl_lengths]
-source jitter_worlds.tcl
-time { cluster_jittered_trajectories jitters 3 2 250 25 }
-time { cluster_jittered_trajectories jitters 3 250 2 25 }
-dg_dir
-dl_tcllist [dl_sortedFunc group5:cluster group5:cluster dl_lengths]
-cluster_jittered_trajectories jitters 7 250 2 25
 dl_tcllist [dl_sortedFunc group6:cluster group6:cluster dl_lengths]
 cluster_jittered_trajectories jitters 7 250 1 25
 dl_tcllist [dl_sortedFunc group7:cluster group7:cluster dl_lengths]
@@ -98,3 +88,12 @@ trajectory_analyze [dl_transpose [dl_llist jitters:x:3 jitters:y:3]]
 dg_view group3
 trajectory_analyze [dl_transpose [dl_llist jitters:x:4 jitters:y:4]]
 dg_view group4
+dg_dir
+dl_length stimdg:id
+source test_planko3.tcl
+dg_dir
+string length temp_session_1752934808723559_tid0x16cf8f000
+source test_planko3.tcl
+load_system planko bounce multiball
+evalNoReply
+set errorInfo

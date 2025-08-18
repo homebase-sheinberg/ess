@@ -237,7 +237,7 @@ proc remove_jitter_trajs {} {
 
 proc add_trajectory_peaks { worlds jitters id } {
     dl_local traj [dl_transpose [dl_llist $jitters:x:$id $jitters:y:$id]]
-    set g [trajectory_analyze $traj]
+    set g [trajectory_analyze_enhanced $traj -mode combined -variance_radius 2 -variance_weight 2]
     set npeaks [dl_length $g:peaks_x]
     for { set i 0 } { $i < $npeaks } { incr i } {
 	set radius [expr {[dl_get $g:peak_values $i]*200.}]
@@ -261,7 +261,7 @@ proc run_simulation { worlds jitters id } {
     dg_delete $new_world
 
     add_jitter_trajs $worlds $jitters $id
-    remove_jitter_trajs
+    #remove_jitter_trajs
     
     add_trajectory_peaks $worlds $jitters $id
 
