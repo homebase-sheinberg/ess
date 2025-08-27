@@ -28,10 +28,10 @@ namespace eval hapticvis::transfer {
             my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness
         }
 
-        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness} {
+        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness calibration_variant} {
             set shape_scale 1
             set noise_type none
-            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness
+            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $calibration_variant
         }
 
         $s add_method setup_visual_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness } {
@@ -77,7 +77,7 @@ namespace eval hapticvis::transfer {
             my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations 1
         }
 
-        $s add_method setup_trials { db_prefix subject_id subject_set n_per_set trial_type shape_scale noise_type n_rep rotations joystick_side subject_handedness { use_dists 0 } } {
+        $s add_method setup_trials { db_prefix subject_id subject_set n_per_set trial_type shape_scale noise_type n_rep rotations joystick_side subject_handedness calibration_variant { use_dists 0 } } {
             # find database
             set db {}
             set p ${::ess::system_path}/$::ess::current(project)/hapticvis/db
@@ -169,6 +169,7 @@ namespace eval hapticvis::transfer {
             dl_set stimdg:hand [dl_ilist]
             dl_set stimdg:subject_handedness [dl_ilist]
             dl_set stimdg:midline_offset [dl_ilist]
+            dl_set stimdg:calibration_variant [dl_ilist]
 
 
             # go into table and find info about sets/subject
@@ -317,11 +318,15 @@ namespace eval hapticvis::transfer {
 
             dl_set stimdg:subject_handedness [dl_repeat $subject_handedness $n_obs]
 
-            if { $joystick_side == 0} {
+            if { $joystick_side == 0 && $calibration_variant == 0} {
                 dl_set stimdg:midline_offset [dl_repeat -25 $n_obs]
-            } else {
+            } elseif {$joystick_side == 1 && $calibration_variant == 0} {
                 dl_set stimdg:midline_offset [dl_repeat 25 $n_obs]
+            } else {
+                dl_set stimdg:midline_offset [dl_repeat 0 $n_obs]
             }
+            
+            dl_set stimdg:calibration_variant [dl_repeat $calibration_variant $n_obs]
 
             dl_set stimdg:remaining [dl_ones $n_obs]
             return $g
