@@ -285,7 +285,7 @@ namespace eval hapticvis::transfer {
             set res [rest::get $url [list function follow_dial_or_pattern follow false]]
         }
 
-        $s add_method haptic_show { shape_id a { hand 1 } } {
+        $s add_method haptic_show { shape_id a { hand 1 } calibration_variant } {
             if { $simulate_grasp } {
                 dservSet ess/grasp/available 1
                 return
@@ -297,16 +297,21 @@ namespace eval hapticvis::transfer {
             set angle [expr {int($a)%360}]
             set url http://${ip}:${port}
             set zero_pt -177.4
-            if {$hand == 0} {
+            if {$hand == 0 && $calibration_variant == 0} {
                 set arm_offset [expr $zero_pt + 25]
                 set res [rest::get $url [list function pick_and_place hand 0 xoffset $arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
                 ]
                 ]
-            } else {
+            } elseif {$hand == 1 && $calibration_variant == 0} {
                 set arm_offset [expr $zero_pt - 25]
                 set res [rest::get $url [list function pick_and_place hand 0 xoffset $arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
                 ]
                 ]
+            } else {
+                set arm_offset [expr $zero_pt]
+                set res [rest::get $url [list function pick_and_place hand 0 xoffset $arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
+                ]
+                ] 
             }
         }
 
