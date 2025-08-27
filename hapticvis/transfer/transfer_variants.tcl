@@ -5,7 +5,7 @@
 # DESCRIPTION
 #   variants for hapticvis transfer task
 #
-# 
+
 #
 # Currently only supports 4, 6, 8 choices properly
 #   The "correct_choice" is numbered 1-n_choices
@@ -106,7 +106,6 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                subject_handedness { { right 1 } { left 0 } }
-               calibration_variant { { no 0 } }
             }
             params [list "$haptic_params joystick_side 0"]
         }
@@ -122,27 +121,9 @@ namespace eval hapticvis::transfer {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { right 1 } }
-                subject_handedness { { right 1 } { left 0 } }
-                calibration_variant { { no 0 } }
+                subject_handedness { { right 1 } { left 0 } }              
             }
             params [list "$haptic_params joystick_side 1"]
-        }
-        haptic_calibration {
-            description "calibration variant to assess position of hand in 3d space"
-            loader_proc setup_haptic
-            loader_options {
-                subject_id { $subject_ids }
-                subject_set { $subject_sets }
-                n_per_set { 4 }
-                n_rep { 6 1 2 4 8 10 20 }
-                rotations {
-                    {three {60 180 300}} {single {180}}
-                }
-                joystick_side { { right 1 } }
-                subject_handedness { { right 1 } { left 0 } }
-                calibration_variant { { yes 1 } }
-            }
-            params [list "$haptic_params joystick_side 0"]
         }
         visual_cued_left {
             description "respond to cued visual objects"
