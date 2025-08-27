@@ -12,11 +12,11 @@ namespace eval hapticvis::identify {
     proc protocol_init { s } {
 	$s set_protocol [namespace tail [namespace current]]
 	
-	$s add_param rmt_host     $::ess::rmt_host   stim ipaddr
 	$s add_param juice_ml            0.6       variable float
 	$s add_param use_joystick          1       variable bool
 	$s add_param use_touchscreen       1       variable bool
 	
+	$s add_variable rmt_host          $::ess::rmt_host
 	$s add_variable cur_id            -1
 	$s add_variable target_slot       -1
 	$s add_variable trial_type        visual

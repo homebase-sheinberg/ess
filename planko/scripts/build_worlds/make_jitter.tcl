@@ -11,11 +11,12 @@ if { ![file exists $base] && [file exists $dlshlib] } {
     zipfs mount $dlshlib $base
 }
 set ::auto_path [linsert $::auto_path [set auto_path 0] $base/lib]
+tcl::tm::path add ../../../lib
 
 package require dlsh
 
 set num_threads 6
-proc mt_jitter { n_jitter } {
+proc mt_jitter { n_jitter jitter_proc } {
 
     # Create multiple threads
     set threads {}
@@ -36,11 +37,11 @@ proc mt_jitter { n_jitter } {
 	set tid [thread::create {
 	    source jitter_worlds.tcl
 
-	    proc do_work { njitter from to } {
+	    proc do_work { njitter jitter_proc from to } {
 		
 		# Load boards
 		set worlds [dg_read worlds]
-		set g [world_jitter $worlds $njitter $from $to]
+		set g [$jitter_proc $worlds $njitter $from $to]
 		dg_delete $worlds
 		
 		# Add result to shared memory 
@@ -79,7 +80,7 @@ proc mt_jitter { n_jitter } {
 	thread::send $tid [list set main_tid [thread::id]]
 	
 	# Execute the do_work proc in the thread and wait for the result
-	thread::send -async $tid [list do_work $n_jitter $from $to]
+	thread::send -async $tid [list do_work $n_jitter $jitter_proc $from $to]
     }
 
     vwait ::done
@@ -103,6 +104,16 @@ proc mt_jitter { n_jitter } {
     return $worlds
 }
 
-set jitters [mt_jitter 250]
-dg_rename $jitters jitters
-dg_write jitters
+puts "Making ball jitters"
+set jitters [mt_jitter 250 ball_jitter]
+dg_rename $jitters ball_jitters
+dg_write ball_jitters
+
+return
+
+puts "Making world jitters"
+set jitters [mt_jitter 250 world_jitter]
+dg_rename $jitters world_jitters
+dg_write world_jitters
+
+

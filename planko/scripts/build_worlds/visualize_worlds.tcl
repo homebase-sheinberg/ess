@@ -10,34 +10,7 @@ set ::auto_path [linsert $::auto_path [set auto_path 0] $base/lib]
 
 package require box2d
 package require dlsh
-package require gsl
-package require dbscan
-
-proc jitter_regression_table { j id { nplanks 10 } } {
-    set r [dg_create]
-
-    # concatenate the jitter xs, ys, angles for each trial into list
-    dl_local xs \
-	[dl_transpose \
-	     [dl_combine \
-		  [dl_transpose $j:jx:$id] \
-		  [dl_transpose $j:jy:$id] \
-		  [dl_transpose $j:angle:$id]]]
-
-    set n [dl_length $j:jx:$id:0]
-    dl_local p_ids \
-	[dl_transpose \
-	     [dl_combine \
-		  [dl_llist [dl_fromto 0 $n]] \
-		  [dl_llist [dl_fromto $n [expr $n*2]]] \
-		  [dl_llist [dl_fromto [expr $n*2] [expr $n*3]]]]]
-    dl_local p_ids [dl_choose [dl_collapse $p_ids] [dl_fromto 0 [expr $nplanks*3]]]
-    
-    
-    dl_set $r:xs [dl_choose $xs [dl_llist $p_ids]]
-    dl_set $r:ys [dl_sqrt $j:distance:$id]
-    return $r
-}
+package require trajectory_analysis
 
 proc get_box_coords { tx ty w h { a 0 } } {
     dl_local x [dl_mult $w [dl_flist -.5 .5 .5 -.5 -.5 ]]
@@ -211,7 +184,7 @@ proc add_t_stats { x y ts ps { alpha 0.01 } } {
     }
 }
 
-proc add_board_info { worlds jitters id nclusters } {
+proc add_board_info { worlds jitters id } {
     global display
     
     # Define some variables
@@ -224,8 +197,6 @@ proc add_board_info { worlds jitters id nclusters } {
     # Create bulleted items
     set items {
 	"Board: $id"
-	"Uncertainty score: [format %.1f [expr ([dl_mean $jitters:distance:$id])]]"
-	"nClusters $nclusters"
     }
     
     set items [subst $items]
@@ -242,43 +213,8 @@ proc add_board_info { worlds jitters id nclusters } {
 	# Move to next line
 	incr y $y_increment
     }
-
-    set jtable [jitter_regression_table $jitters $id]
-    set regression [gsl::regression $jtable:xs $jtable:ys]
-    set ts [dl_tcllist [dl_reshape $regression:t - 3]]
-    set ps [dl_tcllist [dl_reshape $regression:p - 3]]
-    
-    foreach loc $::plank_xys t $ts p $ps {
-	lassign $loc x y
-	add_t_stats $x $y $t $p
-    }
-
-    dg_delete $jtable
-    dg_delete $regression
-
 }
 
-
-# Function to get color from palette by index
-proc get_color {index} {
-
-    set colorPalette {
-	0 "#FF0000"  
-	1 "#00FF00"  
-	2 "#0000FF"  
-	3 "#FFFF00"  
-	4 "#FF00FF"  
-	5 "#00FFFF"  
-	6 "#FFA500"  
-	7 "#800080"  
-    }
-    
-    # Ensure the index wraps around if it exceeds dictionary size
-    set size [dict size $colorPalette]
-    set wrappedIndex [expr {$index % $size}]
-    
-    return [dict get $colorPalette $wrappedIndex]
-}
 
 proc add_jitter_trajs { worlds jitters id { n 100 } } {
     set xs $jitters:x:$id
@@ -286,23 +222,31 @@ proc add_jitter_trajs { worlds jitters id { n 100 } } {
     set n [dl_length $xs]
     dl_local subset [dl_choose [dl_randfill $n] [dl_fromto 0 $n]]
 
-    set mindist 10
-    set minpts 3
-    dl_local clusters [dbscan::cluster $jitters:distance_matrix:$id $mindist $minpts]
-    
     for { set i 0 } { $i < $n } { incr i } {
 	set nc [dl_length $xs:$i]
 	set coords {}
 	lassign [deg_to_display $xs:$i $ys:$i] xlist ylist
 	foreach a $xlist b $ylist { lappend coords $a $b }
-	set c [get_color [dl_get $clusters $i]]
-	$::display create line $coords -fill $c -tag jitter_traj
+	$::display create line $coords -fill magenta -tag jitter_traj
     }
-    return [dl_length [dl_unique $clusters]]
 }
 
 proc remove_jitter_trajs {} {
     $::display delete jitter_traj
+}
+
+proc add_trajectory_peaks { worlds jitters id } {
+    dl_local traj [dl_transpose [dl_llist $jitters:x:$id $jitters:y:$id]]
+    set g [trajectory_analyze_enhanced $traj -mode combined -variance_radius 2 -variance_weight 2]
+    set npeaks [dl_length $g:peaks_x]
+    for { set i 0 } { $i < $npeaks } { incr i } {
+	set radius [expr {[dl_get $g:peak_values $i]*200.}]
+	set x [dl_get $g:peaks_x $i]
+	set y [dl_get $g:peaks_y $i]
+	lassign [deg_to_display $x $y] x0 y0
+	$::display create oval [expr $x0-$radius] [expr $y0-$radius] \
+	    [expr $x0+$radius] [expr $y0+$radius]  -outline red
+    }
 }
 
 proc run_simulation { worlds jitters id } {
@@ -316,8 +260,12 @@ proc run_simulation { worlds jitters id } {
     lassign [build_world $new_world] ::world ::ball ::ball_id
     dg_delete $new_world
 
-    set nclusters [add_jitter_trajs $worlds $jitters $id]
-    add_board_info $worlds $jitters $id $nclusters
+    add_jitter_trajs $worlds $jitters $id
+    #remove_jitter_trajs
+    
+    add_trajectory_peaks $worlds $jitters $id
+
+    add_board_info $worlds $jitters $id
     
     update
     
@@ -337,7 +285,7 @@ proc run_simulation { worlds jitters id } {
 }
 
 set worlds [dg_read worlds]
-set jitters [dg_read jitters]
+set jitters [dg_read ball_jitters]
 set cur_world 0
 set max_worlds [dl_length $worlds:name]
 
