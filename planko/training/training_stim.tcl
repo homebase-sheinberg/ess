@@ -35,58 +35,86 @@ proc check_contacts { w } {
 }
 
 ##############################################################
+###                    update_position                     ###
+##############################################################
+
+proc update_position { ball body start } {
+    global curtrial
+    set now [expr {($::StimTime-$start)/1000.}]
+    set i [dl_first [dl_indices [dl_gt stimdg:ball_t:$curtrial $now]]]
+    if { $i != "" } {
+        set x [dl_get stimdg:ball_x:$curtrial $i]
+        set y [dl_get stimdg:ball_y:$curtrial $i]
+        Box2D_setTransform $::world $body $x $y 
+    }
+    if { ![setObjProp $ball landed] } {
+        if { [expr {$now > [dl_get stimdg:land_time $curtrial]}] } {
+            setObjProp $ball landed 1
+            set side [dl_get stimdg:side $curtrial]
+            if { $side } { set hit right } { set hit left }
+             qpcs::dsSet $::dservhost planko/complete $hit
+        }        
+    }
+}
+
+
+##############################################################
 ###                     Show Worlds                        ###
 ##############################################################
 
 proc make_stims { trial } {
-    
-    resetObjList		 ;# unload existing objects
-    glistInit 1			 ;# initialize stimuli
+
+    resetObjList ;# unload existing objects
+    glistInit 1 ;# initialize stimuli
 
     set dg stimdg
-    
+
     set bworld [Box2D]
     glistAddObject $bworld 0
     setObjProp $bworld complete 0
 
     set ::left_catcher {}
     set ::right_catcher {}
-    
+    set ::planks {}
+
     set n [dl_length $dg:name:$trial]
 
     # get side and show_only_correct_side flag for this trial
-    foreach v "side wrong_catcher_alpha" {
-	set $v [dl_get $dg:$v $trial]
+    foreach v "side ball_color" {
+        set $v [dl_get $dg:$v $trial]
     }
-    
+
     for { set i 0 } { $i < $n } { incr i } {
-	foreach v "name shape type tx ty sx sy angle restitution" {
-	    set $v [dl_get $dg:$v:$trial $i]
-	}
-	if { $shape == "Box" } {
-	    if { $side == "0" } { set wrong_catcher catchr_* } { set wrong_catcher catchl_* }
-	    if { [string match $wrong_catcher $name] } { set alpha $wrong_catcher_alpha } { set alpha 1.0 }
-	    set body [create_box $bworld $name $type $tx $ty $sx $sy $angle [list 9. 9. 9. $alpha ]]
-	} elseif { $shape == "Circle" } {
-	    set body [create_circle $bworld $name $type $tx $ty $sx $angle { 0 1 1 1 }]
-	}
-	Box2D_setRestitution $bworld [setObjProp $body body] $restitution
-	
-	glistAddObject $body 0
+        foreach v "name shape type tx ty sx sy angle restitution" {
+            set $v [dl_get $dg:$v:$trial $i]
+        }
+        if { $shape == "Box" } {
+            set body [create_box $bworld $name $type $tx $ty $sx $sy $angle [list 9. 9. 9. 1.0 ]]
+        } elseif { $shape == "Circle" } {
+            set body [create_circle $bworld $name $type $tx $ty $sx $angle $ball_color]
+        }
+        Box2D_setRestitution $bworld [setObjProp $body body] $restitution
 
-	# track this so we can set in motion
-	if { $name == "ball" } { set ::ball $body }
+        glistAddObject $body 0
 
-	# track catcher bodies so we can give feedback
-	if { [string match catchl* $name] } { lappend ::left_catcher $body }
-	if { [string match catchr* $name] } { lappend ::right_catcher $body }
+        # track this so we can set in motion
+        if { $name == "ball" } { 
+            set ::ball $body 
+            setObjProp $body landed 0
+        }
+
+        # track catcher bodies so we can give feedback
+        if { [string match catchl* $name] } { lappend ::left_catcher $body }
+        if { [string match catchr* $name] } { lappend ::right_catcher $body }
+        if { [string match plank* $name] } { lappend ::planks $body }
     }
 
     addPostScript $bworld [list check_contacts $bworld]
-    
+
     glistSetDynamic 0 1
     return $bworld
 }
+
 
 # create a box2d body and visual box (angle is in degrees)
 proc create_box { bworld name type tx ty sx sy { angle 0 } { color { 1 1 1 } } } {
@@ -158,22 +186,28 @@ proc nexttrial { id } {
 }
 
 proc show_response { resp } {
+    set simulate 0; # used stored trajectory to replay as built
     set body [setObjProp $::ball body]
-    Box2D_setBodyType $::world $body 2
+    if { $simulate } {
+        Box2D_setBodyType $::world $body 2; # dynamic
+    } else {
+        Box2D_setBodyType $::world $body 1; # kinematic 
+        addPreScript $::ball "update_position $::ball $body $::StimTime"
+    } 
     if { $resp == 0 } { set c $::left_catcher } { set c $::right_catcher }
-    set color     "0.7 0.7 0.7"
+    set color "0.7 0.7 0.7"
     foreach p $c {
-	polycolor $p {*}$color
+        polycolor $p {*}$color
     }
 }
 
 proc show_feedback { resp correct } {
     if { $resp == 0 } { set c $::left_catcher } { set c $::right_catcher }
-    set green   "0.2 .9 .3"
-    set red     "1.0 .2 .2"
+    set green "0.2 .9 .3"
+    set red "1.0 .2 .2"
     foreach p $c {
-	if { $correct } { set color $green } { set color $red }
-	polycolor $p {*}$color
+        if { $correct } { set color $green } { set color $red }
+        polycolor $p {*}$color
     }
 }
 
