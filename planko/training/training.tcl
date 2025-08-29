@@ -99,6 +99,15 @@ namespace eval planko::training {
 	    set buttons_changed 0
 	}
 	
+	$s add_method button_pressed {} {
+            if { $use_buttons } {
+                if { [dservGet gpio/input/$left_button] } { return 1 }
+                if { [dservGet gpio/input/$right_button] } { return 2 }
+                return 0
+            }
+            return 0
+  }
+        
 	$s add_method n_obs {} { return [dl_length stimdg:stimtype] }
 
 	$s add_method nexttrial {} {
@@ -150,7 +159,15 @@ namespace eval planko::training {
 	$s add_method stim_off {} {
 	    rmtSend "!stimoff"
 	}
+  
+  $s add_method stim_hide {} {
+            rmtSend "!planksoff"
+  }
 
+  $s add_method stim_unhide {} {
+    rmtSend "!plankson"
+  }
+   
 	$s add_method feedback { resp correct } {
 	    rmtSend "!show_response [expr $resp-1]"
 	}
