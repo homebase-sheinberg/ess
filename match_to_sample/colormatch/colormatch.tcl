@@ -10,213 +10,292 @@ namespace eval match_to_sample::colormatch {
     variable params_defaults { sample_time 2000 delay_time 0 }
 
     proc protocol_init { s } {
-	$s set_protocol [namespace tail [namespace current]]
-	
-	$s add_param rmt_host          $::ess::rmt_host   stim ipaddr
-	
-	$s add_param juice_ml         0.8       variable float
-	
-	$s add_param use_buttons        1       variable int
-	$s add_param left_button       24       variable int
-	$s add_param right_button      25       variable int
-	
-	$s add_variable targ_x             
-	$s add_variable targ_y             
-	$s add_variable targ_r             
-	
-	$s add_variable dist_x             
-	$s add_variable dist_y             
-	$s add_variable dist_r             
-	
-	$s add_variable buttons_changed    0
-	$s add_variable cur_id             0
-	$s add_variable correct           -1
+        $s set_protocol [namespace tail [namespace current]]
 
-	$s set_protocol_init_callback {
-	    ::ess::init
+        $s add_param rmt_host $::ess::rmt_host stim ipaddr
 
-	    if { $use_buttons } {
-		foreach b "$left_button $right_button" {
-		    dservAddExactMatch gpio/input/$b
-		    dservTouch gpio/input/$b
-		    dpointSetScript gpio/input/$b ess::do_update
-		}
-	    }
-	    
-	    # open connection to rmt and upload ${protocol}_stim.tcl
-	    my configure_stim $rmt_host
+        $s add_param juice_ml 0.8 variable float
 
-	    # initialize touch processor
-	    ::ess::touch_init
-	    
-	    # configure juicer subsystem
-	    ::ess::juicer_init
+        $s add_param use_buttons 1 variable int
+        $s add_param left_button 24 variable int
+        $s add_param right_button 25 variable int
 
-	    soundReset
-	    soundSetVoice 81 0    0
-	    soundSetVoice 57 17   1
-	    soundSetVoice 60 0    2
-	    soundSetVoice 42 0    3
-	    soundSetVoice 21 0    4
-	    soundSetVoice 8  0    5
-	    soundSetVoice 113 100 6
-	    foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
-	}
-	    
-	$s set_protocol_deinit_callback {
-	    rmtClose
-	}
-	
-	$s set_reset_callback {
-	    dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
-	    set obs_count 0	    
-	    rmtSend reset
-	}
-	
-	$s set_start_callback {
-	    set first_time 1
-	}
-	
-	$s set_quit_callback {
-	    ::ess::touch_region_off 0
-	    ::ess::touch_region_off 1
-	    rmtSend clearscreen
-	    ::ess::end_obs QUIT
-	}
-	
-	$s set_end_callback {
-	    ::ess::evt_put SYSTEM_STATE STOPPED [now]
-	}
-	
-	$s set_file_open_callback {
-	    print "opened datafile $filename"
-	}
-	
-	$s set_file_close_callback {
-	    set name [file tail [file root $filename]]
-	    #	    set path [string map {-rpi4- {}} [info hostname]]
-	    set path {}
-	    set output_name [file join /tmp $path $name.csv]
-	    #	    set converted [save_data_as_csv $filename $output_name]
-	    #	    print "saved data to $output_name"
-	    print "closed $name"
-	}
-	
+        $s add_variable targ_x
+        $s add_variable targ_y
+        $s add_variable targ_r
 
-	######################################################################
-	#                         Utility Methods                            #
-	######################################################################
-	
-	$s add_method button_pressed {} {
-	    if { $use_buttons } {
-		if { [dservGet gpio/input/$left_button] ||
-		     [dservGet gpio/input/$right_button] } {
-		    return 1
-		}
-	    }
-	    return 0
-	}
-	
-	$s add_method start_obs_reset {} {
-	    set buttons_changed 0
-	}
-	
-	$s add_method n_obs {} { return [dl_length stimdg:stimtype] }
-	
-	$s add_method nexttrial {} {
-	    if { [dl_sum stimdg:remaining] } {
-		dl_local left_to_show \
-		    [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
-		set cur_id [dl_pickone $left_to_show]
-		set stimtype [dl_get stimdg:stimtype $cur_id]
-		
-		# set these touching_response knows where choices are
-		set targ_x [dl_get stimdg:match_x $stimtype]
-		set targ_y [dl_get stimdg:match_y $stimtype]
-		set targ_r [dl_get stimdg:match_r $stimtype]
-		set dist_x [dl_get stimdg:nonmatch_x $stimtype]
-		set dist_y [dl_get stimdg:nonmatch_y $stimtype]
-		set dist_r [dl_get stimdg:nonmatch_r $stimtype]
+        $s add_variable dist_x
+        $s add_variable dist_y
+        $s add_variable dist_r
 
-		::ess::touch_region_off 0
-		::ess::touch_region_off 1
-		::ess::touch_reset
-		
-		::ess::touch_win_set 0 $targ_x $targ_y $targ_r 0
-		::ess::touch_win_set 1 $dist_x $dist_y $dist_r 0
+        $s add_variable buttons_changed 0
+        $s add_variable cur_id 0
+        $s add_variable correct -1
 
-		rmtSend "nexttrial $stimtype"
+        $s set_protocol_init_callback {
+            ::ess::init
 
-		set correct -1
-	    }
-	}
+            if { $use_buttons } {
+                foreach b "$left_button $right_button" {
+                    dservAddExactMatch gpio/input/$b
+                    dservTouch gpio/input/$b
+                    dpointSetScript gpio/input/$b ess::do_update
+                }
+            }
 
-	$s add_method endobs {} {
-	    if { $correct != -1 } {
-		dl_put stimdg:remaining $cur_id 0
-		incr obs_count
-	    }
-	}
+            # open connection to rmt and upload ${protocol}_stim.tcl
+            my configure_stim $rmt_host
 
-	$s add_method finished {} {
-	    return [expr [dl_sum stimdg:remaining]==0]
-	}
+            # initialize touch processor
+            ::ess::touch_init
 
-	$s add_method presample {} {
-	    soundPlay 1 70 200
-	}
+            # configure juicer subsystem
+            ::ess::juicer_init
 
-	$s add_method sample_on {} {
-	    rmtSend "!sample_on"
-	}
+            soundReset
+            soundSetVoice 81 0 0
+            soundSetVoice 57 17 1
+            soundSetVoice 60 0 2
+            soundSetVoice 42 0 3
+            soundSetVoice 21 0 4
+            soundSetVoice 8 0 5
+            soundSetVoice 113 100 6
+            foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
+        }
 
-	$s add_method sample_off {} {
-	    rmtSend "!sample_off"
-	}
+        $s set_protocol_deinit_callback {
+            rmtClose
+        }
 
-	$s add_method choices_on {} {
-	    rmtSend "!choices_on"
-	    ::ess::touch_region_on 0
-	    ::ess::touch_region_on 1
-	}
+        $s set_reset_callback {
+            dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
+            set obs_count 0
+            rmtSend reset
+        }
 
-	$s add_method choices_off {} {
-	    rmtSend "!choices_off"
-	}
+        $s set_start_callback {
+            set first_time 1
+        }
 
-	$s add_method reward {} {
-	    soundPlay 3 70 70
-	    ::ess::reward $juice_ml
-	    ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
-	}
+        $s set_quit_callback {
+            ::ess::touch_region_off 0
+            ::ess::touch_region_off 1
+            rmtSend clearscreen
+            ::ess::end_obs QUIT
+        }
 
-	$s add_method noreward {} {
+        $s set_end_callback {
+            ::ess::evt_put SYSTEM_STATE STOPPED [now]
+        }
 
-	}
+        $s set_file_open_callback {
+            print "opened datafile $filename"
+        }
 
-	$s add_method finale {} {
-	    soundPlay 6 60 400
-	}
+        $s set_file_close_callback {
+            set name [file tail [file root $filename]]
+            #	    set path [string map {-rpi4- {}} [info hostname]]
+            set path {}
+            set output_name [file join /tmp $path $name.csv]
+            #	    set converted [save_data_as_csv $filename $output_name]
+            #	    print "saved data to $output_name"
+            print "closed $name"
+        }
 
-	$s add_method response_correct {} { return $correct }
-	
-	$s add_method responded {} {
-	    if { $use_buttons && $buttons_changed } {
-		return -1
-	    }
 
-	    if { [::ess::touch_in_win 0] } {
-		set correct 1
-		return 0
-	    } elseif { [::ess::touch_in_win 1] } {
-		set correct 0
-		return 1
-	    } else {
-		return -1
-	    }
-	}
-	
-	return
+        ######################################################################
+        #                         Utility Methods                            #
+        ######################################################################
+
+        $s add_method button_pressed {} {
+            if { $use_buttons } {
+                if { [dservGet gpio/input/$left_button] ||
+                    [dservGet gpio/input/$right_button] } {
+                    return 1
+                }
+            }
+            return 0
+        }
+
+        $s add_method start_obs_reset {} {
+            set buttons_changed 0
+        }
+
+        $s add_method n_obs {} { return [dl_length stimdg:stimtype] }
+
+        $s add_method nexttrial {} {
+            if { [dl_sum stimdg:remaining] } {
+                dl_local left_to_show [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
+                set cur_id [dl_pickone $left_to_show]
+                set stimtype [dl_get stimdg:stimtype $cur_id]
+
+                # set these touching_response knows where choices are
+                set targ_x [dl_get stimdg:match_x $stimtype]
+                set targ_y [dl_get stimdg:match_y $stimtype]
+                set targ_r [dl_get stimdg:match_r $stimtype]
+                set dist_x [dl_get stimdg:nonmatch_x $stimtype]
+                set dist_y [dl_get stimdg:nonmatch_y $stimtype]
+                set dist_r [dl_get stimdg:nonmatch_r $stimtype]
+
+                ::ess::touch_region_off 0
+                ::ess::touch_region_off 1
+                ::ess::touch_reset
+
+                ::ess::touch_win_set 0 $targ_x $targ_y $targ_r 0
+                ::ess::touch_win_set 1 $dist_x $dist_y $dist_r 0
+
+                rmtSend "nexttrial $stimtype"
+
+                set correct -1
+            }
+        }
+
+        $s add_method endobs {} {
+            if { $correct != -1 } {
+                dl_put stimdg:remaining $cur_id 0
+                incr obs_count
+            }
+        }
+
+        $s add_method finished {} {
+            return [expr [dl_sum stimdg:remaining]==0]
+        }
+
+        $s add_method presample {} {
+            soundPlay 1 70 200
+        }
+
+        $s add_method sample_on {} {
+            rmtSend "!sample_on"
+        }
+
+        $s add_method sample_off {} {
+            rmtSend "!sample_off"
+        }
+
+        $s add_method choices_on {} {
+            rmtSend "!choices_on"
+            ::ess::touch_region_on 0
+            ::ess::touch_region_on 1
+        }
+
+        $s add_method choices_off {} {
+            rmtSend "!choices_off"
+        }
+
+        $s add_method reward {} {
+            soundPlay 3 70 70
+            ::ess::reward $juice_ml
+            ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
+        }
+
+        $s add_method noreward {} {
+
+        }
+
+        $s add_method finale {} {
+            soundPlay 6 60 400
+        }
+
+        $s add_method response_correct {} { return $correct }
+
+        $s add_method responded {} {
+            if { $use_buttons && $buttons_changed } {
+                return -1
+            }
+
+            if { [::ess::touch_in_win 0] } {
+                set correct 1
+                return 0
+            } elseif { [::ess::touch_in_win 1] } {
+                set correct 0
+                return 1
+            } else {
+                return -1
+            }
+        }
+
+        # setup visualization
+        setup_viz
+        
+        return
+    }
+    
+    proc setup_viz {} {
+        set viz_config {
+            namespace eval match_to_sample {
+                proc setup {} {
+                    evtSetScript 3 2 ::viz::match_to_sample::reset
+                    evtSetScript 7 0 ::viz::match_to_sample::stop
+                    evtSetScript 19 -1 ::viz::match_to_sample::beginobs
+                    evtSetScript 20 -1 ::viz::match_to_sample::endobs
+                    evtSetScript 29 -1 ::viz::match_to_sample::stimtype
+                    evtSetScript 30  1 ::viz::match_to_sample::sample_on
+                    evtSetScript 30  0 ::viz::match_to_sample::sample_off
+                    evtSetScript 49  1 ::viz::match_to_sample::choices_on
+                    evtSetScript 49  0 ::viz::match_to_sample::choices_off
+                }
+
+                proc reset { t s d } { viz::clear_display }
+                proc stop { t s d } { viz::clear_display }
+                proc beginobs { type subtype data } {
+                    setbackground [dlg_rgbcolor 100 100 100]
+                    setwindow -8 -8 8 8
+                    viz::update_display
+                }
+                proc stimtype { type subtype data } {
+                    variable trial
+                    set trial $data
+                    set vars "sample_x sample_y sample_r match_x match_y match_r nonmatch_x nonmatch_y nonmatch_r"                      
+                    foreach v $vars { variable $v [viz::get_attr $trial $v]}
+
+                    # now turn colors into indices
+                    set vars "sample_color match_color nonmatch_color"
+                    foreach v $vars {
+                        set rgb [dl_tcllist [dl_int [dl_mult stimdg:$v:$trial 255]]]
+                        variable $v [dlg_rgbcolor {*}$rgb]                        
+                    }
+                }
+                proc sample_on { type subtype data } {
+                    variable trial 
+                    variable sample_x; variable sample_y; variable sample_r
+                    variable sample_color
+                    clearwin
+                    dlg_markers $sample_x $sample_y fsquare -size ${sample_r}x -color $sample_color
+                    viz::update_display                    
+                }
+                proc sample_off { type subtype data } {
+                    viz::clear_display
+                }
+                proc choices_on { type subtype data } {
+                    variable trial 
+                    variable match_x; variable match_y; variable match_r
+                    variable nonmatch_x; variable nonmatch_y; variable nonmatch_r
+                    variable match_color; variable nonmatch_color
+                    clearwin
+                    dlg_markers $match_x $match_y fsquare -size ${match_r}x  -color $match_color
+                    dlg_markers $nonmatch_x $nonmatch_y fsquare -size ${nonmatch_r}x  -color $nonmatch_color                    
+                    viz::update_display                          
+                }
+                proc choices_off { type subtype data } {
+                     viz::clear_display                   
+                }              
+                proc endobs { type subtype data } {
+                }
+            }
+            match_to_sample::setup
+        }
+        dservSet ess/viz_config $viz_config
     }
 }
+
+
+
+
+
+
+
+
+
+
 

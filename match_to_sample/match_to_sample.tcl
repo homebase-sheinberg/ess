@@ -110,8 +110,8 @@ namespace eval match_to_sample {
 	#
 	$sys add_action sample_on {
 	    my sample_on
-	    ::ess::evt_put SAMPLE ON [now] 
 	    ::ess::evt_put STIMTYPE STIMID [now] $stimtype	
+        ::ess::evt_put SAMPLE ON [now] 
 	    timerTick $sample_time
 	}
 	
@@ -320,3 +320,4 @@ namespace eval match_to_sample {
 	return $sys
     }
 }
+

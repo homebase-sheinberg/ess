@@ -185,9 +185,73 @@ namespace eval emcalib::9point {
             soundPlay 6 60 400
         }
 
-
+        # setup this protocol's vizualization
+        setup_viz
+        
         return
     }
-}
 
+    proc setup_viz {} {
+        set viz_config {
+            namespace eval emcalib {
+                proc setup {} {
+                    evtSetScript 3   2 ::viz::emcalib::reset
+                    evtSetScript 7   0 ::viz::emcalib::stop
+                    evtSetScript 19 -1 ::viz::emcalib::beginobs
+                    evtSetScript 20 -1 ::viz::emcalib::endobs
+                    evtSetScript 25 -1 ::viz::emcalib::fixspot
+                    evtSetScript 26  3 ::viz::emcalib::calib
+                    evtSetScript 29 -1 ::viz::emcalib::stimtype
+                }
+
+                proc reset { t s d } { viz::clear_display }
+                proc stop { t s d } { viz::clear_display }                
+                proc beginobs { type subtype data }	{
+                    setbackground [dlg_rgbcolor 20 20 20]
+                    setwindow -8 -8 8 8 
+                    viz::update_display
+                }
+                proc stimtype { type subtype data } { 
+                    variable trial
+                    set trial $data
+                }
+                proc calib { type subtype data } {
+                    variable calib_x; variable calib_y
+                    variable cur_x; variable cur_y
+                    lassign $data calib_x calib_y
+                    set msg [format "%.0f %.0f" $calib_x $calib_y]
+                    clearwin
+                    set white [dlg_rgbcolor 200 200 200]
+                    dlg_text $cur_x $cur_y [list $msg] -size 16 -just 0 -color $white
+                    viz::update_display
+                }
+                
+                proc endobs { type subtype data }	{
+                  #  clearwin
+                  #  dlg_text 0 0 "Endobs $subtype" -size 24 -just 0
+                  #  dservSet graphics/stimulus [dumpwin json]
+                }
+
+                proc fixspot { type subtype data } {
+                    variable trial 
+                    variable cur_x; variable cur_y; variable cur_r
+                    clearwin
+                    if { $subtype == 1 } { 
+                        set cur_x [viz::get_attr $trial fix_targ_x]
+                        set cur_y [viz::get_attr $trial fix_targ_y]
+                        set cur_r [viz::get_attr $trial fix_targ_r]
+                    } else {
+                        set cur_x [viz::get_attr $trial jump_targ_x]
+                        set cur_y [viz::get_attr $trial jump_targ_y]
+                        set cur_r [viz::get_attr $trial jump_targ_r]
+                    }
+                    dlg_markers $cur_x $cur_y fcircle -size ${cur_r}x  -color [dlg_rgbcolor 200 200 0]
+                    viz::update_display
+                }
+            }
+            emcalib::setup
+        }
+        dservSet ess/viz_config $viz_config
+    }
+}
 
