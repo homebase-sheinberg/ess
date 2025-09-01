@@ -111,209 +111,11 @@ namespace eval planko::bounce {
             #       print "saved data to $output_name"
             print "closed $name"
         }
-
-        # Publish visualization configuration when protocol loads
-        publish_visualization_config
-
-        # Fixed visualization script with proper event timing
-        $s set_visualization_scripts {
-            "eyeTouch:planko" {
-                console.log('=== PLANKO FINAL VISUALIZATION ===');
-
-                let processedTrials = null;
-                let currentTrialElements = new Set();
-                let stimulusVisible = false;
-
-                function loadTrialData() {
-                    const rawStimInfo = getStimInfo();
-                    if (rawStimInfo) {
-                        processedTrials = processStimData(rawStimInfo);
-                        console.log('Loaded', processedTrials.length, 'trials for visualization');
-                        return true;
-                    }
-                    return false;
-                }
-
-                function setupTrial(stimtype) {
-                    console.log('=== SETTING UP TRIAL ===', stimtype);
-
-                    if (!processedTrials && !loadTrialData()) {
-                        console.log('No trial data available');
-                        return;
-                    }
-
-                    if (stimtype < 0 || stimtype >= processedTrials.length) {
-                        console.warn('Invalid stimtype:', stimtype);
-                        return;
-                    }
-
-                    const trial = processedTrials[stimtype];
-                    console.log('Setting up trial with', trial.name?.length || 0, 'elements');
-
-                    // Clear previous elements
-                    draw.clearElements();
-                    currentTrialElements.clear();
-
-                    // Create elements for this trial
-                    if (trial.name && Array.isArray(trial.name)) {
-                        for (let i = 0; i < trial.name.length; i++) {
-                            const name = trial.name[i];
-                            const shape = trial.shape ? trial.shape[i] : 'Box';
-                            const x = trial.tx ? trial.tx[i] : 0;
-                            const y = trial.ty ? trial.ty[i] : 0;
-                            const width = trial.sx ? trial.sx[i] : 1;
-                            const height = trial.sy ? trial.sy[i] : 1;
-                            const rotation = trial.angle ? trial.angle[i] : 0;
-
-                            let fillColor = '#ffffff';
-                            let strokeColor = '#cccccc';
-
-                            // Handle different element types
-                            if (name === 'ball') {
-                                fillColor = '#ff6600'; // Orange ball
-                                strokeColor = '#cc4400';
-
-                                // Use ball_color if available
-                                if (trial.ball_color) {
-                                    if (typeof trial.ball_color === 'string' && trial.ball_color.includes(' ')) {
-                                        const rgb = trial.ball_color.split(' ').map(parseFloat);
-                                        if (rgb.length === 3) {
-                                            const r = Math.round(rgb[0] * 255);
-                                            const g = Math.round(rgb[1] * 255);
-                                            const b = Math.round(rgb[2] * 255);
-                                            fillColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-                                        }
-                                    } else {
-                                        fillColor = trial.ball_color;
-                                    }
-                                    strokeColor = fillColor;
-                                }
-                            } else if (name === 'catchl_b') {
-                                // Left catcher - green if correct side, gray otherwise
-                                fillColor = (trial.side === 0) ? '#00ff00' : '#808080';
-                                strokeColor = '#ffffff';
-                            } else if (name === 'catchr_b') {
-                                // Right catcher - red if correct side, gray otherwise
-                                fillColor = (trial.side === 1) ? '#ff0000' : '#808080';
-                                strokeColor = '#ffffff';
-                            } else if (name.includes('plank')) {
-                                // Planks/obstacles
-                                fillColor = '#ffffff'; // white
-                                strokeColor = '#ffffff';
-                            } else {
-                                // Default elements
-                                fillColor = '#cccccc';
-                                strokeColor = '#999999';
-                            }
-
-                            let elementId;
-                            if (shape === 'Circle') {
-                                elementId = draw.addElement({
-                                    type: 'circle',
-                                    id: name,
-                                    x: x, y: y,
-                                    radius: width,
-                                    fillColor: fillColor,
-                                    strokeColor: strokeColor,
-                                    lineWidth: 1,
-                                    visible: stimulusVisible
-                                });
-                            } else {
-                                // Default to rectangle for Box and other shapes
-                                elementId = draw.addElement({
-                                    type: 'rectangle',
-                                    id: name,
-                                    x: x, y: y,
-                                    width: width, height: height,
-                                    fillColor: fillColor,
-                                    strokeColor: strokeColor,
-                                    lineWidth: 1,
-                                    rotation: -rotation, // Negative for correct rotation direction
-                                    visible: stimulusVisible
-                                });
-                            }
-
-                            if (elementId) {
-                                currentTrialElements.add(elementId);
-                            }
-                        }
-                    }
-
-                    console.log(`Trial setup complete: ${currentTrialElements.size} elements created`);
-                }
-
-                // Load initial data
-                loadTrialData();
-
-                // Handle STIMTYPE events - this tells us which trial to display
-                registerEventHandler(STIMTYPE_STIMID, (event) => {
-                    if (event.params && event.params.length > 0) {
-                        const stimtype = parseInt(event.params[0]);
-                        setupTrial(stimtype);
-                    }
-                });
-
-                // Handle stimulus visibility
-                registerEventHandler(PATTERN_ON, (event) => {
-                    console.log('Making stimulus visible');
-                    stimulusVisible = true;
-                    currentTrialElements.forEach(id => {
-                        draw.updateElement(id, { visible: true });
-                    });
-                });
-
-                registerEventHandler(PATTERN_OFF, (event) => {
-                    console.log('Hiding stimulus');
-                    stimulusVisible = false;
-                    currentTrialElements.forEach(id => {
-                        draw.updateElement(id, { visible: false });
-                    });
-                });
-
-                // Handle responses - highlight the selected catcher
-                registerEventHandler(RESP_LEFT, (event) => {
-                    console.log('Left response detected');
-                    draw.updateElement('catchl_b', { fillColor: '#ffff00', strokeColor: '#cccc00' });
-                });
-
-                registerEventHandler(RESP_RIGHT, (event) => {
-                    console.log('Right response detected');
-                    draw.updateElement('catchr_b', { fillColor: '#ffff00', strokeColor: '#cccc00' });
-                });
-
-                // Handle trial outcomes
-                registerEventHandler(ENDTRIAL_CORRECT, (event) => {
-                    console.log('Correct trial - showing feedback');
-                    draw.drawText(0, 3, 'Correct!', {
-                        fontSize: 16, fillColor: '#00ff00', id: 'feedback'
-                    });
-                    setTimeout(() => { draw.removeElement('feedback'); }, 1000);
-                });
-
-                registerEventHandler(ENDTRIAL_INCORRECT, (event) => {
-                    console.log('Incorrect trial - showing feedback');
-                    draw.drawText(0, 3, 'Try Again', {
-                        fontSize: 16, fillColor: '#ff0000', id: 'feedback'
-                    });
-                    setTimeout(() => { draw.removeElement('feedback'); }, 1000);
-                });
-
-                // Clean up at end of observation
-                registerEventHandler(20, (event) => { // ENDOBS
-                    console.log('End of observation - clearing all elements');
-                    draw.clearElements();
-                    currentTrialElements.clear();
-                    stimulusVisible = false;
-                });
-
-                console.log('=== PLANKO VISUALIZATION READY ===');
-            }
-        }
-
+	
         ######################################################################
         #                         Utility Methods                            #
         ######################################################################
-
+	
         $s add_method start_obs_reset {} {
             set buttons_changed 0
         }
@@ -430,67 +232,52 @@ namespace eval planko::bounce {
             }
         }
 
-        return
-    }
-}
+	
+        ######################################################################
+        #                           Visualization                            #
+        ######################################################################
 
-namespace eval planko::bounce {
+	$s set_viz_config {
+            proc setup {} {
+                package require planko
+                    
+                evtSetScript 3 2 [namespace current]::reset
+                evtSetScript 7 0 [namespace current]::stop
+                evtSetScript 19 -1 [namespace current]::beginobs
+                evtSetScript 20 -1 [namespace current]::endobs
+                evtSetScript 29 -1 [namespace current]::stimtype
+                evtSetScript 28  1 [namespace current]::stimon
+                evtSetScript 28  0 [namespace current]::stimoff
+            }
 
-    proc publish_visualization_config {} {
-        # Create complete visualization configuration for planko/bounce
-        set viz_config {
-            # now load planko packages
-            package require planko
+            proc reset { t s d } { clearwin; flushwin }
+            proc stop { t s d } {clearwin; flushwin }
+            proc beginobs { type subtype data } {
+                clearwin
+                setbackground [dlg_rgbcolor 10 10 10]
+                setwindow -8 -8 8 8
+                flushwin
+            }
+            proc stimtype { type subtype data } {
+                variable trial
+                set trial $data
+            }            
+            proc stimon { type subtype data } {
+                variable trial
+                clearwin
+                planko::show_trial $trial
+                flushwin
+            }
             
-            # Set planko viewport (degrees visual angle)
-            viz::set_viewport -16 -12 16 12
-
-            # Create planko namespace for system-specific procedures
-            namespace eval ::viz::planko {}
-
-            #########################################################################
-            # Event Subscriptions
-            #########################################################################
-
-            # Session events
-            viz::subscribe_to_event 19 {
-                viz::clear_display
-                dlg_text 0 8 "Planko Bounce Session" -size 2 -just 0 -color "0.2 0.8 0.2"
-                dlg_text 0 6 "Experimenter View" -size 1.5 -just 0 -color "0.8 0.8 0.8"
-                viz::update_display
+            proc stimoff { type subtype data } {
+                clearwin; flushwin
             }
-
-            viz::subscribe_to_event 20 {
-                viz::clear_display
-                set status_text "Session Complete"
-                set color "0.2 0.8 0.2"
-
-                switch $subtype {
-                    0 { set status_text "Session Incomplete"; set color "0.8 0.8 0.2" }
-                    1 { set status_text "Session Complete"; set color "0.2 0.8 0.2" }
-                    2 { set status_text "Session Quit"; set color "0.8 0.5 0.2" }
-                    3 { set status_text "Session Aborted"; set color "0.8 0.2 0.2" }
-                }
-
-                dlg_text 0 0 $status_text -size 3 -just 0 -color $color
-                viz::update_display
+            
+            proc endobs { type subtype data } {
             }
-
-            # Trial events
-            viz::subscribe_to_event 29 {viz::set_trial [lindex $params 0]}
-            viz::subscribe_to_event 28 {
-                if {$subtype == 1} {
-                    viz::show_stimulus
-                } else {
-                    viz::hide_stimulus
-                }
-            }
-            viz::subscribe_to_event 37 {viz::set_response $subtype}
-            viz::subscribe_to_event 40 {viz::set_trial_result $subtype}
+	    
+            setup
         }
-
-        # Publish the visualization configuration
-        dservSet ess/viz_config $viz_config
     }
 }
 

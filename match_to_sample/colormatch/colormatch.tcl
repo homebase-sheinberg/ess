@@ -215,79 +215,89 @@ namespace eval match_to_sample::colormatch {
             }
         }
 
-        # setup visualization
-        setup_viz
-        
-        return
-    }
-    
-    proc setup_viz {} {
-        set viz_config {
-            namespace eval match_to_sample {
-                proc setup {} {
-                    evtSetScript 3 2 ::viz::match_to_sample::reset
-                    evtSetScript 7 0 ::viz::match_to_sample::stop
-                    evtSetScript 19 -1 ::viz::match_to_sample::beginobs
-                    evtSetScript 20 -1 ::viz::match_to_sample::endobs
-                    evtSetScript 29 -1 ::viz::match_to_sample::stimtype
-                    evtSetScript 30  1 ::viz::match_to_sample::sample_on
-                    evtSetScript 30  0 ::viz::match_to_sample::sample_off
-                    evtSetScript 49  1 ::viz::match_to_sample::choices_on
-                    evtSetScript 49  0 ::viz::match_to_sample::choices_off
-                }
+        $s set_viz_config {
+            proc setup {} {
+                evtSetScript 3 2 [namespace current]::reset
+                evtSetScript 7 0 [namespace current]::stop
+                evtSetScript 19 -1 [namespace current]::beginobs
+                evtSetScript 20 -1 [namespace current]::endobs
+                evtSetScript 29 -1 [namespace current]::stimtype
+                evtSetScript 30  1 [namespace current]::sample_on
+                evtSetScript 30  0 [namespace current]::sample_off
+                evtSetScript 49  1 [namespace current]::choices_on
+                evtSetScript 49  0 [namespace current]::choices_off
+            }
+            
+            proc reset { t s d } { clearwin; flushwin }
+            proc stop { t s d } { clearwin; flushwin }
+            proc beginobs { type subtype data } {
+                setbackground [dlg_rgbcolor 100 100 100]
+                setwindow -8 -8 8 8
+                flushwin
+            }
+            proc stimtype { type subtype data } {
+                variable trial
+                set trial $data
+                set vars "sample_x sample_y sample_r match_x match_y match_r nonmatch_x nonmatch_y nonmatch_r"                      
+                foreach v $vars { variable $v [dl_get stimdg:$v $trial] }
 
-                proc reset { t s d } { viz::clear_display }
-                proc stop { t s d } { viz::clear_display }
-                proc beginobs { type subtype data } {
-                    setbackground [dlg_rgbcolor 100 100 100]
-                    setwindow -8 -8 8 8
-                    viz::update_display
+                # now turn colors into indices
+                set vars "sample_color match_color nonmatch_color"
+                foreach v $vars {
+                    set rgb [dl_tcllist [dl_int [dl_mult stimdg:$v:$trial 255]]]
+                    variable $v [dlg_rgbcolor {*}$rgb]                        
                 }
-                proc stimtype { type subtype data } {
-                    variable trial
-                    set trial $data
-                    set vars "sample_x sample_y sample_r match_x match_y match_r nonmatch_x nonmatch_y nonmatch_r"                      
-                    foreach v $vars { variable $v [viz::get_attr $trial $v]}
-
-                    # now turn colors into indices
-                    set vars "sample_color match_color nonmatch_color"
-                    foreach v $vars {
-                        set rgb [dl_tcllist [dl_int [dl_mult stimdg:$v:$trial 255]]]
-                        variable $v [dlg_rgbcolor {*}$rgb]                        
+                
+                # approximate the transparency of the nonmatch stimulus
+                if { [dl_exists stimdg:nonmatch_transparency] } {
+                    set nmt [dl_get stimdg:nonmatch_transparency $trial]
+                    if { $nmt < 1 } {
+                        # assumes background is as set above, to 100 100 100
+                        lassign [dl_tcllist stimdg:nonmatch_color:$trial] r g b
+                        set r [expr {int($r*255*$nmt+100*(1-$nmt))}]
+                        set g [expr {int($g*255*$nmt+100*(1-$nmt))}]
+                        set b [expr {int($b*255*$nmt+100*(1-$nmt))}]
+                        variable nonmatch_color [dlg_rgbcolor $r $g $b]
                     }
                 }
-                proc sample_on { type subtype data } {
-                    variable trial 
-                    variable sample_x; variable sample_y; variable sample_r
-                    variable sample_color
-                    clearwin
-                    dlg_markers $sample_x $sample_y fsquare -size ${sample_r}x -color $sample_color
-                    viz::update_display                    
-                }
-                proc sample_off { type subtype data } {
-                    viz::clear_display
-                }
-                proc choices_on { type subtype data } {
-                    variable trial 
-                    variable match_x; variable match_y; variable match_r
-                    variable nonmatch_x; variable nonmatch_y; variable nonmatch_r
-                    variable match_color; variable nonmatch_color
-                    clearwin
-                    dlg_markers $match_x $match_y fsquare -size ${match_r}x  -color $match_color
-                    dlg_markers $nonmatch_x $nonmatch_y fsquare -size ${nonmatch_r}x  -color $nonmatch_color                    
-                    viz::update_display                          
-                }
-                proc choices_off { type subtype data } {
-                     viz::clear_display                   
-                }              
-                proc endobs { type subtype data } {
-                }
             }
-            match_to_sample::setup
-        }
-        dservSet ess/viz_config $viz_config
+            proc sample_on { type subtype data } {
+                variable trial 
+                variable sample_x; variable sample_y; variable sample_r
+                variable sample_color
+                clearwin
+                dlg_markers $sample_x $sample_y fsquare -size ${sample_r}x -color $sample_color
+                flushwin                    
+            }
+            proc sample_off { type subtype data } {
+                clearwin; flushwin
+            }
+            proc choices_on { type subtype data } {
+                variable trial 
+                variable match_x; variable match_y; variable match_r
+                variable nonmatch_x; variable nonmatch_y; variable nonmatch_r
+                variable match_color; variable nonmatch_color
+                clearwin
+                dlg_markers $match_x $match_y fsquare -size ${match_r}x  -color $match_color
+                dlg_markers $nonmatch_x $nonmatch_y fsquare -size ${nonmatch_r}x  -color $nonmatch_color                    
+                flushwin
+            }
+            proc choices_off { type subtype data } {
+                clearwin; flushwin
+            }              
+            proc endobs { type subtype data } {
+            }
+            
+            setup
+        }           
+        return
     }
 }
+
+
+
+
+
 
 
 

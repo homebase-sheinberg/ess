@@ -12,7 +12,7 @@ package require points
 
 namespace eval planko {
     variable params
-    variable use_threading 1
+    variable use_threading 0
     variable num_threads 6
     variable min_threading_batch 4
 
@@ -1066,294 +1066,99 @@ namespace eval planko {
     namespace export test_world_parameter_combinations generate_worlds_with_parameter_sweeps
 }
 
+#########################################################################
+# Visualization Helper Functions
+#########################################################################
+
 namespace eval planko {
     
-    #########################################################################
-    # Visualization Helper Functions
-    #########################################################################
-    
-    # Render a box with rotation (reusable across protocols)
-    proc render_box {tx ty sx sy angle color} {
-        dl_local x [dl_mult $sx [dl_flist -.5 .5 .5 -.5 -.5]]
-        dl_local y [dl_mult $sy [dl_flist -.5 -.5 .5 .5 -.5]]
+    proc show_trial { trial } {
+	set g stimdg
+	set w [get_world $g $trial]
+	
+	clearwin
 
-        set cos_theta [expr cos($angle)]
-        set sin_theta [expr sin($angle)]
+	# Setup the viewport to be the middle of the original display
+	setwindow -16 -12 16 12
+	
+	show_world $w
 
-        dl_local rotated_x [dl_sub [dl_mult $x $cos_theta] [dl_mult $y $sin_theta]]
-        dl_local rotated_y [dl_add [dl_mult $y $cos_theta] [dl_mult $x $sin_theta]]
+	dlg_markers $g:ball_x:${trial} $g:ball_y:${trial} \
+	    -marker fcircle -size 0.5x -color [dlg_rgbcolor 180 190 180]
+	
+	#set status [dl_get $g:status $trial]
+	#set rts [dl_get $g:rts $trial]
+	#set side [dl_get $g:side $trial]
+	if { [dl_exists $g:show_shadow] } {
+	    set show_shadow [dl_get $g:show_shadow $trial]
+	}
+	dg_delete $w
+    }
 
-        dl_local x [dl_add $tx $rotated_x]
-        dl_local y [dl_add $ty $rotated_y]
+    proc get_world { dg trial } {
+	set w [dg_create]
+	set vars "name shape type tx ty sx sy angle restitution contact_t contact_bodies ball_t ball_x ball_y"
+	foreach l $vars {
+	    dl_set $w:$l $dg:$l:$trial
+	}
+	
+	foreach v "side nhit nplanks ball_start_x \
+    	    	   ball_start_y ball_radius ball_restitution \
+                   lcatcher_x lcatcher_y rcatcher_x rcatcher_y" {
+	    dl_set $w:$v [dl_flist [dl_get $dg:$v $trial]]
+	}
+	return $w
+    }
 
-        dlg_lines $x $y -fillcolor $color -linecolor "0 0 0"
+    proc show_world { w } {
+	global nworld floor blocks sphere
+	set nbodies [dl_length $w:type]
+	
+	for { set i 0 } { $i < $nbodies } { incr i } {
+	    set name [dl_get $w:name $i]
+	    set sx [dl_get $w:sx $i]
+	    set sy [dl_get $w:sy $i]
+	    set tx [dl_get $w:tx $i]
+	    set ty [dl_get $w:ty $i]
+	    set color_r 255
+	    set color_g 255
+	    set color_b 255
+	    set angle [dl_get $w:angle $i]
+	    
+	    
+	    if { [dl_get $w:shape $i] == "Box" } {
+		set body [show_box $name $tx $ty $sx $sy $angle]
+	    } elseif { [dl_get $w:type $i] == "Circle" } {
+		set r 0
+		set g 255
+		set b 255
+		set color [dlg_rgbcolor $r $g $b]
+		set body [show_sphere $tx $ty $sx $sy $color]
+	    }
+	}
     }
     
-    # Generic world renderer t
-    proc render_world_elements {trial_id {element_filter ""} {color_proc ""}} {
-        if {![dl_exists stimdg:name:$trial_id]} {
-            return 0  ;# No elements to render
-        }
-        
-        set names [dl_tcllist stimdg:name:$trial_id]
-        set shapes [dl_tcllist stimdg:shape:$trial_id]
-        set tx_list [dl_tcllist stimdg:tx:$trial_id]
-        set ty_list [dl_tcllist stimdg:ty:$trial_id]
-        set sx_list [dl_tcllist stimdg:sx:$trial_id]
-        set sy_list [dl_tcllist stimdg:sy:$trial_id]
-        set angle_list [dl_tcllist stimdg:angle:$trial_id]
-        
-        set elements_rendered 0
-        
-        for {set i 0} {$i < [llength $names]} {incr i} {
-            set name [lindex $names $i]
-            set shape [lindex $shapes $i]
-            set tx [lindex $tx_list $i]
-            set ty [lindex $ty_list $i]
-            set sx [lindex $sx_list $i]
-            set sy [lindex $sy_list $i]
-            set angle [lindex $angle_list $i]
-            
-            # Apply element filter if provided
-            if {$element_filter ne "" && ![eval $element_filter [list $name $shape $i]]} {
-                continue
-            }
-            
-            # Get color for this element
-            if {$color_proc ne ""} {
-                set color [eval $color_proc [list $name $trial_id $i]]
-            } else {
-                set color [default_element_color $name]
-            }
-            
-            # Render based on shape
-            if {$shape eq "Circle"} {
-                dlg_markers $tx $ty fcircle -size $sx -scaletype x -color $color
-            } elseif {$shape eq "Box"} {
-                render_box $tx $ty $sx $sy $angle $color
-            }
-            
-            incr elements_rendered
-        }
-        
-        return $elements_rendered
+    proc show_box { name tx ty sx sy angle } {
+	
+	dl_local x [dl_mult $sx [dl_flist -.5 .5 .5 -.5 -.5 ]]
+	dl_local y [dl_mult $sy [dl_flist -.5  -.5 .5 .5 -.5 ]]
+	
+	set cos_theta [expr cos($angle)]
+	set sin_theta [expr sin($angle)]
+	
+	dl_local rotated_x [dl_sub [dl_mult $x $cos_theta] [dl_mult $y $sin_theta]]
+	dl_local rotated_y [dl_add [dl_mult $y $cos_theta] [dl_mult $x $sin_theta]]
+	
+	dl_local x [dl_add $tx $rotated_x]
+	dl_local y [dl_add $ty $rotated_y]
+	
+	dlg_lines $x $y  -fillcolor 7 -linecolor 7
     }
     
-    # Default element coloring for experimenter view
-    proc default_element_color {name} {
-        if {[string match "*catcher*" $name]} {
-            return "0.5 0.5 0.5"  ;# Gray catchers
-        } elseif {[string match "*plank*" $name]} {
-            return "1 1 1"  ;# White planks
-        } elseif {$name eq "ball"} {
-            return "1 0.4 0"  ;# Orange ball
-        }
-        return "0.7 0.7 0.7"  ;# Default gray
+    proc show_sphere { tx ty tz sx sy sz color } {
+	dlg_markers $tx $ty fcircle -size $sx -scaletype x -color $color
     }
-    
-    # Visualization coloring that integrates with viz framework
-    proc viz_element_color {name trial_id element_index} {
-        if {[string match "*catcher*" $name]} {
-            if {[dl_exists stimdg:side]} {
-                set correct_side [dl_get stimdg:side $trial_id]
-                if {($name eq "catchl_b" && $correct_side == 0) ||
-                    ($name eq "catchr_b" && $correct_side == 1)} {
-                    return [viz_color correct]  ;# Use viz color system
-                } else {
-                    return [viz_color incorrect]
-                }
-            }
-        }
-        
-        return [viz_default_element_color $name]
-    }
-    
-    # Response highlighting that uses viz color system
-    proc viz_highlight_catcher_response {trial_id response_type} {
-        set highlight_color [viz_response_color $response_type]
-        
-        set info [get_trial_viz_info $trial_id]
-        
-        if {[dict exists $info lcatcher_x] && [dict exists $info rcatcher_x]} {
-            set lcatcher_x [dict get $info lcatcher_x]
-            set rcatcher_x [dict get $info rcatcher_x]
-            set catcher_y [expr {[dict exists $info lcatcher_y] ? [dict get $info lcatcher_y] : -7.5}]
-            
-            if {$response_type == 1} {
-                dlg_markers $lcatcher_x $catcher_y \
-		    fcircle -size 3.5 -scaletype x -color $highlight_color
-                return "LEFT"
-            } elseif {$response_type == 2} {
-                dlg_markers $rcatcher_x $catcher_y \
-		    fcircle -size 3.5 -scaletype x -color $highlight_color
-                return "RIGHT"
-            }
-        }
-        
-        return "UNKNOWN"
-    }
-    
-    # Viz-integrated color helpers that can be used from viz process
-    proc viz_color {type} {
-        switch $type {
-            correct { return "0 0.8 0" }
-            incorrect { return "0.3 0.3 0.3" }
-            neutral { return "0.5 0.5 0.5" }
-            default { return "0.7 0.7 0.7" }
-        }
-    }
-    
-    proc viz_response_color {response_type} {
-        switch $response_type {
-            1 { return "0.5 0.5 0.9" }  ;# Left
-            2 { return "0.9 0.5 0.5" }  ;# Right
-            default { return "0.7 0.7 0.7" }
-        }
-    }
-    
-    proc viz_default_element_color {name} {
-        if {[string match "*catcher*" $name]} {
-            return [viz_color neutral]
-        } elseif {[string match "*plank*" $name]} {
-            return "1 1 1"  ;# White planks
-        } elseif {$name eq "ball"} {
-            return "1 0.4 0"  ;# Orange ball
-        }
-        return [viz_color default]
-    }
-    
-    # Find specific elements in a world
-    proc find_world_element {trial_id element_name} {
-        if {![dl_exists stimdg:name:$trial_id]} {
-            return {}
-        }
-        
-        set names [dl_tcllist stimdg:name:$trial_id]
-        set tx_list [dl_tcllist stimdg:tx:$trial_id]
-        set ty_list [dl_tcllist stimdg:ty:$trial_id]
-        set sx_list [dl_tcllist stimdg:sx:$trial_id]
-        set sy_list [dl_tcllist stimdg:sy:$trial_id]
-        
-        for {set i 0} {$i < [llength $names]} {incr i} {
-            if {[lindex $names $i] eq $element_name} {
-                return [dict create \
-			    name $element_name \
-			    index $i \
-			    x [lindex $tx_list $i] \
-			    y [lindex $ty_list $i] \
-			    size_x [lindex $sx_list $i] \
-			    size_y [lindex $sy_list $i]]
-            }
-        }
-        
-        return {}
-    }
-    
-    # Get trial parameters for experimenter display
-    proc get_trial_viz_info {trial_id} {
-        set info [dict create trial_id $trial_id]
-        
-        # Standard planko trial parameters
-        foreach param {side nplanks plank_restitution ball_restitution 
-	    ball_start_x ball_start_y lcatcher_x rcatcher_x} {
-            if {[dl_exists stimdg:$param]} {
-                dict set info $param [dl_get stimdg:$param $trial_id]
-            }
-        }
-        
-        return $info
-    }
-    
-    # Show trajectory if available
-    proc render_ball_trajectory {trial_id {color "0.6 0.6 0.6"} {size 0.3}} {
-        if {[dl_exists stimdg:ball_x:$trial_id] && [dl_exists stimdg:ball_y:$trial_id]} {
-            dlg_markers stimdg:ball_x:$trial_id stimdg:ball_y:$trial_id \
-                fcircle -size $size -scaletype x -color $color
-            return 1
-        }
-        return 0
-    }
-    
-    # Common overlay helper
-    proc render_viz_info {trial_id {x -15} {y_start 10}} {
-        set info [get_trial_viz_info $trial_id]
-        set y $y_start
-        
-        # Show correct answer
-        if {[dict exists $info side]} {
-            set correct_side [dict get $info side]
-            set answer_text [expr {$correct_side ? "RIGHT" : "LEFT"}]
-            dlg_text $x $y "Correct: $answer_text" -size 1.2 -just -1 -color "0.2 0.8 0.2"
-            set y [expr {$y - 1.5}]
-        }
-        
-        # Show trial parameters
-        if {[dict exists $info nplanks]} {
-            dlg_text $x $y "Planks: [dict get $info nplanks]" \
-		-size 1 -just -1 -color "0.8 0.8 0.8"
-            set y [expr {$y - 1.5}]
-        }
-        
-        if {[dict exists $info plank_restitution]} {
-            set restitution [dict get $info plank_restitution]
-            dlg_text $x $y [format "Bounce: %.1f" $restitution] \
-		-size 1 -just -1 -color "0.8 0.8 0.8"
-            set y [expr {$y - 1.5}]
-        }
-        
-        return [expr {$y_start - $y}]  ;# Return height used
-    }
-    
-    # Response highlighting helper
-    proc highlight_catcher_response {trial_id response_type {highlight_color ""}} {
-        if {$highlight_color eq ""} {
-            set highlight_color \
-		[expr {$response_type == 1 ? "0.5 0.5 0.9" : "0.9 0.5 0.5"}]
-        }
-        
-        set info [get_trial_viz_info $trial_id]
-        
-        if {[dict exists $info lcatcher_x] && [dict exists $info rcatcher_x]} {
-            set lcatcher_x [dict get $info lcatcher_x]
-            set rcatcher_x [dict get $info rcatcher_x]
-            set catcher_y [expr {[dict exists $info lcatcher_y] ? [dict get $info lcatcher_y] : -7.5}]
-            
-            if {$response_type == 1} {
-                # Left response
-                dlg_markers $lcatcher_x $catcher_y fcircle -size 3.5 \
-		    -scaletype x -color $highlight_color
-                return "LEFT"
-            } elseif {$response_type == 2} {
-                # Right response
-                dlg_markers $rcatcher_x $catcher_y fcircle -size 3.5 \
-		    -scaletype x -color $highlight_color
-                return "RIGHT"
-            }
-        }
-        
-        return "UNKNOWN"
-    }
-    
-    # Element filters for common cases
-    proc filter_no_ball {name shape index} {
-        return [expr {$name ne "ball"}]
-    }
-    
-    proc filter_only_planks {name shape index} {
-        return [string match "*plank*" $name]
-    }
-    
-    proc filter_only_catchers {name shape index} {
-        return [string match "*catcher*" $name]
-    }
-    
-    # Export the new visualization functions
-    namespace export render_box render_world_elements default_element_color
-    namespace export viz_element_color find_world_element
-    namespace export get_trial_viz_info render_ball_trajectory
-    namespace export render_viz_info highlight_catcher_response
-    namespace export filter_no_ball filter_only_planks filter_only_catchers
-}
+}    
 
 # Ensure Thread package is loaded before using planko with threading
 if {[catch {package require Thread} err]} {
