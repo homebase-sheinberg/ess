@@ -209,8 +209,6 @@ namespace eval planko::training {
                 evtSetScript 29 -1 [namespace current]::stimtype
                 evtSetScript 28  1 [namespace current]::stimon
                 evtSetScript 28  0 [namespace current]::stimoff
-
-                puts "setup viz for [namespace current]"
             }
 
             proc reset { t s d } { clearwin; flushwin }
@@ -243,4 +241,5 @@ namespace eval planko::training {
         }
     }
 }
+
 

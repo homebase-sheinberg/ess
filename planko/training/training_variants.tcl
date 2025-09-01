@@ -18,7 +18,8 @@ namespace eval planko::training {
                 params { { defaults {} } }
             }
             init {
-                planko::enable_threading 4
+                #planko::enable_threading 4
+                planko::disable_threading
                 rmtSend "setBackground 0 0 10"
             }
             deinit {
@@ -59,6 +60,7 @@ namespace eval planko::training {
         }
     }
 }
+
 
 
 

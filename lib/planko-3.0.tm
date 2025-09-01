@@ -13,7 +13,7 @@ package require points
 namespace eval planko {
     variable params
     variable use_threading 0
-    variable num_threads 6
+    variable num_threads 4
     variable min_threading_batch 4
 
     # Thread-local world tracking
@@ -1169,3 +1169,6 @@ if {[catch {package require Thread} err]} {
     # Now safe to enable threading
     planko::enable_threading 4
 }
+
+# until we track down crashes...
+planko::disable_threading
