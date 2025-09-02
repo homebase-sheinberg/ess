@@ -59,7 +59,7 @@ namespace eval hapticvis::transfer {
         pre_stim_time 100
         cue_delay 250
         cue_duration 6250
-        sample_delay 1500
+        sample_delay 0
         sample_duration 5000
         choice_duration 30000
         choice_delay 0
