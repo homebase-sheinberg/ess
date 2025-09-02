@@ -177,7 +177,7 @@ namespace eval hapticvis::transfer {
         }
         haptic_cued_left {
             description "respond to cued haptic objects"
-            loader_proc setup_haptic
+            loader_proc setup_haptic_cued
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
@@ -195,7 +195,7 @@ namespace eval hapticvis::transfer {
         }
         haptic_cued_right {
             description "respond to cued haptic objects"
-            loader_proc setup_haptic
+            loader_proc setup_haptic_cued
             loader_options {
                 subject_id { $subject_ids }
                 subject_set { $subject_sets }
