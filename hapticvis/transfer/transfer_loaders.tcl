@@ -68,6 +68,8 @@ namespace eval hapticvis::transfer {
         }
  
         $s add_method setup_haptic_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness } {
+            set shape_scale 1
+            set noise_type none
             my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness
 
             # now create a column for cue centers
