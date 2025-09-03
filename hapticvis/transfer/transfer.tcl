@@ -582,7 +582,7 @@ namespace eval hapticvis::transfer {
                         return -2
                     }
                 }
-                set r [dict get $mapdict $joy_position]
+               
                 # note which position has been activated
                 if { [dservExists ess/joystick/position] } {
                     set cur_position [dservGet ess/joystick/position]
@@ -614,6 +614,7 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
+                set r [dict get $mapdict $joy_position]
                 if { $task == "learning" } {
                     if { ($cue_valid == 1 && $r == 1) || ($cue_valid == 0 && $r == 0) } {
                         set slot [expr $target_slot-1]
