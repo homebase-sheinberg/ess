@@ -214,7 +214,7 @@ namespace eval hapticvis {
             if { !$cue_up } {
                 my highlight_response
             } else {
-                my hightlight_response_lr
+                my highlight_response_lr
             }
         }
 
