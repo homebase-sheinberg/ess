@@ -66,6 +66,41 @@ namespace eval hapticvis::transfer {
             dl_set stimdg:lr_choice_centers [dl_replicate [dl_llist [dl_llist [dl_flist -$lr_ecc 0] [dl_flist $lr_ecc 0]]] $n]
             dl_set stimdg:lr_choice_scale [dl_repeat $lr_scale $n]
         }
+ 
+        $s add_method setup_haptic_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness } {
+            set shape_scale 1
+            set noise_type none
+            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness
+
+            # now create a column for cue centers
+            # for half the trials, the cue center matches the target
+            # for the other half, the cue center is from another loc
+            set n [dl_length stimdg:stimtype]
+            dl_set stimdg:is_cued [dl_ones $n]
+            dl_local target_loc [dl_sub stimdg:correct_choice 1]
+            dl_local target_choice_center [dl_choose stimdg:choice_centers [dl_pack $target_loc]]
+            dl_local choice_loc_ids [dl_fromto 0 [dl_repeat $n_choices $n]]
+            dl_local dist_locs [dl_select $choice_loc_ids [dl_noteq $choice_loc_ids $target_loc]]
+            # pull out all non-target choice locations
+            dl_local dist_choice_centers [dl_choose stimdg:choice_centers $dist_locs]
+
+            # choose random index to select dist center randomly
+            dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            dl_local dist_choice_center [dl_choose $dist_choice_centers [dl_pack $dist_id]]
+
+            # for half presentations show actual location for other half not
+            set valid_per_target [expr {($n_rep/2)*[llength $rotations]}]
+            dl_local use_dist [dl_replicate [dl_repeat "0 1" $valid_per_target] $n_per_set]
+            dl_local cue_center [dl_replace $target_choice_center $use_dist $dist_choice_center]
+            dl_set stimdg:cue_valid [dl_not $use_dist]
+            dl_set stimdg:cued_choices $cue_center
+
+            # now add left right choice options
+            set lr_ecc 6.0
+            set lr_scale 1.75
+            dl_set stimdg:lr_choice_centers [dl_replicate [dl_llist [dl_llist [dl_flist -$lr_ecc 0] [dl_flist $lr_ecc 0]]] $n]
+            dl_set stimdg:lr_choice_scale [dl_repeat $lr_scale $n]
+        }
 
         $s add_method setup_visual_transfer { subject_id subject_set n_per_set n_rep rotations } {
             set shape_scale 1
