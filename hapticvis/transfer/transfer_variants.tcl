@@ -53,6 +53,20 @@ namespace eval hapticvis::transfer {
         post_response_time 500
     }
 
+    # state system parameters for haptic cued
+    set haptic_cued_params {
+        interblock_time 500
+        pre_stim_time 100
+        cue_delay 250
+        cue_duration 6250
+        sample_delay 0
+        sample_duration 5000
+        choice_duration 30000
+        choice_delay 0
+        stim_duration 30000
+        post_response_time 500
+    }
+
     set subject_ids [dl_tcllist [dl_fromto 0 30]]
     set subject_sets [dl_tcllist [dl_fromto 0 4]]
 
@@ -160,6 +174,42 @@ namespace eval hapticvis::transfer {
                subject_handedness { { right 1 } { left 0 } }
             }
             params [list "$visual_cued_params joystick_side 1"]
+        }
+        haptic_cued_left {
+            description "respond to cued haptic objects"
+            loader_proc setup_haptic_cued
+            loader_options {
+                subject_id { $subject_ids }
+                subject_set { $subject_sets }
+                n_per_set { 4 }
+                shape_scale { 3 4 5 6 }
+                noise_type { none }
+                n_rep { 6 2 4 8 10 20 }
+                rotations {
+                    {three {60 180 300}} {single {180}}
+                }
+                joystick_side { { left 0 } }
+               subject_handedness { { right 1 } { left 0 } }
+            }
+            params [list "$haptic_cued_params joystick_side 0"]
+        }
+        haptic_cued_right {
+            description "respond to cued haptic objects"
+            loader_proc setup_haptic_cued
+            loader_options {
+                subject_id { $subject_ids }
+                subject_set { $subject_sets }
+                n_per_set { 4 }
+                shape_scale { 3 4 5 6 }
+                noise_type { none }
+                n_rep { 6 2 4 8 10 20 }
+                rotations {
+                    {three {60 180 300}} {single {180}}
+                }
+                joystick_side { { right 1 } }
+               subject_handedness { { right 1 } { left 0 } }
+            }
+            params [list "$haptic_cued_params joystick_side 1"]
         }
         visual_to_haptic {
             description "learn visual transfer to haptic"
