@@ -143,7 +143,7 @@ namespace eval emcalib::9point {
         }
 
         $s add_method fixjump {} {
-            ::ess::em_region_off 0
+            # leave r0 on, so as to not trigger update unrelated to r1
             rmtSend "!fixjump"
             ::ess::em_region_on 1
             ::ess::evt_put EMPARAMS CIRC [now] 1 $jump_targ_x $jump_targ_y $jump_targ_r
