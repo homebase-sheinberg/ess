@@ -324,23 +324,3 @@ namespace eval emcalib {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
