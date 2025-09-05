@@ -95,7 +95,7 @@ namespace eval emcalib::9point {
 
         $s add_method nexttrial {} {
             if { [dl_sum stimdg:remaining] } {
-                dl_local left_to_show  [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
+                dl_local left_to_show   [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
                 set cur_id [dl_pickone $left_to_show]
                 set stimtype [dl_get stimdg:stimtype $cur_id]
 
@@ -245,6 +245,7 @@ namespace eval emcalib::9point {
         return
     }
 }
+
 
 
 
