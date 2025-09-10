@@ -24,17 +24,17 @@ namespace eval hapticvis::transfer {
             if { $row >= 0 } { return }
         }
 
-        $s add_method setup_visual { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness} {
+        $s add_method setup_visual { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
             my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
         }
 
-        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness} {
+        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness have_feedback} {
             set shape_scale 1
             set noise_type none
             my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
         }
 
-        $s add_method setup_visual_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness } {
+        $s add_method setup_visual_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
             my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
 
             # now create a column for cue centers
@@ -67,7 +67,7 @@ namespace eval hapticvis::transfer {
             dl_set stimdg:lr_choice_scale [dl_repeat $lr_scale $n]
         }
  
-        $s add_method setup_haptic_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness } {
+        $s add_method setup_haptic_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
             set shape_scale 1
             set noise_type none
             my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
