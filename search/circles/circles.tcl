@@ -192,7 +192,7 @@ namespace eval search::circles {
             proc beginobs { type subtype data } {
                 clearwin
                 setbackground [dlg_rgbcolor 100 100 100]
-                setwindow -12 -8 12 8
+                setwindow -20 -14 20 14
                 flushwin
             }
             proc stimtype { type subtype data } {
