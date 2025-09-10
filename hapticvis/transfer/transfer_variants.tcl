@@ -86,6 +86,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                 subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$visual_params joystick_side 0"]
         }
@@ -104,6 +105,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { right 1 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$visual_params joystick_side 1"]
         }
@@ -120,6 +122,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$haptic_params joystick_side 0"]
         }
@@ -135,7 +138,8 @@ namespace eval hapticvis::transfer {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { right 1 } }
-                subject_handedness { { right 1 } { left 0 } }              
+                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$haptic_params joystick_side 1"]
         }
@@ -154,6 +158,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$visual_cued_params joystick_side 0"]
         }
@@ -172,6 +177,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { right 1 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$visual_cued_params joystick_side 1"]
         }
@@ -190,6 +196,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$haptic_cued_params joystick_side 0"]
         }
@@ -208,6 +215,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { right 1 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
             }
             params [list "$haptic_cued_params joystick_side 1"]
         }
@@ -226,6 +234,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                 subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { no 0 } }
             }
             params [list "$visual_params joystick_side 0"]
         }
@@ -244,6 +253,7 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { right 1 } }
                 subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { no 0 } }
             }
             params [list "$visual_params joystick_side 1"]
         }
