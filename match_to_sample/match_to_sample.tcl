@@ -16,11 +16,11 @@ namespace eval match_to_sample {
 	#                          System Parameters                         #
 	######################################################################
 	
-	$sys add_param start_delay         0      time int
-	$sys add_param interblock_time  1000      time int
-	$sys add_param sample_pre_time     0      time int
+	$sys add_param start_delay          0      time int
+	$sys add_param interblock_time   1000      time int
+	$sys add_param sample_pre_time      0      time int
 	$sys add_param sample_time      15000      time int
-	$sys add_param delay_time       1000      time int
+	$sys add_param delay_time        1000      time int
 	
 	$sys add_param response_timeout 10000      time int
 	
@@ -110,8 +110,8 @@ namespace eval match_to_sample {
 	#
 	$sys add_action sample_on {
 	    my sample_on
-	    ::ess::evt_put SAMPLE ON [now] 
 	    ::ess::evt_put STIMTYPE STIMID [now] $stimtype	
+        ::ess::evt_put SAMPLE ON [now] 
 	    timerTick $sample_time
 	}
 	
@@ -320,3 +320,6 @@ namespace eval match_to_sample {
 	return $sys
     }
 }
+
+
+

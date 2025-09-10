@@ -165,7 +165,7 @@ namespace eval match_to_sample::phd {
             grasp_db close
 
             dl_set $g:choice_scale [dl_repeat $choice_scale $n_obs]
-            dl_local locations [dl_llist [dl_ilist -1 1] [dl_ilist 1 1] [dl_ilist -1 -1] [dl_ilist 1 -1]]
+            dl_local locations [dl_llist  [dl_ilist -1 1] [dl_ilist 1 1] [dl_ilist -1 -1] [dl_ilist 1 -1]]
             dl_local locations [dl_mult $locations $choice_spacing]
 
             dl_set $g:choice_centers [dl_replicate [dl_llist $locations] $n_obs]
@@ -174,3 +174,4 @@ namespace eval match_to_sample::phd {
         }
     }
 }
+
