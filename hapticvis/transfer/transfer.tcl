@@ -531,24 +531,32 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
-                if { $task == "learning" && $have_feedback == 1 } {
-                    if { $r == [expr {$target_slot-1}] } {
-                        set slot [expr $target_slot-1]
-                        set choice_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
-                        set choice_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
-                        rmtSend "feedback_on correct $choice_x $choice_y"
-                        set correct 1
-                    } elseif { $r >= 0 } {
-                        set slot [expr $target_slot-1]
-                        set target_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
-                        set target_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
-
-                        set choice_x [dl_get stimdg:choice_centers:$cur_id:$r 0]
-                        set choice_y [dl_get stimdg:choice_centers:$cur_id:$r 1]
-                        set correct_fb "feedback_on correct $target_x $target_y"
-                        set incorrect_fb "feedback_on incorrect $choice_x $choice_y"
-                        rmtSend "${correct_fb}; ${incorrect_fb}"
-                        set correct 0
+                if { $task == "learning" } {
+                    if { $have_feedback == 1 } {
+                        if { $r == [expr {$target_slot-1}] } {
+                            set slot [expr $target_slot-1]
+                            set choice_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
+                            set choice_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
+                            rmtSend "feedback_on correct $choice_x $choice_y"
+                            set correct 1
+                        } elseif { $r >= 0 } {
+                            set slot [expr $target_slot-1]
+                            set target_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
+                            set target_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
+    
+                            set choice_x [dl_get stimdg:choice_centers:$cur_id:$r 0]
+                            set choice_y [dl_get stimdg:choice_centers:$cur_id:$r 1]
+                            set correct_fb "feedback_on correct $target_x $target_y"
+                            set incorrect_fb "feedback_on incorrect $choice_x $choice_y"
+                            rmtSend "${correct_fb}; ${incorrect_fb}"
+                            set correct 0
+                        }
+                    } else {
+                        if { $r == [expr {$target_slot-1}] } {
+                            set correct 1
+                        } elseif { $r >= 0 } {
+                            set correct 0
+                        }
                     }
                 } else {
                     rmtSend "choices_off; feedback_off all"
