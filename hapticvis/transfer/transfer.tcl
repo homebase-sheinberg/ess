@@ -414,7 +414,9 @@ namespace eval hapticvis::transfer {
 
         $s add_method reward {} {
             if { $task == "learning" } {
-                soundPlay 3 70 70
+                if { $have_feedback == 1} {
+                  soundPlay 3 70 70
+                }
                 ::ess::reward $juice_ml
                 ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
             }
@@ -422,7 +424,9 @@ namespace eval hapticvis::transfer {
 
         $s add_method noreward {} {
             if { $task == "learning" } {
+              if { $have_feedback == 1 } {
                 soundPlay 4 90 300
+              }
             }
         }
 
