@@ -32,6 +32,7 @@ namespace eval hapticvis::transfer {
         $s add_variable choices {}
         $s add_variable follow_dial 0
         $s add_variable follow_pattern 0
+        $s add_variable have_feedback 1
 
         $s set_protocol_init_callback {
             ::ess::init
@@ -226,6 +227,7 @@ namespace eval hapticvis::transfer {
                 set shape_id [dl_get stimdg:shape_id $cur_id]
                 set shape_angle [dl_get stimdg:shape_rot_deg_cw $cur_id]
                 set shape_hand [dl_get stimdg:hand $cur_id]
+                set have_feedback [dl_get stimdg:have_feedback $cur_id]
 
                 rmtSend "nexttrial $cur_id"
 
@@ -529,7 +531,7 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
-                if { $task == "learning" } {
+                if { $task == "learning" && $have_feedback == 1 } {
                     if { $r == [expr {$target_slot-1}] } {
                         set slot [expr $target_slot-1]
                         set choice_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
