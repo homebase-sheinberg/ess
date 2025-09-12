@@ -310,8 +310,8 @@ namespace eval hapticvis::transfer {
                 set njprop 0
                 set minradius 0.5
                 set total_elements [expr {${n_obs}*$nelements}]
-                dl_local xs [dl_zeros $total_elements]
-                dl_local ys [dl_zeros $total_elements]
+                dl_local xs [dl_transpose [dl_zeros $total_elements]]
+                dl_local ys [dl_transpose [dl_zeros $total_elements]]
                 dl_local rs [dl_add $minradius [dl_mult [dl_urand $total_elements] $njprop]]
                 dl_local noise_elements [dl_reshape [dl_transpose [dl_llist $xs $ys $rs]] $n_obs $nelements]
             }
