@@ -119,7 +119,7 @@ proc create_mask { shader id color } {
         dl_local radii [dl_collapse [dl_choose stimdg:noise_elements:$id [dl_llist 2]]]
         dl_local radii [dl_div $radii $mscale]
 
-        shaderObjSetUniform $obj maskColor "$color 0.5" # 1
+        shaderObjSetUniform $obj maskColor "$color 1"
         shaderObjSetUniform $obj circlePos [dl_tcllist $centers]
         shaderObjSetUniform $obj radii [dl_tcllist $radii]
         shaderObjSetUniform $obj nCircles [dl_length $radii]
