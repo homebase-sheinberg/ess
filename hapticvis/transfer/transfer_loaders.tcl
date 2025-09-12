@@ -308,7 +308,7 @@ namespace eval hapticvis::transfer {
             } elseif {$noise_type == "spotlight"} {
                 set nelements 1
                 set njprop 0
-                set minradius 0.5
+                set minradius 1
                 set total_elements [expr {${n_obs}*$nelements}]
                 dl_local xs [dl_repeat 0.0 $total_elements]
                 dl_local ys [dl_repeat 0.0 $total_elements]
