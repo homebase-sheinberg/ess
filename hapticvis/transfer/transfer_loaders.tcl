@@ -313,7 +313,7 @@ namespace eval hapticvis::transfer {
                 dl_local xs [dl_zeros $total_elements]
                 dl_local ys [dl_zeros $total_elements]
                 dl_local rs [dl_add $minradius [dl_mult [dl_urand $total_elements] $njprop]]
-                dl_local noise_elements [dl_reshape [dl_llist $xs $ys $rs] $n_obs $nelements]
+                dl_local noise_elements [dl_reshape [dl_transpose [dl_llist $xs $ys $rs]] $n_obs $nelements]
             }
 
             dl_set stimdg:stimtype [dl_fromto 0 $n_obs]
