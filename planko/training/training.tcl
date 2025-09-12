@@ -201,39 +201,42 @@ namespace eval planko::training {
         $s set_viz_config {
             proc setup {} {
                 package require planko
-                    
+
                 evtSetScript 3 2 [namespace current]::reset
                 evtSetScript 7 0 [namespace current]::stop
                 evtSetScript 19 -1 [namespace current]::beginobs
                 evtSetScript 20 -1 [namespace current]::endobs
                 evtSetScript 29 -1 [namespace current]::stimtype
-                evtSetScript 28  1 [namespace current]::stimon
-                evtSetScript 28  0 [namespace current]::stimoff
+                evtSetScript 28 1 [namespace current]::stimon
+                evtSetScript 28 0 [namespace current]::stimoff
+                
+                clearwin
+                setbackground [dlg_rgbcolor 10 10 10]
+                setwindow -8 -8 8 8
+                flushwin
             }
 
             proc reset { t s d } { clearwin; flushwin }
             proc stop { t s d } {clearwin; flushwin }
             proc beginobs { type subtype data } {
                 clearwin
-                setbackground [dlg_rgbcolor 10 10 10]
-                setwindow -8 -8 8 8
                 flushwin
             }
             proc stimtype { type subtype data } {
                 variable trial
                 set trial $data
-            }            
+            }
             proc stimon { type subtype data } {
                 variable trial
                 clearwin
                 planko::show_trial $trial
                 flushwin
             }
-            
+
             proc stimoff { type subtype data } {
                 clearwin; flushwin
             }
-            
+
             proc endobs { type subtype data } {
             }
 

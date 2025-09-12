@@ -185,14 +185,17 @@ namespace eval search::circles {
                 evtSetScript 29 -1 [namespace current]::stimtype
                 evtSetScript 28 1 [namespace current]::stimon
                 evtSetScript 28 0 [namespace current]::stimoff
+                
+                clearwin
+                setbackground [dlg_rgbcolor 100 100 100]
+                setwindow -20 -14 20 14
+                flushwin
             }
 
             proc reset { t s d } { clearwin; flushwin }
             proc stop { t s d } {clearwin; flushwin }
             proc beginobs { type subtype data } {
                 clearwin
-                setbackground [dlg_rgbcolor 100 100 100]
-                setwindow -20 -14 20 14
                 flushwin
             }
             proc stimtype { type subtype data } {
@@ -204,23 +207,23 @@ namespace eval search::circles {
                 clearwin
 
                 # Draw target
-                foreach v "x y r color" { 
-                    set targ_${v} [dl_get stimdg:targ_${v} $trial] 
+                foreach v "x y r color" {
+                    set targ_${v} [dl_get stimdg:targ_${v} $trial]
                 }
                 dl_local c [dl_flist {*}$targ_color]
                 set color [dlg_rgbcolor {*}[dl_tcllist [dl_int [dl_mult $c 255]]]]
-                dlg_markers $targ_x $targ_y -marker fcircle -size $targ_r  -scaletype x -color $color
+                dlg_markers $targ_x $targ_y -marker fcircle -size $targ_r -scaletype x -color $color
 
                 # Draw distractors
                 set ndists [dl_get stimdg:dists_n $trial]
                 for { set i 0 } { $i < $ndists } { incr i } {
-                    foreach v "x y r color" { 
-                        set dist_${v} [dl_get stimdg:dist_${v}s:$trial $i] 
+                    foreach v "x y r color" {
+                        set dist_${v} [dl_get stimdg:dist_${v}s:$trial $i]
                     }
                     dl_local c [dl_flist {*}$dist_color]
                     set color [dlg_rgbcolor {*}[dl_tcllist [dl_int [dl_mult $c 255]]]]
-                    dlg_markers $dist_x $dist_y -marker fcircle -size $dist_r  -scaletype x -color $color
-                    
+                    dlg_markers $dist_x $dist_y -marker fcircle -size $dist_r -scaletype x -color $color
+
                 }
                 flushwin
             }

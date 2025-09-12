@@ -95,7 +95,7 @@ namespace eval emcalib::9point {
 
         $s add_method nexttrial {} {
             if { [dl_sum stimdg:remaining] } {
-                dl_local left_to_show   [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
+                dl_local left_to_show [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
                 set cur_id [dl_pickone $left_to_show]
                 set stimtype [dl_get stimdg:stimtype $cur_id]
 
@@ -131,7 +131,7 @@ namespace eval emcalib::9point {
             soundPlay 1 70 200
             rmtSend "!fixon"
             ::ess::em_region_on 0
-            ::ess::evt_put EMPARAMS CIRC [now]  0 $fix_targ_x $fix_targ_y $fix_targ_r
+            ::ess::evt_put EMPARAMS CIRC [now] 0 $fix_targ_x $fix_targ_y $fix_targ_r
         }
 
         $s add_method acquired_fixspot {} {
@@ -184,26 +184,27 @@ namespace eval emcalib::9point {
         $s add_method finale {} {
             soundPlay 6 60 400
         }
-        
+
         $s set_viz_config {
             proc setup {} {
-                evtSetScript 3   2 [namespace current]::reset
-                evtSetScript 7   0 [namespace current]::stop
+                evtSetScript 3 2 [namespace current]::reset
+                evtSetScript 7 0 [namespace current]::stop
                 evtSetScript 19 -1 [namespace current]::beginobs
                 evtSetScript 20 -1 [namespace current]::endobs
                 evtSetScript 25 -1 [namespace current]::fixspot
-                evtSetScript 26  3 [namespace current]::calib
+                evtSetScript 26 3 [namespace current]::calib
                 evtSetScript 29 -1 [namespace current]::stimtype
-            }
-            
-            proc reset { t s d } { viz::clear_display }
-            proc stop { t s d } { viz::clear_display }                
-            proc beginobs { type subtype data }	{
-                setbackground [dlg_rgbcolor 20 20 20]
-                setwindow -8 -8 8 8 
+
+                clearwin
+                setbackground [dlg_rgbcolor 30 30 30]
+                setwindow -12 -8 12 8
                 flushwin
             }
-            proc stimtype { type subtype data } { 
+
+            proc reset { t s d } { clearwin; flushwin }
+            proc stop { t s d } { clearwin; flushwin }
+            proc beginobs { type subtype data } { clearwin; flushwin }
+            proc stimtype { type subtype data } {
                 variable trial
                 set trial $data
             }
@@ -217,18 +218,18 @@ namespace eval emcalib::9point {
                 dlg_text $cur_x $cur_y [list $msg] -size 16 -just 0 -color $white
                 flushwin
             }
-            
-            proc endobs { type subtype data }	{
+
+            proc endobs { type subtype data } {
                 #  clearwin
                 #  dlg_text 0 0 "Endobs $subtype" -size 24 -just 0
                 #  dservSet graphics/stimulus [dumpwin json]
             }
-            
+
             proc fixspot { type subtype data } {
-                variable trial 
+                variable trial
                 variable cur_x; variable cur_y; variable cur_r
                 clearwin
-                if { $subtype == 1 } { 
+                if { $subtype == 1 } {
                     set cur_x [dl_get stimdg:fix_targ_x $trial]
                     set cur_y [dl_get stimdg:fix_targ_y $trial]
                     set cur_r [dl_get stimdg:fix_targ_r $trial]
@@ -237,18 +238,14 @@ namespace eval emcalib::9point {
                     set cur_y [dl_get stimdg:jump_targ_y $trial]
                     set cur_r [dl_get stimdg:jump_targ_r $trial]
                 }
-                dlg_markers $cur_x $cur_y fcircle -size ${cur_r}x  -color [dlg_rgbcolor 200 200 0]
+                dlg_markers $cur_x $cur_y fcircle -size ${cur_r}x -color [dlg_rgbcolor 200 200 0]
                 flushwin
             }
             setup
-        }        
+        }
         return
     }
 }
-
-
-
-
 
 
 
