@@ -250,6 +250,3 @@ namespace eval emcalib::9point {
 
 
 
-
-
-

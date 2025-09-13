@@ -111,11 +111,11 @@ namespace eval planko::bounce {
             #       print "saved data to $output_name"
             print "closed $name"
         }
-	
+
         ######################################################################
         #                         Utility Methods                            #
         ######################################################################
-	
+
         $s add_method start_obs_reset {} {
             set buttons_changed 0
         }
@@ -232,24 +232,25 @@ namespace eval planko::bounce {
             }
         }
 
-	
+
         ######################################################################
         #                           Visualization                            #
         ######################################################################
 
-	$s set_viz_config {
+        $s set_viz_config {
             proc setup {} {
                 package require planko
-                    
+
                 evtSetScript 3 2 [namespace current]::reset
                 evtSetScript 7 0 [namespace current]::stop
                 evtSetScript 19 -1 [namespace current]::beginobs
                 evtSetScript 20 -1 [namespace current]::endobs
                 evtSetScript 29 -1 [namespace current]::stimtype
-                evtSetScript 28  1 [namespace current]::stimon
-                evtSetScript 28  0 [namespace current]::stimoff
+                evtSetScript 28 1 [namespace current]::stimon
+                evtSetScript 28 0 [namespace current]::stimoff
                 evtSetScript 37 -1 [namespace current]::response
-
+                evtSetScript 49 -1 [namespace current]::feedback
+                
                 clearwin
                 setbackground [dlg_rgbcolor 10 10 10]
                 setwindow -8 -8 8 8
@@ -265,7 +266,7 @@ namespace eval planko::bounce {
             proc stimtype { type subtype data } {
                 variable trial
                 set trial $data
-            }            
+            }
             proc stimon { type subtype data } {
                 variable trial
                 clearwin
@@ -274,6 +275,8 @@ namespace eval planko::bounce {
             }
             proc response { type subtype data } {
                 variable trial
+                variable response
+                set response $subtype
                 clearwin
                 # add trajectory
                 planko::show_trial $trial 1
@@ -281,18 +284,27 @@ namespace eval planko::bounce {
                 planko::highlight_catcher $trial $subtype
                 flushwin
             }
+            proc feedback { type subtype data } {
+                variable trial
+                variable response
+                clearwin
+                # leave trajectory
+                planko::show_trial $trial 1
+                # add indication of choice correctness
+                planko::highlight_catcher $trial $response 1
+                flushwin
+            }
             proc stimoff { type subtype data } {
                 clearwin; flushwin
             }
-            
+
             proc endobs { type subtype data } {
             }
-	    
+
             setup
         }
     }
 }
-
 
 
 

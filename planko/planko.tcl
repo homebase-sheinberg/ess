@@ -126,9 +126,9 @@ namespace eval planko {
             my stim_on
             set stimon_time [now]
             set stim_up 1
-           ::ess::evt_put STIMTYPE STIMID $stimon_time $stimtype
-           ::ess::evt_put PATTERN ON $stimon_time
-            
+            ::ess::evt_put STIMTYPE STIMID $stimon_time $stimtype
+            ::ess::evt_put PATTERN ON $stimon_time
+
             timerTick $response_timeout
             if { $stimup_time != -1 } {
                 timerTick $stim_timer $stimup_time
@@ -227,6 +227,7 @@ namespace eval planko {
         # post_feedback
         #
         $sys add_action post_feedback {
+            ::ess::evt_put FEEDBACK ON [now] $resp $correct
             timerTick $post_feedback_time
         }
 
@@ -370,5 +371,3 @@ namespace eval planko {
         return $sys
     }
 }
-
-

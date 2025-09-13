@@ -1022,7 +1022,7 @@ namespace eval planko {
 	dlg_markers $tx $ty fcircle -size $sx -scaletype x -color $color
     }
 
-    proc highlight_catcher { trial response } {
+    proc highlight_catcher { trial response { feedback 0 } } {
 	set side [expr {$response-1}]
 	if { $side == 0 } {
 	    set cx [dl_get stimdg:lcatcher_x $trial]
@@ -1039,10 +1039,14 @@ namespace eval planko {
 	dl_local y [dl_mult $sy [dl_flist -.5  -.5 .5 .5 -.5 ]]
 	dl_local x [dl_add $tx $x]
 	dl_local y [dl_add $ty $y]
-	if { $side == [dl_get stimdg:side $trial] } {
-	    set color [dlg_rgbcolor 10 200 10]
+	if { $feedback } {
+	    if { $side == [dl_get stimdg:side $trial] } {
+		set color [dlg_rgbcolor 10 200 10]
+	    } else {
+		set color [dlg_rgbcolor 230 10 10]
+	    }
 	} else {
-	    set color [dlg_rgbcolor 230 10 10]
+	    set color [dlg_rgbcolor 200 200 200]
 	}
 	
 	dlg_lines $x $y -fillcolor $color -linecolor $color
