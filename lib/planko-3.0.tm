@@ -934,7 +934,7 @@ namespace eval planko {
 
 namespace eval planko {
     
-    proc show_trial { trial } {
+    proc show_trial { trial { show_traj 0 } } {
 	set g stimdg
 	set w [get_world $g $trial]
 	
@@ -943,17 +943,13 @@ namespace eval planko {
 	# Setup the viewport to be the middle of the original display
 	setwindow -16 -12 16 12
 	
-	show_world $w
+	show_world $w $trial
 
-	dlg_markers $g:ball_x:${trial} $g:ball_y:${trial} \
-	    -marker fcircle -size 0.5x -color [dlg_rgbcolor 180 190 180]
-	
-	#set status [dl_get $g:status $trial]
-	#set rts [dl_get $g:rts $trial]
-	#set side [dl_get $g:side $trial]
-	if { [dl_exists $g:show_shadow] } {
-	    set show_shadow [dl_get $g:show_shadow $trial]
+	if { $show_traj } {
+	    dlg_markers $g:ball_x:${trial} $g:ball_y:${trial} \
+		-marker fcircle -size 0.5x -color [dlg_rgbcolor 180 190 180]
 	}
+
 	dg_delete $w
     }
 
@@ -972,7 +968,7 @@ namespace eval planko {
 	return $w
     }
 
-    proc show_world { w } {
+    proc show_world { w trial } {
 	global nworld floor blocks sphere
 	set nbodies [dl_length $w:type]
 	
@@ -990,12 +986,17 @@ namespace eval planko {
 	    
 	    if { [dl_get $w:shape $i] == "Box" } {
 		set body [show_box $name $tx $ty $sx $sy $angle]
-	    } elseif { [dl_get $w:type $i] == "Circle" } {
-		set r 0
-		set g 255
-		set b 255
+	    } elseif { [dl_get $w:shape $i] == "Circle" } {
+		if { [dl_exists stimdg:ball_color] } {
+		    lassign [dl_get stimdg:ball_color $trial] r g b
+		    set r [expr {int($r*255)}]
+		    set g [expr {int($g*255)}]
+		    set b [expr {int($b*255)}]
+		} else {
+		    lassign "0 255 255" r g b
+		}
 		set color [dlg_rgbcolor $r $g $b]
-		set body [show_sphere $tx $ty $sx $sy $color]
+		set body [show_sphere $name $tx $ty $sx $sy $color]
 	    }
 	}
     }
@@ -1017,8 +1018,34 @@ namespace eval planko {
 	dlg_lines $x $y  -fillcolor 7 -linecolor 7
     }
     
-    proc show_sphere { tx ty tz sx sy sz color } {
+    proc show_sphere { name tx ty sx sy color } {
 	dlg_markers $tx $ty fcircle -size $sx -scaletype x -color $color
+    }
+
+    proc highlight_catcher { trial response } {
+	set side [expr {$response-1}]
+	if { $side == 0 } {
+	    set cx [dl_get stimdg:lcatcher_x $trial]
+	    set cy [dl_get stimdg:lcatcher_y $trial]
+	} else {
+	    set cx [dl_get stimdg:rcatcher_x $trial]
+	    set cy [dl_get stimdg:rcatcher_y $trial]
+	}
+	set sx 3
+	set sy .25
+	set tx $cx
+	set ty [expr $cy-1.25]
+	dl_local x [dl_mult $sx [dl_flist -.5 .5 .5 -.5 -.5 ]]
+	dl_local y [dl_mult $sy [dl_flist -.5  -.5 .5 .5 -.5 ]]
+	dl_local x [dl_add $tx $x]
+	dl_local y [dl_add $ty $y]
+	if { $side == [dl_get stimdg:side $trial] } {
+	    set color [dlg_rgbcolor 10 200 10]
+	} else {
+	    set color [dlg_rgbcolor 230 10 10]
+	}
+	
+	dlg_lines $x $y -fillcolor $color -linecolor $color
     }
 }    
 

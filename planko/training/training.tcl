@@ -209,6 +209,7 @@ namespace eval planko::training {
                 evtSetScript 29 -1 [namespace current]::stimtype
                 evtSetScript 28 1 [namespace current]::stimon
                 evtSetScript 28 0 [namespace current]::stimoff
+                evtSetScript 37 -1 [namespace current]::response
                 
                 clearwin
                 setbackground [dlg_rgbcolor 10 10 10]
@@ -230,6 +231,16 @@ namespace eval planko::training {
                 variable trial
                 clearwin
                 planko::show_trial $trial
+                flushwin
+            }
+
+	    proc response { type subtype data } {
+                variable trial
+                clearwin
+                # add trajectory
+                planko::show_trial $trial 1
+                # add indication of choice
+                planko::highlight_catcher $trial $subtype
                 flushwin
             }
 

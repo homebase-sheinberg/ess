@@ -248,14 +248,18 @@ namespace eval planko::bounce {
                 evtSetScript 29 -1 [namespace current]::stimtype
                 evtSetScript 28  1 [namespace current]::stimon
                 evtSetScript 28  0 [namespace current]::stimoff
+                evtSetScript 37 -1 [namespace current]::response
+
+                clearwin
+                setbackground [dlg_rgbcolor 10 10 10]
+                setwindow -8 -8 8 8
+                flushwin
             }
 
             proc reset { t s d } { clearwin; flushwin }
             proc stop { t s d } {clearwin; flushwin }
             proc beginobs { type subtype data } {
                 clearwin
-                setbackground [dlg_rgbcolor 10 10 10]
-                setwindow -8 -8 8 8
                 flushwin
             }
             proc stimtype { type subtype data } {
@@ -268,7 +272,15 @@ namespace eval planko::bounce {
                 planko::show_trial $trial
                 flushwin
             }
-            
+            proc response { type subtype data } {
+                variable trial
+                clearwin
+                # add trajectory
+                planko::show_trial $trial 1
+                # add indication of choice
+                planko::highlight_catcher $trial $subtype
+                flushwin
+            }
             proc stimoff { type subtype data } {
                 clearwin; flushwin
             }
@@ -280,6 +292,8 @@ namespace eval planko::bounce {
         }
     }
 }
+
+
 
 
 
