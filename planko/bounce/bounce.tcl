@@ -51,6 +51,7 @@ namespace eval planko::bounce {
         }
 
         $s set_protocol_deinit_callback {
+            ::ess::touch_deinit
             rmtClose
         }
 
@@ -220,10 +221,12 @@ namespace eval planko::bounce {
             }
 
             if { [::ess::touch_in_win 0] } {
+                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
                 if { $side == 0 } { set correct 1 } { set correct 0 }
                 set resp 1
                 return 1
             } elseif { [::ess::touch_in_win 1] } {
+                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
                 if { $side == 1 } { set correct 1 } { set correct 0 }
                 set resp 2
                 return 1
@@ -305,6 +308,8 @@ namespace eval planko::bounce {
         }
     }
 }
+
+
 
 
 

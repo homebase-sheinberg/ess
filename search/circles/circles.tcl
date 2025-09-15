@@ -28,11 +28,6 @@ namespace eval search::circles {
         $s add_variable dist_y
         $s add_variable dist_r
 
-        $s add_variable touch_count 0
-        $s add_variable touch_last 0
-        $s add_variable touch_x
-        $s add_variable touch_y
-
         $s set_protocol_init_callback {
             ::ess::init
 
@@ -57,6 +52,7 @@ namespace eval search::circles {
         }
 
         $s set_protocol_deinit_callback {
+            ::ess::touch_deinit
             rmtClose
         }
 
@@ -141,6 +137,12 @@ namespace eval search::circles {
 
         $s add_method stim_on {} {
             ::ess::touch_region_on 0
+            foreach t "press release" {
+                if { [dservExists ess/touch_${t}] } {
+                    set touch_last_${t} [dservTimestamp ess/touch_${t}]
+                
+                }
+            }
             rmtSend "!stimon"
         }
 
@@ -164,6 +166,7 @@ namespace eval search::circles {
 
         $s add_method responded {} {
             if { [::ess::touch_in_win 0] } {
+                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
                 return 1
             } else {
                 return 0
@@ -240,6 +243,19 @@ namespace eval search::circles {
         return
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

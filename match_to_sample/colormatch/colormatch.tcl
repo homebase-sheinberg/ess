@@ -64,6 +64,7 @@ namespace eval match_to_sample::colormatch {
         }
 
         $s set_protocol_deinit_callback {
+            ::ess::touch_deinit
             rmtClose
         }
 
@@ -205,9 +206,11 @@ namespace eval match_to_sample::colormatch {
             }
 
             if { [::ess::touch_in_win 0] } {
+                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
                 set correct 1
                 return 0
             } elseif { [::ess::touch_in_win 1] } {
+                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
                 set correct 0
                 return 1
             } else {
@@ -297,6 +300,8 @@ namespace eval match_to_sample::colormatch {
         return
     }
 }
+
+
 
 
 
