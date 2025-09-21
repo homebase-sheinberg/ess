@@ -19,6 +19,7 @@ namespace eval video {
         $sys add_param interblock_time 1000 time int
         $sys add_param prestim_time 250 time int
         $sys add_param response_timeout 5000 time int
+        $sys add_param use_response_timeout 0 variable bool
 
         ##
         ## Local variables for this system
@@ -104,7 +105,17 @@ namespace eval video {
             my prestim
         }
         $sys add_transition pre_stim {
-            if { [timerExpired] } { return stim_on }
+            if { [timerExpired] } { return next_video }
+        }
+
+        #
+        # next_video
+        #
+        $sys add_action next_video {
+            my show_next_video
+        }
+        $sys add_transition next_video {
+            if { [my select_next_video] } { return stim_on }
         }
 
         #
@@ -125,14 +136,17 @@ namespace eval video {
         # wait_for_response
         #
         $sys add_action wait_for_response {
-            timerTick $response_timeout
+            if { $use_response_timeout } {
+                timerTick $response_timeout
+            }
         }
 
         $sys add_transition wait_for_response {
-            if [timerExpired] { return no_response }
+            if { $use_response_timeout } {
+                if [timerExpired] { return no_response }
+            }
             set response [my responded]
             if { $response != 0 } { return response }
-
         }
 
         #
@@ -145,8 +159,11 @@ namespace eval video {
         }
 
         $sys add_transition response {
-            if { $response == 1 } { return play }
-	    else { return post_trial }
+            if { $response == 1 } {
+                return play
+            } else {
+                return post_trial
+            }
         }
 
         #
@@ -160,8 +177,8 @@ namespace eval video {
         $sys add_transition play {
             if { [my play_complete] } { return post_trial }
         }
-        
-        
+
+
         #
         # no_response
         #
@@ -269,9 +286,11 @@ namespace eval video {
 
         $sys add_method endobs {} { incr obs_count }
         $sys add_method prestim {} {}
+        $sys add_method show_next_video {} {}
+        $sys add_method select_next_video {} {}
         $sys add_method stim_on {} {}
-	$sys add_method play {} {}
-	$sys add_method play_complete {} { return 1 }
+        $sys add_method play {} {}
+        $sys add_method play_complete {} { return 1 }
         $sys add_method stim_off {} {}
         $sys add_method reward {} {}
         $sys add_method finale {} {}
@@ -282,7 +301,3 @@ namespace eval video {
         return $sys
     }
 }
-
-
-
-

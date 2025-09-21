@@ -26,20 +26,20 @@ namespace eval video::play-or-skip {
 
         $s set_protocol_init_callback {
             ::ess::init
-            
+
             # configure juicer
             ::ess::juicer_init
-            
+
             # open connection to rmt and upload ${protocol}_stim.tcl
             my configure_stim $rmt_host
-            
+
             # initialize touch processor
             ::ess::touch_init
-            
+
             # listen for end of playback
             dservAddExactMatch video/complete
             dpointSetScript video/complete ess::do_update
-            
+
             soundReset
             soundSetVoice 81 0 0
             soundSetVoice 57 17 1
@@ -105,8 +105,9 @@ namespace eval video::play-or-skip {
                 dl_local left_to_show [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
                 set cur_id [dl_pickone $left_to_show]
                 set stimtype [dl_get stimdg:stimtype $cur_id]
-                
+
                 # virtual button info for play and skip
+                lassign [dl_get stimdg:next_button $stimtype] next_x next_y next_r
                 lassign [dl_get stimdg:play_button $stimtype] play_x play_y play_r
                 lassign [dl_get stimdg:skip_button $stimtype] skip_x skip_y skip_r
 
@@ -114,6 +115,7 @@ namespace eval video::play-or-skip {
                 ::ess::touch_reset
                 ::ess::touch_win_set 0 $play_x $play_y $play_r 0
                 ::ess::touch_win_set 1 $skip_x $skip_y $skip_r 0
+                ::ess::touch_win_set 2 $next_x $next_y $next_r 0
 
                 rmtSend "nexttrial $stimtype"
             }
@@ -125,16 +127,28 @@ namespace eval video::play-or-skip {
                 incr obs_count
             }
         }
-        
+
         $s add_method finished {} {
             return [expr [dl_sum stimdg:remaining]==0]
         }
-        
+
         $s add_method prestim {} {
             soundPlay 1 70 200
         }
-        
+
+        $s add_method show_next_video {} {
+            rmtSend "!show_next_video"
+            ::ess::touch_region_on 2
+        }
+
+        $s add_method select_next_video {} {
+            if { [::ess::touch_in_win 2] } {
+                return 1;
+            }
+        }
+
         $s add_method stim_on {} {
+            ::ess::touch_region_off 2
             foreach t "0 1" { ::ess::touch_region_on $t }
             foreach t "press release" {
                 if { [dservExists ess/touch_${t}] } {
@@ -143,49 +157,49 @@ namespace eval video::play-or-skip {
             }
             rmtSend "!stimon"
         }
-        
+
         $s add_method stim_off {} {
             rmtSend "!stimoff"
         }
-        
+
         $s add_method reward {} {
             soundPlay 3 70 70
             ::ess::reward $juice_ml
             ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
         }
-        
+
         $s add_method noreward {} {
-            
+
         }
-        
+
         $s add_method finale {} {
             soundPlay 6 60 400
         }
-        
+
         $s add_method play {} {
             dservSet video/complete 0
             rmtSend "!play"
         }
         $s add_method play_complete {} { return [dservGet video/complete] }
-        
+
         $s add_method responded {} {
             if { [::ess::touch_in_win 0] } {
-                return 1;	# play
+                return 1; # play
             } elseif { [::ess::touch_in_win 1] } {
-                return 2;	# skip
+                return 2; # skip
             } else {
                 return 0
             }
         }
-        
+
         ######################################################################
         #                           Visualization                            #
         ######################################################################
-        
+
         $s set_viz_config {
             proc setup {} {
                 package require planko
-                
+
                 evtSetScript 3 2 [namespace current]::reset
                 evtSetScript 7 0 [namespace current]::stop
                 evtSetScript 19 -1 [namespace current]::beginobs
@@ -193,7 +207,7 @@ namespace eval video::play-or-skip {
                 evtSetScript 29 -1 [namespace current]::stimtype
                 evtSetScript 28 1 [namespace current]::stimon
                 evtSetScript 28 0 [namespace current]::stimoff
-                
+
                 clearwin
                 setbackground [dlg_rgbcolor 100 100 100]
                 setwindow -20 -14 20 14
@@ -214,9 +228,9 @@ namespace eval video::play-or-skip {
                 variable trial
                 clearwin
 
-		# video window
-		# play_button
-		# skip_button
+                # video window
+                # play_button
+                # skip_button
                 flushwin
             }
 
@@ -232,9 +246,6 @@ namespace eval video::play-or-skip {
         return
     }
 }
-
-
-
 
 
 
