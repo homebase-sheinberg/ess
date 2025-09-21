@@ -74,7 +74,10 @@ proc nexttrial { id } {
     shaderDeleteAll
     glistInit 2
 
-    dl_local videos [dl_slist {*}[glob /Users/sheinb/src/stim2/examples/pixabay_vids/*.mp4]]
+    set system_path [lindex [qpcs::dsGet $::dservhost ess/system_path] 5]
+    set asset_path [file join $system_path assets]
+    dl_local videos [dl_slist {*}[glob $asset_path/pixabay_vids/*.mp4]]
+
     set v [video [dl_pickone $videos]]
     set ::video $v
 
