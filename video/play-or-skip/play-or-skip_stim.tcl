@@ -83,7 +83,9 @@ proc nexttrial { id } {
 
     set w [expr {0.8*[screen_set HalfScreenDegreeX]*2}]
     set h [expr {0.8*[screen_set HalfScreenDegreeY]*2}]
+    set voff [expr {0.075*[screen_set HalfScreenDegreeY]*2}]
     scaleObj $v $w $h
+    translateObj $v 0 $voff
     videoEofCallback $v videoComplete
 
     glistAddObject $v 0
