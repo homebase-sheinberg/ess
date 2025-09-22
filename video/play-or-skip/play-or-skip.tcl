@@ -67,7 +67,7 @@ namespace eval video::play-or-skip {
         }
 
         $s set_quit_callback {
-            foreach t "0 1" { ::ess::touch_region_off $t }
+            foreach t "0 1 2" { ::ess::touch_region_off $t }
             rmtSend clearscreen
             ::ess::end_obs QUIT
         }
@@ -246,9 +246,6 @@ namespace eval video::play-or-skip {
         return
     }
 }
-
-
-
 
 
 
