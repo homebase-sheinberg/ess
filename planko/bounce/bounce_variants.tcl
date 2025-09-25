@@ -69,9 +69,12 @@ namespace eval planko::bounce {
                 }
             }
             init {
+                planko::enable_threading 4
                 rmtSend "setBackground 0 0 10"
             }
-            deinit {}
+            deinit {
+                planko::disable_threading
+            }
             params { use_buttons 1 left_button 20 right_button 22 save_ems 1 }
         }
         multiball {
@@ -136,6 +139,8 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
+
+
 
 
 

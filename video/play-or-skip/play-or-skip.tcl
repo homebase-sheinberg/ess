@@ -1,33 +1,33 @@
 #
 # PROTOCOL
-#   planko training
+#   video play-or-skip
 #
 # DESCRIPTION
-#   Train planko
+#   Offer videos to be watched or skipped
 #
 
-namespace eval planko::training {
-
+namespace eval video::play-or-skip {
     variable params_defaults { n_rep 50 }
 
     proc protocol_init { s } {
         $s set_protocol [namespace tail [namespace current]]
 
         $s add_param rmt_host $::ess::rmt_host stim ipaddr
-        $s add_param juice_ml .6 variable float
-        $s add_param use_buttons 0 variable int
-        $s add_param left_button 24 variable int
-        $s add_param right_button 25 variable int
 
-        $s add_variable touch_count 0
-        $s add_variable touch_last 0
-        $s add_variable touch_x
-        $s add_variable touch_y
+        $s add_param juice_ml 0.6 variable float
+
+        $s add_variable play_x
+        $s add_variable play_y
+        $s add_variable play_r
+
+        $s add_variable skip_x
+        $s add_variable skip_y
+        $s add_variable skip_r
 
         $s set_protocol_init_callback {
             ::ess::init
 
-            # initialize juicer
+            # configure juicer
             ::ess::juicer_init
 
             # open connection to rmt and upload ${protocol}_stim.tcl
@@ -36,9 +36,9 @@ namespace eval planko::training {
             # initialize touch processor
             ::ess::touch_init
 
-            # listen for planko/complete event
-            dservAddExactMatch planko/complete
-            dpointSetScript planko/complete ess::do_update
+            # listen for end of playback
+            dservAddExactMatch video/complete
+            dpointSetScript video/complete ess::do_update
 
             soundReset
             soundSetVoice 81 0 0
@@ -67,8 +67,7 @@ namespace eval planko::training {
         }
 
         $s set_quit_callback {
-            ::ess::touch_region_off 0
-            ::ess::touch_region_off 1
+            foreach t "0 1 2" { ::ess::touch_region_off $t }
             rmtSend clearscreen
             ::ess::end_obs QUIT
         }
@@ -91,12 +90,12 @@ namespace eval planko::training {
             print "closed $name"
         }
 
+
         ######################################################################
         #                         Utility Methods                            #
         ######################################################################
 
         $s add_method start_obs_reset {} {
-            set buttons_changed 0
         }
 
         $s add_method n_obs {} { return [dl_length stimdg:stimtype] }
@@ -107,19 +106,16 @@ namespace eval planko::training {
                 set cur_id [dl_pickone $left_to_show]
                 set stimtype [dl_get stimdg:stimtype $cur_id]
 
-                set side [dl_get stimdg:side $cur_id]
+                # virtual button info for play and skip
+                lassign [dl_get stimdg:next_button $stimtype] next_x next_y next_r
+                lassign [dl_get stimdg:play_button $stimtype] play_x play_y play_r
+                lassign [dl_get stimdg:skip_button $stimtype] skip_x skip_y skip_r
 
-                foreach v "lcatcher_x lcatcher_y rcatcher_x rcatcher_y" {
-                    set $v [dl_get stimdg:$v $cur_id]
-                }
-
-                ::ess::touch_region_off 0
-                ::ess::touch_region_off 1
+                for { set i 0 } { $i < 8 } { incr i } { ::ess::touch_region_off $i }
                 ::ess::touch_reset
-                ::ess::touch_win_set 0 $lcatcher_x $lcatcher_y 2 0
-                ::ess::touch_win_set 1 $rcatcher_x $rcatcher_y 2 0
-
-                dservSet planko/complete waiting
+                ::ess::touch_win_set 0 $play_x $play_y $play_r 0
+                ::ess::touch_win_set 1 $skip_x $skip_y $skip_r 0
+                ::ess::touch_win_set 2 $next_x $next_y $next_r 0
 
                 rmtSend "nexttrial $stimtype"
             }
@@ -140,9 +136,25 @@ namespace eval planko::training {
             soundPlay 1 70 200
         }
 
+        $s add_method show_next_video {} {
+            rmtSend "!show_next_video"
+            ::ess::touch_region_on 2
+        }
+
+        $s add_method select_next_video {} {
+            if { [::ess::touch_in_win 2] } {
+                return 1;
+            }
+        }
+
         $s add_method stim_on {} {
-            ::ess::touch_region_on 0
-            ::ess::touch_region_on 1
+            ::ess::touch_region_off 2
+            foreach t "0 1" { ::ess::touch_region_on $t }
+            foreach t "press release" {
+                if { [dservExists ess/touch_${t}] } {
+                    set touch_last_${t} [dservTimestamp ess/touch_${t}]
+                }
+            }
             rmtSend "!stimon"
         }
 
@@ -150,48 +162,31 @@ namespace eval planko::training {
             rmtSend "!stimoff"
         }
 
-        $s add_method stim_hide {} {
-            rmtSend "!planksoff"
-        }
-
-        $s add_method stim_unhide {} {
-            rmtSend "!plankson"
-        }
-
-        $s add_method feedback { resp correct } {
-            rmtSend "!show_response [expr $resp-1]"
-        }
-
-        $s add_method feedback_complete {} {
-            if { [dservGet planko/complete] != "waiting" } { return 1 } { return 0 }
-        }
-
         $s add_method reward {} {
-            rmtSend "!show_feedback [expr $resp-1] $correct"
             soundPlay 3 70 70
             ::ess::reward $juice_ml
             ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
         }
 
         $s add_method noreward {} {
-            rmtSend "!show_feedback [expr $resp-1] $correct"
+
         }
 
         $s add_method finale {} {
             soundPlay 6 60 400
         }
 
+        $s add_method play {} {
+            dservSet video/complete 0
+            rmtSend "!play"
+        }
+        $s add_method play_complete {} { return [dservGet video/complete] }
+
         $s add_method responded {} {
             if { [::ess::touch_in_win 0] } {
-                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
-                if { $side == 0 } { set correct 1 } { set correct 0 }
-                set resp 1
-                return 1
+                return 1; # play
             } elseif { [::ess::touch_in_win 1] } {
-                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
-                if { $side == 1 } { set correct 1 } { set correct 0 }
-                set resp 2
-                return 1
+                return 2; # skip
             } else {
                 return 0
             }
@@ -212,12 +207,10 @@ namespace eval planko::training {
                 evtSetScript 29 -1 [namespace current]::stimtype
                 evtSetScript 28 1 [namespace current]::stimon
                 evtSetScript 28 0 [namespace current]::stimoff
-                evtSetScript 37 -1 [namespace current]::response
-                evtSetScript 49 -1 [namespace current]::feedback
 
                 clearwin
-                setbackground [dlg_rgbcolor 10 10 10]
-                setwindow -8 -8 8 8
+                setbackground [dlg_rgbcolor 100 100 100]
+                setwindow -20 -14 20 14
                 flushwin
             }
 
@@ -234,30 +227,10 @@ namespace eval planko::training {
             proc stimon { type subtype data } {
                 variable trial
                 clearwin
-                planko::show_trial $trial
-                flushwin
-            }
 
-            proc response { type subtype data } {
-                variable trial
-                variable response
-                set response $subtype
-                clearwin
-                # add trajectory
-                planko::show_trial $trial 1
-                # add indication of choice
-                planko::highlight_catcher $trial $subtype 0
-                flushwin
-            }
-
-            proc feedback { type subtype data } {
-                variable trial
-                variable response
-                clearwin
-                # leave trajectory
-                planko::show_trial $trial 1
-                # add indication of choice correctness
-                planko::highlight_catcher $trial $response 1
+                # video window
+                # play_button
+                # skip_button
                 flushwin
             }
 
@@ -270,8 +243,24 @@ namespace eval planko::training {
 
             setup
         }
+        return
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

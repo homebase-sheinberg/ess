@@ -12,8 +12,8 @@ package require points
 
 namespace eval planko {
     variable params
-    variable use_threading 1
-    variable num_threads 6
+    variable use_threading 0
+    variable num_threads 4
     variable min_threading_batch 4
 
     # Thread-local world tracking
@@ -113,263 +113,125 @@ namespace eval planko {
         return [dict create enabled $use_threading threads $num_threads min_batch $min_threading_batch]
     }
 
-    # Worker thread initialization script
     proc create_worker_script {} {
-        return {
-            # Setup worker thread environment
-            set dlshlib [file join /usr/local/dlsh dlsh.zip]
-            set base [file join [zipfs root] dlsh]
-            if { ![file exists $base] && [file exists $dlshlib] } {
-                zipfs mount $dlshlib $base
-            }
-            set ::auto_path [linsert $::auto_path [set auto_path 0] $base/lib]
-
-            # Add module path and load required packages - match working version
-            if { [info exists ::env(ESS_SYSTEM_PATH)] } {
-                tcl::tm::path add $::env(ESS_SYSTEM_PATH)/ess/lib
-            }
-            package require box2d
-            package require planko
-
-            proc do_planko_work { n d worker_id } {
-                puts "Worker $worker_id starting generation of $n worlds"
-
-                if {[catch {
-                        # Generate worlds in this thread's context
-                        set g [planko::generate_worlds_serial $n $d]
-
-                        set tid [thread::id]
-                        puts "Worker $worker_id (thread $tid) completed $n worlds successfully"
-
-                        # Serialize result for thread-safe transfer
-                        dg_toString $g result_$tid
-
-                        # Store result in thread-safe variable with session-specific key
-                        upvar 1 session_id session_id
-                        tsv::set planko_result "${session_id}_${tid}" [set result_$tid]
-                        tsv::incr planko_result "${session_id}_count"
-
-                        # Clean up local data
-                        dg_delete $g
-
-                    } work_error]} {
-                    puts "ERROR in worker $worker_id: $work_error"
-                    puts "Worker $worker_id error info: $::errorInfo"
-
-                    # Store error result
-                    upvar 1 session_id session_id
-                    set tid [thread::id]
-                    tsv::set planko_result "${session_id}_${tid}" "ERROR: $work_error"
-                    tsv::incr planko_result "${session_id}_count"
-                }
-
-                # Notify main thread of completion
-                upvar 1 main_tid main_tid
-                thread::send $main_tid planko::check_completion
-            }
-
-            # Wait for work assignments
-            thread::wait
-        }
+	return {
+	    # Setup worker thread environment (same as before)
+	    set dlshlib [file join /usr/local/dlsh dlsh.zip]
+	    set base [file join [zipfs root] dlsh]
+	    set ::auto_path [linsert $::auto_path [set auto_path 0] $base/lib]
+	    
+	    if { [info exists ::env(ESS_SYSTEM_PATH)] } {
+		tcl::tm::path add $::env(ESS_SYSTEM_PATH)/ess/lib
+	    }
+	    package require planko
+	    
+	    proc do_planko_work { n d worker_id } {
+		puts "Worker $worker_id starting generation of $n worlds"
+		
+		set result [catch {
+		    set g [planko::generate_worlds_serial $n $d]
+		    dg_toString $g temp_result
+		    set ::result_string $temp_result
+		    dg_delete $g
+		    puts "Worker $worker_id completed $n worlds successfully"
+		} work_error]
+		
+		if {$result != 0} {
+		    puts "ERROR in worker $worker_id: $work_error"
+		    set ::result_string "ERROR: $work_error"
+		    return "ERROR: $work_error"
+		}
+		
+		return "SUCCESS"
+	    }
+	    thread::wait
+	}
     }
 
-    # Parallel world generation
     proc generate_worlds_parallel { n d } {
-        variable num_threads
-
-        # Don't use threading for small jobs
-        if {$n < $num_threads * 2} {
-            return [generate_worlds_serial $n $d]
-        }
-
-        puts "Generating $n worlds using $num_threads threads"
-
-        # Distribute work across threads - handle remainder properly
-        set worlds_per_thread [expr {$n / $num_threads}]
-        set remainder [expr {$n % $num_threads}]
-
-        set threads {}
-        set thread_args {}
-
-        for {set i 0} {$i < $num_threads} {incr i} {
-            set thread_n $worlds_per_thread
-            if {$i < $remainder} {incr thread_n} ; # Distribute remainder
-            if {$thread_n > 0} {
-                lappend thread_args [list $thread_n $d $i]
-            }
-        }
-
-        # Create unique session ID to avoid conflicts between calls
-        set session_id "session_[clock microseconds]"
-
-        # Initialize thread-safe storage with session-specific keys
-        if {[catch {
-                tsv::set planko_result "${session_id}_count" 0
-                set expected_threads [llength $thread_args]
-                tsv::set planko_result "${session_id}_expected" $expected_threads
-            } tsv_error]} {
-            puts "TSV initialization error: $tsv_error"
-            # Fallback to serial if TSV fails
-            return [generate_worlds_serial $n $d]
-        }
-
-        # Set global session ID for check_completion to access
-        set ::planko_current_session $session_id
-
-        # Completion check procedure for main thread
-        proc check_completion {} {
-            set session_id $::planko_current_session
-            if {[catch {
-                    set count [tsv::get planko_result "${session_id}_count"]
-                    set expected [tsv::get planko_result "${session_id}_expected"]
-                    if {$count >= $expected} {
-                        set ::planko_parallel_done 1
-                    }
-                } check_error]} {
-                puts "Error in check_completion: $check_error"
-                set ::planko_parallel_done 1 ; # Force completion on error
-            }
-        }
-
-        # Create worker threads
-        puts "expected threads: $expected_threads"
-        set created_threads {}
-
-        if {[catch {
-                for {set i 0} {$i < $expected_threads} {incr i} {
-                    set tid [thread::create [create_worker_script]]
-                    lappend created_threads $tid
-                    # Initialize with session-specific key
-                    tsv::set planko_result "${session_id}_${tid}" {}
-                }
-                set threads $created_threads
-            } thread_creation_error]} {
-            puts "Thread creation error: $thread_creation_error"
-            # Clean up any created threads
-            foreach tid $created_threads {
-            catch {thread::release $tid}
-            }
-            # Fallback to serial
-            return [generate_worlds_serial $n $d]
-        }
-
-        # Start work in each thread
-        if {[catch {
-                set thread_index 0
-                foreach tid $threads {
-                    lassign [lindex $thread_args $thread_index] thread_n thread_d worker_id
-                    thread::send $tid [list set main_tid [thread::id]]
-                    thread::send $tid [list set session_id $session_id]
-                    thread::send -async $tid [list do_planko_work $thread_n $thread_d $worker_id]
-                    incr thread_index
-                }
-            } work_dispatch_error]} {
-            puts "Work dispatch error: $work_dispatch_error"
-            # Clean up threads
-            foreach tid $threads {
-            catch {thread::release $tid}
-            }
-            return [generate_worlds_serial $n $d]
-        }
-
-        # Wait for completion with timeout
-        set timeout_ms 60000 ; # 60 second timeout
-        set start_time [clock milliseconds]
-
-        while {![info exists ::planko_parallel_done]} {
-            vwait ::planko_parallel_done
-            set elapsed [expr {[clock milliseconds] - $start_time}]
-            if {$elapsed > $timeout_ms} {
-                puts "Timeout waiting for parallel completion"
-                break
-            }
-        }
-
-        # Collect results with error handling
-        set all_worlds {}
-        set successful_threads 0
-
-        foreach tid $threads {
-            if {[catch {
-                    set thread_result [tsv::get planko_result "${session_id}_${tid}"]
-                    if {$thread_result ne "" && ![string match "ERROR:*" $thread_result]} {
-                        # Create unique name for each thread's data
-                        set unique_name "temp_${session_id}_${tid}"
-
-                        # Use safe creation
-                        set g [safe_dg_fromString $thread_result $unique_name]
-
-                        if {$all_worlds eq ""} {
-                            set all_worlds $g
-                        } else {
-                            if {[catch {dg_append $all_worlds $g} append_error]} {
-                                puts "Error appending data from thread $tid: $append_error"
-                                # Try to continue with remaining threads
-                            } else {
-                                dg_delete $g
-                            }
-                        }
-                        incr successful_threads
-                    } else {
-                        puts "Thread $tid failed or returned error: $thread_result"
-                    }
-                } result_error]} {
-                puts "Error processing results from thread $tid: $result_error"
-            }
-
-            # Clean up this thread's data immediately
-        catch {tsv::unset planko_result "${session_id}_${tid}"}
-        }
-
-        # Clean up session data
-    catch {tsv::unset planko_result "${session_id}_count"}
-    catch {tsv::unset planko_result "${session_id}_expected"}
-
-        # Clean up global session variable
-    catch {unset ::planko_current_session}
-    catch {unset ::planko_parallel_done}
-
-        # Cleanup threads
-        foreach tid $threads {
-        catch {thread::release $tid}
-        }
-
-        puts "Parallel generation summary: $successful_threads/$expected_threads threads successful"
-
-        # Verify we got some results
-        if {$all_worlds eq "" || $successful_threads == 0} {
-            puts "No successful parallel results, falling back to serial generation"
-            return [generate_worlds_serial $n $d]
-        }
-
-        # Renumber IDs sequentially across all threads
-        if {$all_worlds ne ""} {
-            set total_worlds [dl_length $all_worlds:name]
-            dl_set $all_worlds:id [dl_fromto 0 $total_worlds]
-            puts "Parallel generation complete: $total_worlds worlds generated"
-        }
-
-        # Ensure the final data group has a simple, accessible name
-        if {$all_worlds ne "" && [dg_exists $all_worlds]} {
-            # Create a simple name that doesn't use session IDs
-            set simple_name "worlds_[clock microseconds]"
-
-            # If the current name is complex, rename to something simpler
-            if {[string match "*session*" $all_worlds]} {
-                dg_rename $all_worlds $simple_name
-                set all_worlds $simple_name
-            }
-
-            set total_worlds [dl_length $all_worlds:name]
-            dl_set $all_worlds:id [dl_fromto 0 $total_worlds]
-            puts "Parallel generation complete: $total_worlds worlds generated as '$all_worlds'"
-        } else {
-            puts "Warning: No valid worlds generated"
-        }
-
-        return $all_worlds
+	variable num_threads
+	
+	if {$n < $num_threads * 2} {
+	    return [generate_worlds_serial $n $d]
+	}
+	
+	puts "Generating $n worlds using $num_threads threads"
+	
+	# Distribute work
+	set worlds_per_thread [expr {$n / $num_threads}]
+	set remainder [expr {$n % $num_threads}]
+	
+	set threads {}
+	set thread_work {}
+	
+	# Create threads and assign work
+	for {set i 0} {$i < $num_threads} {incr i} {
+	    set thread_n $worlds_per_thread
+	    if {$i < $remainder} {incr thread_n}
+	    
+	    if {$thread_n > 0} {
+		set tid [thread::create [create_worker_script]]
+		lappend threads $tid
+		lappend thread_work [list $thread_n $d $i]
+	    }
+	}
+	
+	# Start all work asynchronously
+	for {set i 0} {$i < [llength $threads]} {incr i} {
+	    set tid [lindex $threads $i]
+	    lassign [lindex $thread_work $i] thread_n thread_d worker_id
+	    
+	    # Start work without waiting - all threads begin immediately
+	    thread::send -async $tid [list do_planko_work $thread_n $thread_d $worker_id]
+	}
+	
+	# Collect results (blocks on any thread still working)
+	set all_worlds ""
+	set successful_threads 0
+	
+	for {set i 0} {$i < [llength $threads]} {incr i} {
+	    set tid [lindex $threads $i]
+	    
+	    if {[catch {
+		# Get the return value from the async call
+		set thread_result [thread::send $tid {set ::result_string}]
+		
+		if {$thread_result ne "" && ![string match "ERROR:*" $thread_result]} {
+		    set unique_name "temp_${tid}_[clock microseconds]"
+		    set g [safe_dg_fromString $thread_result $unique_name]
+		    
+		    if {$all_worlds eq ""} {
+			set all_worlds $g
+		    } else {
+			if {[catch {dg_append $all_worlds $g} append_error]} {
+			    puts "Error appending data from thread $tid: $append_error"
+			} else {
+			    dg_delete $g
+			}
+		    }
+		    incr successful_threads
+		} else {
+		    puts "Thread $tid failed: $thread_result"
+		}
+	    } result_error]} {
+		puts "Error collecting from thread $tid: $result_error"
+	    }
+	    
+	    thread::release $tid
+	}
+	
+	puts "Parallel generation: $successful_threads/[llength $threads] threads successful"
+	
+	# Final processing
+	if {$all_worlds ne ""} {
+	    set total_worlds [dl_length $all_worlds:name]
+	    dl_set $all_worlds:id [dl_fromto 0 $total_worlds]
+	    puts "Parallel generation complete: $total_worlds worlds generated"
+	}
+	
+	return $all_worlds
     }
-
+    
     proc update_world { w d } {
 	variable params
 	# for now, just handle plank_restitution, but this need to be expanded
@@ -1066,6 +928,131 @@ namespace eval planko {
     namespace export test_world_parameter_combinations generate_worlds_with_parameter_sweeps
 }
 
+#########################################################################
+# Visualization Helper Functions
+#########################################################################
+
+namespace eval planko {
+    
+    proc show_trial { trial { show_traj 0 } } {
+	set g stimdg
+	set w [get_world $g $trial]
+	
+	clearwin
+
+	# Setup the viewport to be the middle of the original display
+	setwindow -16 -12 16 12
+	
+	show_world $w $trial
+
+	if { $show_traj } {
+	    dlg_markers $g:ball_x:${trial} $g:ball_y:${trial} \
+		-marker fcircle -size 0.5x -color [dlg_rgbcolor 180 190 180]
+	}
+
+	dg_delete $w
+    }
+
+    proc get_world { dg trial } {
+	set w [dg_create]
+	set vars "name shape type tx ty sx sy angle restitution contact_t contact_bodies ball_t ball_x ball_y"
+	foreach l $vars {
+	    dl_set $w:$l $dg:$l:$trial
+	}
+	
+	foreach v "side nhit nplanks ball_start_x \
+    	    	   ball_start_y ball_radius ball_restitution \
+                   lcatcher_x lcatcher_y rcatcher_x rcatcher_y" {
+	    dl_set $w:$v [dl_flist [dl_get $dg:$v $trial]]
+	}
+	return $w
+    }
+
+    proc show_world { w trial } {
+	global nworld floor blocks sphere
+	set nbodies [dl_length $w:type]
+	
+	for { set i 0 } { $i < $nbodies } { incr i } {
+	    set name [dl_get $w:name $i]
+	    set sx [dl_get $w:sx $i]
+	    set sy [dl_get $w:sy $i]
+	    set tx [dl_get $w:tx $i]
+	    set ty [dl_get $w:ty $i]
+	    set color_r 255
+	    set color_g 255
+	    set color_b 255
+	    set angle [dl_get $w:angle $i]
+	    
+	    
+	    if { [dl_get $w:shape $i] == "Box" } {
+		set body [show_box $name $tx $ty $sx $sy $angle]
+	    } elseif { [dl_get $w:shape $i] == "Circle" } {
+		if { [dl_exists stimdg:ball_color] } {
+		    lassign [dl_get stimdg:ball_color $trial] r g b
+		    set r [expr {int($r*255)}]
+		    set g [expr {int($g*255)}]
+		    set b [expr {int($b*255)}]
+		} else {
+		    lassign "0 255 255" r g b
+		}
+		set color [dlg_rgbcolor $r $g $b]
+		set body [show_sphere $name $tx $ty $sx $sy $color]
+	    }
+	}
+    }
+    
+    proc show_box { name tx ty sx sy angle } {
+	
+	dl_local x [dl_mult $sx [dl_flist -.5 .5 .5 -.5 -.5 ]]
+	dl_local y [dl_mult $sy [dl_flist -.5  -.5 .5 .5 -.5 ]]
+	
+	set cos_theta [expr cos($angle)]
+	set sin_theta [expr sin($angle)]
+	
+	dl_local rotated_x [dl_sub [dl_mult $x $cos_theta] [dl_mult $y $sin_theta]]
+	dl_local rotated_y [dl_add [dl_mult $y $cos_theta] [dl_mult $x $sin_theta]]
+	
+	dl_local x [dl_add $tx $rotated_x]
+	dl_local y [dl_add $ty $rotated_y]
+	
+	dlg_lines $x $y  -fillcolor 7 -linecolor 7
+    }
+    
+    proc show_sphere { name tx ty sx sy color } {
+	dlg_markers $tx $ty fcircle -size $sx -scaletype x -color $color
+    }
+
+    proc highlight_catcher { trial response { feedback 0 } } {
+	set side [expr {$response-1}]
+	if { $side == 0 } {
+	    set cx [dl_get stimdg:lcatcher_x $trial]
+	    set cy [dl_get stimdg:lcatcher_y $trial]
+	} else {
+	    set cx [dl_get stimdg:rcatcher_x $trial]
+	    set cy [dl_get stimdg:rcatcher_y $trial]
+	}
+	set sx 3
+	set sy .25
+	set tx $cx
+	set ty [expr $cy-1.25]
+	dl_local x [dl_mult $sx [dl_flist -.5 .5 .5 -.5 -.5 ]]
+	dl_local y [dl_mult $sy [dl_flist -.5  -.5 .5 .5 -.5 ]]
+	dl_local x [dl_add $tx $x]
+	dl_local y [dl_add $ty $y]
+	if { $feedback } {
+	    if { $side == [dl_get stimdg:side $trial] } {
+		set color [dlg_rgbcolor 10 200 10]
+	    } else {
+		set color [dlg_rgbcolor 230 10 10]
+	    }
+	} else {
+	    set color [dlg_rgbcolor 200 200 200]
+	}
+	
+	dlg_lines $x $y -fillcolor $color -linecolor $color
+    }
+}    
+
 # Ensure Thread package is loaded before using planko with threading
 if {[catch {package require Thread} err]} {
     puts "Warning: Thread package not available: $err"
@@ -1075,3 +1062,6 @@ if {[catch {package require Thread} err]} {
     # Now safe to enable threading
     planko::enable_threading 4
 }
+
+# until we track down crashes...
+planko::disable_threading

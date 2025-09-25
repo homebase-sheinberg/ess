@@ -114,8 +114,8 @@ namespace eval search {
         $sys add_action stim_on {
             my stim_on
             set stimon_time [now]
-            ::ess::evt_put PATTERN ON $stimon_time
             ::ess::evt_put STIMTYPE STIMID $stimon_time $stimtype
+            ::ess::evt_put PATTERN ON $stimon_time
         }
 
         $sys add_transition stim_on {
@@ -147,7 +147,7 @@ namespace eval search {
 
         $sys add_transition response {
             my stim_off
-            ::ess::evt_put PATTERN ON [now]
+            ::ess::evt_put PATTERN OFF [now]
             if { $response == 1 } {
                 return correct
             } else {
@@ -295,4 +295,6 @@ namespace eval search {
         return $sys
     }
 }
+
+
 

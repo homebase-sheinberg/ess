@@ -24,18 +24,53 @@ namespace eval hapticvis::transfer {
             if { $row >= 0 } { return }
         }
 
-        $s add_method setup_visual { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness} {
-            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness
+        $s add_method setup_visual { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
+            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
         }
 
-        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness} {
+        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness have_feedback} {
             set shape_scale 1
             set noise_type none
-            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness
+            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
         }
 
-        $s add_method setup_visual_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness } {
-            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness
+        $s add_method setup_visual_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
+            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
+
+            # now create a column for cue centers
+            # for half the trials, the cue center matches the target
+            # for the other half, the cue center is from another loc
+            set n [dl_length stimdg:stimtype]
+            dl_set stimdg:is_cued [dl_ones $n]
+            dl_local target_loc [dl_sub stimdg:correct_choice 1]
+            dl_local target_choice_center [dl_choose stimdg:choice_centers [dl_pack $target_loc]]
+            dl_local choice_loc_ids [dl_fromto 0 [dl_repeat $n_choices $n]]
+            dl_local dist_locs [dl_select $choice_loc_ids [dl_noteq $choice_loc_ids $target_loc]]
+            # pull out all non-target choice locations
+            dl_local dist_choice_centers [dl_choose stimdg:choice_centers $dist_locs]
+
+            # choose random index to select dist center randomly
+            dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            dl_local dist_choice_center [dl_choose $dist_choice_centers [dl_pack $dist_id]]
+
+            # for half presentations show actual location for other half not
+            set valid_per_target [expr {($n_rep/2)*[llength $rotations]}]
+            dl_local use_dist [dl_replicate [dl_repeat "0 1" $valid_per_target] $n_per_set]
+            dl_local cue_center [dl_replace $target_choice_center $use_dist $dist_choice_center]
+            dl_set stimdg:cue_valid [dl_not $use_dist]
+            dl_set stimdg:cued_choices $cue_center
+
+            # now add left right choice options
+            set lr_ecc 6.0
+            set lr_scale 1.75
+            dl_set stimdg:lr_choice_centers [dl_replicate [dl_llist [dl_llist [dl_flist -$lr_ecc 0] [dl_flist $lr_ecc 0]]] $n]
+            dl_set stimdg:lr_choice_scale [dl_repeat $lr_scale $n]
+        }
+ 
+        $s add_method setup_haptic_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
+            set shape_scale 1
+            set noise_type none
+            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
 
             # now create a column for cue centers
             # for half the trials, the cue center matches the target
@@ -77,7 +112,7 @@ namespace eval hapticvis::transfer {
             my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations 1
         }
 
-        $s add_method setup_trials { db_prefix subject_id subject_set n_per_set trial_type shape_scale noise_type n_rep rotations joystick_side subject_handedness { use_dists 0 } } {
+        $s add_method setup_trials { db_prefix subject_id subject_set n_per_set trial_type shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback { use_dists 0 } } {
             # find database
             set db {}
             set p ${::ess::system_path}/$::ess::current(project)/hapticvis/db
@@ -169,6 +204,7 @@ namespace eval hapticvis::transfer {
             dl_set stimdg:hand [dl_ilist]
             dl_set stimdg:subject_handedness [dl_ilist]
             dl_set stimdg:midline_offset [dl_ilist]
+            dl_set stimdg:have_feedback [dl_ilist]
 
 
             # go into table and find info about sets/subject
@@ -269,6 +305,16 @@ namespace eval hapticvis::transfer {
                 dl_local ys [dl_sub [dl_urand $total_elements] 0.5]
                 dl_local rs [dl_add $minradius [dl_mult [dl_urand $total_elements] $njprop]]
                 dl_local noise_elements [dl_reshape [dl_transpose [dl_llist $xs $ys $rs]] $n_obs $nelements]
+            } elseif {$noise_type == "spotlight"} {
+                set nelements 6
+                set njprop 0
+                set minradius 0.25
+                set total_elements [expr {${n_obs}*$nelements}]
+                dl_local xs [dl_flist 0.43 0.0 -0.43 -0.43 0.0 0.43]
+                dl_local ys [dl_flist 0.25 0.5 0.25 -0.25 -0.5 -0.25]
+                dl_local rs [dl_repeat $minradius [dl_length $xs]]
+                dl_local single_trial [dl_transpose [dl_llist $xs $ys $rs]]
+                dl_local noise_elements [dl_replicate [dl_llist $single_trial] $n_obs]
             }
 
             dl_set stimdg:stimtype [dl_fromto 0 $n_obs]
@@ -322,9 +368,12 @@ namespace eval hapticvis::transfer {
             } else {
                 dl_set stimdg:midline_offset [dl_repeat 25 $n_obs]
             }
+            
+            dl_set stimdg:have_feedback [dl_repeat $have_feedback $n_obs]
 
             dl_set stimdg:remaining [dl_ones $n_obs]
             return $g
         }
     }
 }
+

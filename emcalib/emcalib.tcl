@@ -134,6 +134,7 @@ namespace eval emcalib {
         $sys add_action fixjump {
             set jump_time [now]
             my fixjump
+            ::ess::evt_put FIXSPOT SET [now]
             timerTick $reacquire_time
         }
 
@@ -322,23 +323,4 @@ namespace eval emcalib {
         return $sys
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
