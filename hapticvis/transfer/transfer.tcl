@@ -67,6 +67,10 @@ namespace eval hapticvis::transfer {
         }
 
         $s set_protocol_deinit_callback {
+            if { $use_touchscreen } {
+                ::ess::touch_deinit
+            }
+
             rmtClose
         }
 
@@ -415,7 +419,7 @@ namespace eval hapticvis::transfer {
         $s add_method reward {} {
             if { $task == "learning" } {
                 if { $have_feedback == 1} {
-                  soundPlay 3 70 70
+                    soundPlay 3 70 70
                 }
                 ::ess::reward $juice_ml
                 ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
@@ -424,9 +428,9 @@ namespace eval hapticvis::transfer {
 
         $s add_method noreward {} {
             if { $task == "learning" } {
-              if { $have_feedback == 1 } {
-                soundPlay 4 90 300
-              }
+                if { $have_feedback == 1 } {
+                    soundPlay 4 90 300
+                }
             }
         }
 
@@ -547,7 +551,7 @@ namespace eval hapticvis::transfer {
                             set slot [expr $target_slot-1]
                             set target_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
                             set target_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
-    
+
                             set choice_x [dl_get stimdg:choice_centers:$cur_id:$r 0]
                             set choice_y [dl_get stimdg:choice_centers:$cur_id:$r 1]
                             set correct_fb "feedback_on correct $target_x $target_y"
