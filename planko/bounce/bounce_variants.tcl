@@ -21,14 +21,12 @@ namespace eval planko::bounce {
         }
         { warm {
                 plank_restitution {0.6}
-                ball_color {{0.86 0.77 0.19}
-                }
+                ball_color {{0.86 0.77 0.19}}
             }
         }
         { hot {
                 plank_restitution {0.8}
-                ball_color {{1.0 0.67 0.12}
-                }
+                ball_color {{1.0 0.67 0.12}}
             }
         }
         { cold_cool {
