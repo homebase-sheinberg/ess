@@ -68,7 +68,7 @@ namespace eval hapticvis::transfer {
     }
 
     set subject_ids [dl_tcllist [dl_fromto 0 30]]
-    set subject_sets [dl_tcllist [dl_fromto 0 4]]
+    set subject_sets [dl_tcllist [dl_fromto 0 5]]
 
     variable variants {
         visual_learn_left {
