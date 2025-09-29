@@ -108,7 +108,7 @@ namespace eval planko::bounce {
             description "worlds that work with different balls"
             loader_proc setup_multiworld
             loader_options {
-                nr { 4 10 20 25 30 }
+                nr { 4 10 20 25 30 60 100 }
                 nplanks { {4 4} {8 8} {4+8 {4 8}} }
                 board_params {
                     { jittered {
@@ -137,6 +137,7 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
+
 
 
 
