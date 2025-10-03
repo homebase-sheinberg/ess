@@ -8,104 +8,105 @@
 
 namespace eval match_to_sample::shapematch {
     variable params_defaults { sample_time 2000 delay_time 0 }
-
+    
     proc protocol_init { s } {
-	$s set_protocol [namespace tail [namespace current]]
-	
-	$s add_param rmt_host          $::ess::rmt_host   stim ipaddr
-	
-	$s add_param juice_ml         0.8       variable float
-	
-	$s add_param use_buttons        1       variable int
-	$s add_param left_button       24       variable int
-	$s add_param right_button      25       variable int
-	
-	$s add_variable targ_x             
-	$s add_variable targ_y             
-	$s add_variable targ_scale             
-	
-	$s add_variable dist_x             
-	$s add_variable dist_y             
-	$s add_variable dist_scale         
-	
-	$s add_variable buttons_changed    0
-	$s add_variable cur_id             0
-	$s add_variable correct           -1
-
-	$s set_protocol_init_callback {
-	    ::ess::init
-
-	    if { $use_buttons } {
-		foreach b "$left_button $right_button" {
-		    dservAddExactMatch gpio/input/$b
-		    dservTouch gpio/input/$b
-		    dpointSetScript gpio/input/$b ess::do_update
-		}
-	    }
-	    
-	    # open connection to rmt and upload ${protocol}_stim.tcl
-	    my configure_stim $rmt_host
-
-	    # initialize touch processor
-	    ::ess::touch_init
-	    
-	    # configure juicer subsystem
-	    ::ess::juicer_init
-
-	    soundReset
-	    soundSetVoice 81 0    0
-	    soundSetVoice 57 17   1
-	    soundSetVoice 60 0    2
-	    soundSetVoice 42 0    3
-	    soundSetVoice 21 0    4
-	    soundSetVoice 8  0    5
-	    soundSetVoice 113 100 6
-	    foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
-	}
-	    
-	$s set_protocol_deinit_callback {
-	    rmtClose
-	}
-	
-	$s set_reset_callback {
-	    dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
-	    set obs_count 0	    
-	    rmtSend reset
-	}
-	
-	$s set_start_callback {
-	    set first_time 1
-	}
-	
-	$s set_quit_callback {
-	    ::ess::touch_region_off 0
-	    ::ess::touch_region_off 1
-	    rmtSend clearscreen
-	    ::ess::end_obs QUIT
-	}
-	
-	$s set_end_callback {
-	    ::ess::evt_put SYSTEM_STATE STOPPED [now]
-	}
-	
-	$s set_file_open_callback {
-	    print "opened datafile $filename"
-	}
-	
-	$s set_file_close_callback {
-	    set name [file tail [file root $filename]]
-	    #	    set path [string map {-rpi4- {}} [info hostname]]
-	    set path {}
-	    set output_name [file join /tmp $path $name.csv]
-	    #	    set converted [save_data_as_csv $filename $output_name]
-	    #	    print "saved data to $output_name"
-	    print "closed $name"
-	}
-	
-
-	######################################################################
-	#                         Utility Methods                            #
-	######################################################################
+        $s set_protocol [namespace tail [namespace current]]
+        
+        $s add_param rmt_host          $::ess::rmt_host   stim ipaddr
+        
+        $s add_param juice_ml         0.8       variable float
+        
+        $s add_param use_buttons        1       variable int
+        $s add_param left_button       24       variable int
+        $s add_param right_button      25       variable int
+        
+        $s add_variable targ_x             
+        $s add_variable targ_y             
+        $s add_variable targ_scale             
+        
+        $s add_variable dist_x             
+        $s add_variable dist_y             
+        $s add_variable dist_scale         
+        
+        $s add_variable buttons_changed    0
+        $s add_variable cur_id             0
+        $s add_variable correct           -1
+        
+        $s set_protocol_init_callback {
+            ::ess::init
+            
+            if { $use_buttons } {
+                foreach b "$left_button $right_button" {
+                    dservAddExactMatch gpio/input/$b
+                    dservTouch gpio/input/$b
+                    dpointSetScript gpio/input/$b ess::do_update
+                }
+            }
+            
+            # open connection to rmt and upload ${protocol}_stim.tcl
+            my configure_stim $rmt_host
+            
+            # initialize touch processor
+            ::ess::touch_init
+            
+            # configure juicer subsystem
+            ::ess::juicer_init
+            
+            soundReset
+            soundSetVoice 81 0    0
+            soundSetVoice 57 17   1
+            soundSetVoice 60 0    2
+            soundSetVoice 42 0    3
+            soundSetVoice 21 0    4
+            soundSetVoice 8  0    5
+            soundSetVoice 113 100 6
+            foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
+        }
+        
+        $s set_protocol_deinit_callback {
+            ::ess::touch_deinit
+            rmtClose
+        }
+        
+        $s set_reset_callback {
+            dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
+            set obs_count 0	    
+            rmtSend reset
+        }
+        
+        $s set_start_callback {
+            set first_time 1
+        }
+        
+        $s set_quit_callback {
+            ::ess::touch_region_off 0
+            ::ess::touch_region_off 1
+            rmtSend clearscreen
+            ::ess::end_obs QUIT
+        }
+        
+        $s set_end_callback {
+            ::ess::evt_put SYSTEM_STATE STOPPED [now]
+        }
+        
+        $s set_file_open_callback {
+            print "opened datafile $filename"
+        }
+        
+        $s set_file_close_callback {
+            set name [file tail [file root $filename]]
+            #	    set path [string map {-rpi4- {}} [info hostname]]
+            set path {}
+            set output_name [file join /tmp $path $name.csv]
+            #	    set converted [save_data_as_csv $filename $output_name]
+            #	    print "saved data to $output_name"
+            print "closed $name"
+        }
+        
+        
+        ######################################################################
+        #                         Utility Methods                            #
+        ######################################################################
 	
 	$s add_method button_pressed {} {
 	    if { $use_buttons } {
@@ -125,8 +126,7 @@ namespace eval match_to_sample::shapematch {
 	
 	$s add_method nexttrial {} {
 	    if { [dl_sum stimdg:remaining] } {
-		dl_local left_to_show \
-		    [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
+		dl_local left_to_show  [dl_select stimdg:stimtype [dl_gt stimdg:remaining 0]]
 		set cur_id [dl_pickone $left_to_show]
 		set stimtype [dl_get stimdg:stimtype $cur_id]
 		
@@ -200,23 +200,27 @@ namespace eval match_to_sample::shapematch {
 
 	$s add_method response_correct {} { return $correct }
 	
-	$s add_method responded {} {
-	    if { $use_buttons && $buttons_changed } {
-		return -1
-	    }
-
-	    if { [::ess::touch_in_win 0] } {
-		set correct 1
-		return 0
-	    } elseif { [::ess::touch_in_win 1] } {
-		set correct 0
-		return 1
-	    } else {
-		return -1
-	    }
-	}
+        $s add_method responded {} {
+            if { $use_buttons && $buttons_changed } {
+                return -1
+            }
+            
+            if { [::ess::touch_in_win 0] } {
+                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
+                set correct 1
+                return 0
+            } elseif { [::ess::touch_in_win 1] } {
+                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
+                set correct 0
+                return 1
+            } else {
+                return -1
+            }
+        }
 	
 	return
     }
 }
+
+
 

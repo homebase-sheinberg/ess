@@ -27,7 +27,7 @@ namespace eval match_to_sample::colormatch {
 
             dl_set $g:stimtype [dl_fromto 0 $n_obs]
             dl_set $g:color_choices [dl_repeat [dl_slist $color_choices] $n_obs]
-            dl_set $g:side [dl_repeat "0 1" $n_per_side]
+            dl_set $g:side [dl_shuffle [dl_repeat "0 1" $n_per_side]]
 
             if { $color_choices == "redgreen" } {
                 dl_local red [dl_flist 1 0 0]
@@ -47,15 +47,15 @@ namespace eval match_to_sample::colormatch {
                 dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
                 dl_local l [dl_repeat 85. $n_obs]
                 dl_local c [dl_repeat 95. $n_obs]
-                dl_local sample_colors  [dl_div [dl_transpose  [dlg_polarlabcolors $l $c [dl_float $sample_hues]]]  255.]
-                dl_local nonmatch_colors  [dl_div [dl_transpose  [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]]  255.]
+                dl_local sample_colors [dl_div [dl_transpose [dlg_polarlabcolors $l $c [dl_float $sample_hues]]] 255.]
+                dl_local nonmatch_colors [dl_div [dl_transpose [dlg_polarlabcolors $l $c [dl_float $nonmatch_hues]]] 255.]
             }
 
             dl_set $g:sample_x [dl_repeat 0. $n_obs]
             dl_set $g:sample_y [dl_repeat $yoff $n_obs]
             dl_set $g:sample_r [dl_repeat $targ_scale $n_obs]
             dl_set $g:sample_color $sample_colors
-            dl_set $g:sample_pos  [dl_reshape [dl_interleave $g:sample_x $g:sample_y] - 2]
+            dl_set $g:sample_pos [dl_reshape [dl_interleave $g:sample_x $g:sample_y] - 2]
 
 
             dl_set $g:match_x [dl_mult 2 [dl_sub $g:side .5] $xoff]
@@ -68,13 +68,13 @@ namespace eval match_to_sample::colormatch {
             dl_set $g:nonmatch_y [dl_repeat [expr -1*$yoff] $n_obs]
             dl_set $g:nonmatch_r [dl_repeat $targ_scale $n_obs]
             dl_set $g:nonmatch_color $nonmatch_colors
-            dl_set $g:nonmatch_pos  [dl_reshape [dl_interleave $g:nonmatch_x $g:nonmatch_y] - 2]
+            dl_set $g:nonmatch_pos [dl_reshape [dl_interleave $g:nonmatch_x $g:nonmatch_y] - 2]
 
             dl_set $g:remaining [dl_ones $n_obs]
 
             return $g
         }
-    
+
         $s add_method setup_transparent_trials { n_rep targ_scale transparency } {
             my setup_trials $n_rep $targ_scale easy
             set n [dl_length stimdg:stimtype]
