@@ -1,9 +1,9 @@
 #
-# STIM
-#   planko_stim.tcl
+# NAME
+#   bounce_stim.tcl
 #
 # DESCRIPTION
-#   planko task stim code
+#   planko task stim code for bounce
 #
 # REQUIRES
 #   box2d
@@ -47,15 +47,15 @@ proc update_position { ball body start } {
     if { $i != "" } {
         set x [dl_get stimdg:ball_x:$curtrial $i]
         set y [dl_get stimdg:ball_y:$curtrial $i]
-        Box2D_setTransform $::world $body $x $y
+        Box2D_setTransform $::world $body $x $y 
     }
     if { ![setObjProp $ball landed] } {
         if { [expr {$now > [dl_get stimdg:land_time $curtrial]}] } {
             setObjProp $ball landed 1
             set side [dl_get stimdg:side $curtrial]
             if { $side } { set hit right } { set hit left }
-            qpcs::dsSet $::dservhost planko/complete $hit
-        }
+             qpcs::dsSet $::dservhost planko/complete $hit
+        }        
     }
 }
 
@@ -82,7 +82,7 @@ proc make_stims { trial } {
     set n [dl_length $dg:name:$trial]
 
     # get side and show_only_correct_side flag for this trial
-    foreach v "side wrong_catcher_alpha" {
+    foreach v "side ball_color" {
         set $v [dl_get $dg:$v $trial]
     }
 
@@ -91,19 +91,17 @@ proc make_stims { trial } {
             set $v [dl_get $dg:$v:$trial $i]
         }
         if { $shape == "Box" } {
-            if { $side == "0" } { set wrong_catcher catchr_* } { set wrong_catcher catchl_* }
-            if { [string match $wrong_catcher $name] } { set alpha $wrong_catcher_alpha } { set alpha 1.0 }
-            set body [create_box $bworld $name $type $tx $ty $sx $sy $angle [list 9. 9. 9. $alpha ]]
+            set body [create_box $bworld $name $type $tx $ty $sx $sy $angle [list 9. 9. 9. 1.0 ]]
         } elseif { $shape == "Circle" } {
-            set body [create_circle $bworld $name $type $tx $ty $sx $angle { 0 1 1 1 }]
+            set body [create_circle $bworld $name $type $tx $ty $sx $angle $ball_color]
         }
         Box2D_setRestitution $bworld [setObjProp $body body] $restitution
 
         glistAddObject $body 0
 
         # track this so we can set in motion
-        if { $name == "ball" } {
-            set ::ball $body
+        if { $name == "ball" } { 
+            set ::ball $body 
             setObjProp $body landed 0
         }
 
@@ -183,10 +181,10 @@ proc make_circle {} {
 }
 
 proc nexttrial { id } {
-    set ::curtrial $id
     glistInit 1
     resetObjList
     set ::world [make_stims $id]
+    set ::curtrial $id
 }
 
 proc show_response { resp } {
@@ -195,9 +193,9 @@ proc show_response { resp } {
     if { $simulate } {
         Box2D_setBodyType $::world $body 2; # dynamic
     } else {
-        Box2D_setBodyType $::world $body 1; # kinematic
+        Box2D_setBodyType $::world $body 1; # kinematic 
         addPreScript $::ball "update_position $::ball $body $::StimTime"
-    }
+    } 
     if { $resp == 0 } { set c $::left_catcher } { set c $::right_catcher }
     set color "0.7 0.7 0.7"
     foreach p $c {
@@ -247,5 +245,24 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

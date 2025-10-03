@@ -1,20 +1,19 @@
 #
 # PROTOCOL
-#   planko training
+#   planko bounce
 #
 # DESCRIPTION
-#   Train planko
+#   Allow change of mind during response
 #
 
-namespace eval planko::training {
-
-    variable params_defaults { n_rep 50 }
+namespace eval planko::bounce {
 
     proc protocol_init { s } {
         $s set_protocol [namespace tail [namespace current]]
 
         $s add_param rmt_host $::ess::rmt_host stim ipaddr
         $s add_param juice_ml .6 variable float
+        $s add_param save_ems 0 variable bool
         $s add_param use_buttons 0 variable int
         $s add_param left_button 24 variable int
         $s add_param right_button 25 variable int
@@ -56,6 +55,27 @@ namespace eval planko::training {
             rmtClose
         }
 
+        $s set_final_init_callback {
+            if { $save_ems } {
+                # initialize eye movements
+                ::ess::em_init
+            }
+
+            # wait until variants have potentially changed buttons
+            foreach b "$left_button $right_button" {
+                if { $use_buttons } {
+                    dservAddExactMatch gpio/input/$b
+                    dservTouch gpio/input/$b
+                    dpointSetScript gpio/input/$b ess::do_update
+                    if { ![dservExists gpio/input/$b] } {
+                        dservSet gpio/input/$b 0
+                    }
+                } else {
+                    dservSet gpio/input/$b 0
+                }
+            }
+        }
+
         $s set_reset_callback {
             dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
             set obs_count 0
@@ -74,6 +94,8 @@ namespace eval planko::training {
         }
 
         $s set_end_callback {
+            ::ess::touch_region_off 0
+            ::ess::touch_region_off 1
             ::ess::evt_put SYSTEM_STATE STOPPED [now]
         }
 
@@ -83,11 +105,11 @@ namespace eval planko::training {
 
         $s set_file_close_callback {
             set name [file tail [file root $filename]]
-            #	    set path [string map {-rpi4- {}} [info hostname]]
+            #       set path [string map {-rpi4- {}} [info hostname]]
             set path {}
             set output_name [file join /tmp $path $name.csv]
-            #	    set converted [save_data_as_csv $filename $output_name]
-            #	    print "saved data to $output_name"
+            #       set converted [save_data_as_csv $filename $output_name]
+            #       print "saved data to $output_name"
             print "closed $name"
         }
 
@@ -97,6 +119,15 @@ namespace eval planko::training {
 
         $s add_method start_obs_reset {} {
             set buttons_changed 0
+        }
+
+        $s add_method button_pressed {} {
+            if { $use_buttons } {
+                if { [dservGet gpio/input/$left_button] } { return 1 }
+                if { [dservGet gpio/input/$right_button] } { return 2 }
+                return 0
+            }
+            return 0
         }
 
         $s add_method n_obs {} { return [dl_length stimdg:stimtype] }
@@ -182,6 +213,13 @@ namespace eval planko::training {
         }
 
         $s add_method responded {} {
+            set button_response [my button_pressed]
+            if { $button_response != 0 } {
+                set resp $button_response
+                if { $side == [expr {$resp-1}] } { set correct 1 } { set correct 0 }
+                return 1
+            }
+
             if { [::ess::touch_in_win 0] } {
                 ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
                 if { $side == 0 } { set correct 1 } { set correct 0 }
@@ -196,6 +234,7 @@ namespace eval planko::training {
                 return 0
             }
         }
+
 
         ######################################################################
         #                           Visualization                            #
@@ -214,7 +253,7 @@ namespace eval planko::training {
                 evtSetScript 28 0 [namespace current]::stimoff
                 evtSetScript 37 -1 [namespace current]::response
                 evtSetScript 49 -1 [namespace current]::feedback
-
+                
                 clearwin
                 setbackground [dlg_rgbcolor 10 10 10]
                 setwindow -8 -8 8 8
@@ -237,7 +276,6 @@ namespace eval planko::training {
                 planko::show_trial $trial
                 flushwin
             }
-
             proc response { type subtype data } {
                 variable trial
                 variable response
@@ -246,10 +284,9 @@ namespace eval planko::training {
                 # add trajectory
                 planko::show_trial $trial 1
                 # add indication of choice
-                planko::highlight_catcher $trial $subtype 0
+                planko::highlight_catcher $trial $subtype
                 flushwin
             }
-
             proc feedback { type subtype data } {
                 variable trial
                 variable response
@@ -260,7 +297,6 @@ namespace eval planko::training {
                 planko::highlight_catcher $trial $response 1
                 flushwin
             }
-
             proc stimoff { type subtype data } {
                 clearwin; flushwin
             }
@@ -272,6 +308,14 @@ namespace eval planko::training {
         }
     }
 }
+
+
+
+
+
+
+
+
 
 
 
