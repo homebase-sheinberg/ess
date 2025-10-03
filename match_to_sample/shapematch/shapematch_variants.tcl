@@ -14,7 +14,7 @@ namespace eval match_to_sample::shapematch {
 	    loader_options {
 		n_rep { 50 100 200 400 800}
 		targ_scale 3
-		shape_choices single_pair
+			shape_choices { single_pair arbitrary}
 		shape_params {}
 	    }
 	}
