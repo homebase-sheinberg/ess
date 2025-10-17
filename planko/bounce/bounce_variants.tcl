@@ -21,14 +21,12 @@ namespace eval planko::bounce {
         }
         { warm {
                 plank_restitution {0.6}
-                ball_color {{0.86 0.77 0.19}
-                }
+                ball_color {{0.86 0.77 0.19}}
             }
         }
         { hot {
                 plank_restitution {0.8}
-                ball_color {{1.0 0.67 0.12}
-                }
+                ball_color {{1.0 0.67 0.12}}
             }
         }
         { cold_cool {
@@ -110,7 +108,7 @@ namespace eval planko::bounce {
             description "worlds that work with different balls"
             loader_proc setup_multiworld
             loader_options {
-                nr { 4 10 20 25 30 }
+                nr { 4 10 20 25 30 60 100 }
                 nplanks { {4 4} {8 8} {4+8 {4 8}} }
                 board_params {
                     { jittered {
@@ -139,6 +137,7 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
+
 
 
 
