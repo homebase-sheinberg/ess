@@ -109,12 +109,12 @@ namespace eval planko::bounce {
             loader_proc setup_multiworld
             loader_options {
                 nr { 4 6 8 10 20 25 30 60 100 }
-                nplanks { {1 1} {4 4} {8 8} {4+8 {4 8}} }
+                nplanks { {2 2} {4 4} {8 8} {4+8 {4 8}} }
                 board_params {
                     { jittered {
                             ball_jitter_x 10
                             ball_start_y 8
-                            minplanks 1
+                            minplanks 2
                             planks_min_dist 1.4
                             planks_max_x 12.0
                             lcatcher_x -3.25
