@@ -114,7 +114,7 @@ namespace eval planko::bounce {
                     { jittered {
                             ball_jitter_x 10
                             ball_start_y 8
-                            minplanks 2
+                            minplanks 1
                             planks_min_dist 1.4
                             planks_max_x 12.0
                             lcatcher_x -3.25
