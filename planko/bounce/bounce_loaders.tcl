@@ -28,7 +28,7 @@ namespace eval planko::bounce {
 
             set ball_color [dl_slist "0.0 1.0 1.0"]
             dl_set $g:ball_color [dl_repeat $ball_color $n_obs]
-            
+
             dg_rename $g stimdg
             return $g
         }
@@ -108,7 +108,7 @@ namespace eval planko::bounce {
 
             # rename id column to stimtytpe
             dl_set $g:id [dl_fromto 0 $n_obs]
-            dl_set $g:world_id [dl_repeat [dl_fromto 0 [expr {$n_obs/2}]] 2]
+            dl_set $g:world_id [dl_repeat [dl_fromto 0 [expr {$n_obs/$nbr}]] $nbr]
             dl_set $g:stimtype $g:id
             dl_set $g:remaining [dl_ones $n_obs]
 
