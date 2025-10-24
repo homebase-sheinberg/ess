@@ -173,7 +173,7 @@ namespace eval match_to_sample {
 		set sample_pre_time 0
 		return correct
 	    } else {
-		set sample_pre_time 200
+		set sample_pre_time 300
 		return incorrect
 	    }
 	}
