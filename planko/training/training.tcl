@@ -24,6 +24,11 @@ namespace eval planko::training {
         $s add_variable touch_x
         $s add_variable touch_y
 
+        $s add_param fix_radius 3.0 variable float
+        $s add_variable fix_targ_x 
+        $s add_variable fix_targ_y 
+        $s add_variable fix_targ_r 
+
         $s set_protocol_init_callback {
             ::ess::init
 
@@ -36,6 +41,9 @@ namespace eval planko::training {
             # initialize touch processor
             ::ess::touch_init
 
+	    # initialize eye movements
+            ::ess::em_init
+	    
             # listen for planko/complete event
             dservAddExactMatch planko/complete
             dpointSetScript planko/complete ess::do_update
@@ -119,6 +127,13 @@ namespace eval planko::training {
                 ::ess::touch_win_set 0 $lcatcher_x $lcatcher_y 2 0
                 ::ess::touch_win_set 1 $rcatcher_x $rcatcher_y 2 0
 
+                if { $show_fixspot } {
+		    set fix_targ_x 0
+		    set fix_targ_y 0
+		    set fix_targ_r 0.2
+                    ::ess::em_region_off 0
+                    ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 0
+                }
                 dservSet planko/complete waiting
 
                 rmtSend "nexttrial $stimtype"
@@ -140,7 +155,26 @@ namespace eval planko::training {
             soundPlay 1 70 200
         }
 
+        $s add_method fixation_on {} {
+            rmtSend "!fixon"
+            ::ess::em_region_on 0
+            ::ess::evt_put EMPARAMS CIRC [now] 0 $fix_targ_x $fix_targ_y $fix_targ_r
+        }
+
+        $s add_method fixation_off {} {
+            rmtSend "!fixoff"
+        }
+
+        $s add_method acquired_fixspot {} {
+            return [::ess::em_eye_in_region 0]
+        }
+
+        $s add_method out_of_start_win {} {
+            return [expr ![::ess::em_eye_in_region 0]]
+        }
+
         $s add_method stim_on {} {
+            ::ess::em_region_off 0
             ::ess::touch_region_on 0
             ::ess::touch_region_on 1
             rmtSend "!stimon"
@@ -272,6 +306,3 @@ namespace eval planko::training {
         }
     }
 }
-
-
-

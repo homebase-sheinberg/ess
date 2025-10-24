@@ -16,6 +16,10 @@ namespace eval planko {
         #                          System Parameters                         #
         ######################################################################
 
+        $sys add_param show_fixspot 0 variable bool
+        $sys add_param acquire_time 2000 time int
+        $sys add_param fixhold_time 500 time int
+
         $sys add_param interblock_time 1000 time int
         $sys add_param prestim_time 250 time int
 
@@ -116,7 +120,35 @@ namespace eval planko {
             my prestim
         }
         $sys add_transition pre_stim {
+            if { [timerExpired] } {
+                if { $show_fixspot } { return fixon } { return stim_on }
+            }
+        }
+
+        #
+        # fixon
+        #
+        $sys add_action fixon {
+            my fixation_on
+            ::ess::evt_put FIXSPOT ON [now]
+            timerTick $acquire_time
+        }
+        $sys add_transition fixon {
+            if { [timerExpired] } { return abort }
+            if { [my acquired_fixspot] } { return fixhold }
+        }
+
+        #
+        # fixhold
+        #
+        $sys add_action fixhold {
+            ::ess::evt_put FIXATE IN [now]
+            timerTick $fixhold_time
+        }
+
+        $sys add_transition fixhold {
             if { [timerExpired] } { return stim_on }
+            if { [my out_of_start_win] } { return abort }
         }
 
         #
@@ -266,6 +298,17 @@ namespace eval planko {
         }
 
         #
+        # abort
+        #
+        $sys add_action abort {
+            my fixation_off
+            ::ess::evt_put ENDTRIAL INCORRECT [now]
+        }
+        $sys add_transition abort {
+            return finish
+        }
+
+        #
         # post_trial
         #
         $sys add_action post_trial {
@@ -365,6 +408,11 @@ namespace eval planko {
         $sys add_method reward {} {}
         $sys add_method noreward {} {}
         $sys add_method finale {} {}
+
+        $sys add_method fixation_on {} {}
+        $sys add_method acquired_fixspot {} { return 0 }
+        $sys add_method out_of_start_win {} { return 0 }
+        $sys add_method fixation_off {} {}
 
         $sys add_method responded {} { return 0 }
 
