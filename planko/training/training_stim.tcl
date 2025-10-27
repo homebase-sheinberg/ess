@@ -179,9 +179,10 @@ proc make_circle {} {
 }
 
 proc nexttrial { id } {
-    set ::curtrial $id
     glistInit 2
     resetObjList
+
+    set ::curtrial $id
     set ::world [make_stims $id]
 
     set fix_color ".7 .7 .1"
