@@ -34,6 +34,11 @@ namespace eval planko::bounce {
             # initialize juicer
             ::ess::juicer_init
 
+            if { $use_buttons } {
+                # initialize joystick here
+                ::ess::joystick_init
+            }
+
             # open connection to rmt and upload ${protocol}_stim.tcl
             my configure_stim $rmt_host
 

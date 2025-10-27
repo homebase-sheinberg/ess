@@ -25,9 +25,9 @@ namespace eval planko::training {
         $s add_variable touch_y
 
         $s add_param fix_radius 3.0 variable float
-        $s add_variable fix_targ_x 
-        $s add_variable fix_targ_y 
-        $s add_variable fix_targ_r 
+        $s add_variable fix_targ_x
+        $s add_variable fix_targ_y
+        $s add_variable fix_targ_r
 
         $s set_protocol_init_callback {
             ::ess::init
@@ -35,15 +35,20 @@ namespace eval planko::training {
             # initialize juicer
             ::ess::juicer_init
 
+            if { $use_buttons } {
+                # initialize joystick here
+                ::ess::joystick_init
+            }
+            
             # open connection to rmt and upload ${protocol}_stim.tcl
             my configure_stim $rmt_host
 
             # initialize touch processor
             ::ess::touch_init
 
-	    # initialize eye movements
+            # initialize eye movements
             ::ess::em_init
-	    
+
             # listen for planko/complete event
             dservAddExactMatch planko/complete
             dpointSetScript planko/complete ess::do_update
@@ -128,9 +133,9 @@ namespace eval planko::training {
                 ::ess::touch_win_set 1 $rcatcher_x $rcatcher_y 2 0
 
                 if { $show_fixspot } {
-		    set fix_targ_x 0
-		    set fix_targ_y 0
-		    set fix_targ_r 0.2
+                    set fix_targ_x 0
+                    set fix_targ_y 0
+                    set fix_targ_r 0.2
                     ::ess::em_region_off 0
                     ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 0
                 }
