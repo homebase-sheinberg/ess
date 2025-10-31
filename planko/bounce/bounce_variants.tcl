@@ -96,7 +96,6 @@ namespace eval planko::bounce {
             }
             init {
                 planko::enable_threading 4
-                rmtSend "setBackground 0 0 10"
             }
             deinit {
                 planko::disable_threading
@@ -125,7 +124,6 @@ namespace eval planko::bounce {
             }
             init {
                 planko::enable_threading 4
-                rmtSend "setBackground 0 0 10"
             }
             deinit {
                 planko::disable_threading
@@ -136,8 +134,6 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
-
-
 
 
 
