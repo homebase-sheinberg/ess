@@ -140,13 +140,11 @@ namespace eval planko::bounce {
             if { $use_buttons } {
                 if { [dservGet gpio/input/$left_button] } { return 1 }
                 if { [dservGet gpio/input/$right_button] } { return 2 }
-                return 0
             }
             if { $use_joystick } {
                 set joy_position [dservGet ess/joystick/value]
                 if { $joy_position == 4 } { return 1 }
                 if { $joy_position == 8 } { return 2 }
-                return 0
             }
             return 0
         }
