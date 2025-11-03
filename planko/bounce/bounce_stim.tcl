@@ -233,6 +233,20 @@ proc stimon {} {
     redraw
 }
 
+proc stimon_and_drop {} {
+    glistSetCurGroup 0
+    glistSetVisible 1
+    set simulate 0; # used stored trajectory to replay as built
+    set body [setObjProp $::ball body]
+    if { $simulate } {
+        Box2D_setBodyType $::world $body 2; # dynamic
+    } else {
+        Box2D_setBodyType $::world $body 1; # kinematic 
+        addPreScript $::ball "update_position $::ball $body $::StimTime"
+    } 
+    redraw
+}
+
 proc stimoff {} {
     glistSetVisible 0
     redraw

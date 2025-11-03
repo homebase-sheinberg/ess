@@ -36,6 +36,8 @@ namespace eval planko {
         $sys add_variable obs_count 0
         $sys add_variable cur_id 0
 
+        $sys add_variable perception_only
+
         $sys add_variable start_delay 0
         $sys add_variable stimtype 0
 
@@ -44,7 +46,6 @@ namespace eval planko {
 
         $sys add_variable response 0
         $sys add_variable first_time 1
-
 
         $sys add_variable side -1
         $sys add_variable resp -1
@@ -224,12 +225,15 @@ namespace eval planko {
         # feedback
         #
         $sys add_action feedback {
-            my feedback $resp $correct
-            timerTick $max_feedback_time
+            if { !$perception_only } {
+                set feedback_time [my feedback_time]
+                my feedback $resp $correct
+                timerTick $feedback_time
+            }
         }
 
         $sys add_transition feedback {
-            if { [timerExpired] || [my feedback_complete] } {
+            if { $perception_only || [timerExpired] || [my feedback_complete] } {
                 if { $correct } { return correct } { return incorrect }
             }
         }
@@ -405,6 +409,7 @@ namespace eval planko {
         $sys add_method stim_unhide {} {}
         $sys add_method feedback { resp correct } { print $resp/$correct }
         $sys add_method feedback_complete {} { return 0 }
+        $sys add_method feedback_time {} { return $max_feedback_time }
         $sys add_method reward {} {}
         $sys add_method noreward {} {}
         $sys add_method finale {} {}
