@@ -35,7 +35,8 @@ namespace eval planko::bounce {
             ::ess::juicer_init
 
             if { $use_buttons } {
-                # initialize joystick here
+                # initialize joystick (right sided) here
+                dservSet joystick/lines { 1 19 2 23 4 20 8 22 }
                 ::ess::joystick_init
             }
 
@@ -153,9 +154,9 @@ namespace eval planko::bounce {
 
                 set side [dl_get stimdg:side $cur_id]
 
-		# control timing of playback
-		set perception_only [dl_get stimdg:perception_only $cur_id]
-		
+                # control timing of playback
+                set perception_only [dl_get stimdg:perception_only $cur_id]
+
                 foreach v "lcatcher_x lcatcher_y rcatcher_x rcatcher_y" {
                     set $v [dl_get stimdg:$v $cur_id]
                 }
@@ -217,7 +218,7 @@ namespace eval planko::bounce {
             ::ess::em_region_off 0
             ::ess::touch_region_on 0
             ::ess::touch_region_on 1
-	    if { $perception_only } { rmtSend "!stimon_and_drop" } { rmtSend "!stimon" }
+            if { $perception_only } { rmtSend "!stimon_and_drop" } { rmtSend "!stimon" }
         }
 
         $s add_method stim_off {} {
