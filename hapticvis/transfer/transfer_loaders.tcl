@@ -144,7 +144,6 @@ namespace eval hapticvis::transfer {
             set original_sets [dl_tcllist [dl_fromto 0 4]]
             set exclude_set $subject_set
             
-            if 0 {
             set distractors_list [lmap item $original_sets {
               if {$item != $exclude_set} {
                 set item
@@ -152,11 +151,11 @@ namespace eval hapticvis::transfer {
                 set {}
               }
             }]
-            }
             
             # randomly choose set from distractors list
-            # set pick_ind [dl_randchoose 3 1]
-            # set distractor_choice lindex $distractors_list pick_ind
+            #set pick_ind [dl_randchoose 3 1]
+            #set distractor_choice lindex $distractors_list pick_ind
+            #set distractors trial_db:target_ids:$row:$distractor_choice
             
             # trial info in trialdb_file
             # trial_db contains columns: subject target_ids dist_ids
