@@ -147,6 +147,8 @@ namespace eval hapticvis::transfer {
             set distractors_list [lmap item $original_sets {
               if {$item != $exclude_set} {
                 set item
+              } else {
+                set {}
               }
             }]
             
