@@ -139,7 +139,25 @@ namespace eval hapticvis::transfer {
             if {![file exists $shapedb_file]} { error "db file not found" }
             if { [dg_exists shape_db] } { dg_delete shape_db }
             dg_rename [dg_read $shapedb_file] shape_db
-
+            
+            # set list of distractors to add
+            set original_sets [dl_tcllist [dl_fromto 0 4]]
+            set exclude_set $subject_set
+            
+            set distractors_list [lmap item $original_sets {
+              if {$item ne $exclude_set} {
+                set item
+              } else {
+                # Return an empty string if the item should be excluded
+                # lmap will filter out empty strings by default when constructing the new list
+                set {}
+              }
+            }]
+            
+            # randomly choose set from distractors list
+            set pick_ind [dl_randchoose 3 1]
+            set distractor_choice lindex $distractors_list pick_ind
+            
             # trial info in trialdb_file
             # trial_db contains columns: subject target_ids dist_ids
             if { [dg_exists trial_db] } { dg_delete trial_db }
