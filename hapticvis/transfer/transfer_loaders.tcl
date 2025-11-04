@@ -144,17 +144,15 @@ namespace eval hapticvis::transfer {
             set original_sets [dl_tcllist [dl_fromto 0 4]]
             set exclude_set $subject_set
             
-            if 0 {
-              set distractors_list [lmap item $original_sets {
-                if {$item ne $exclude_set} {
-                  set item
-                } else {
-                  # Return an empty string if the item should be excluded
-                  # lmap will filter out empty strings by default when constructing the new list
-                  set {}
-                }
-              }]
-            }
+            set distractors_list [lmap item $original_sets {
+              if {$item ne $exclude_set} {
+                set item
+              } else {
+                # Return an empty string if the item should be excluded
+                # lmap will filter out empty strings by default when constructing the new list
+                set {}
+              }
+            }]
             
             # randomly choose set from distractors list
             # set pick_ind [dl_randchoose 3 1]
