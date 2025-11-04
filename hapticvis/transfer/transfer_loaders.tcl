@@ -141,8 +141,8 @@ namespace eval hapticvis::transfer {
             dg_rename [dg_read $shapedb_file] shape_db
             
             # set list of distractors to add
-            set original_sets [dl_tcllist [dl_fromto 0 4]]
-            set exclude_set $subject_set
+            #set original_sets [dl_tcllist [dl_fromto 0 4]]
+            #set exclude_set $subject_set
             
             #set distractors_list [lmap item $original_sets {
             #  if {$item != $exclude_set} {
