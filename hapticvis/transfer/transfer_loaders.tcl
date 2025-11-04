@@ -145,12 +145,8 @@ namespace eval hapticvis::transfer {
             set exclude_set $subject_set
             
             set distractors_list [lmap item $original_sets {
-              if {$item ne $exclude_set} {
+              if {$item != $exclude_set} {
                 set item
-              } else {
-                # Return an empty string if the item should be excluded
-                # lmap will filter out empty strings by default when constructing the new list
-                set {}
               }
             }]
             
