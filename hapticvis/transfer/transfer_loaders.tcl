@@ -24,18 +24,18 @@ namespace eval hapticvis::transfer {
             if { $row >= 0 } { return }
         }
 
-        $s add_method setup_visual { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
-            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
+        $s add_method setup_visual { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback have_distractors} {
+            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback $have_distractors
         }
 
-        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness have_feedback} {
+        $s add_method setup_haptic { subject_id subject_set n_per_set n_rep rotations joystick_side subject_handedness have_feedback have_distractors} {
             set shape_scale 1
             set noise_type none
-            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
+            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback $have_distractors
         }
 
-        $s add_method setup_visual_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
-            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
+        $s add_method setup_visual_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback have_distractors} {
+            my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback $have_distractors
 
             # now create a column for cue centers
             # for half the trials, the cue center matches the target
@@ -67,10 +67,10 @@ namespace eval hapticvis::transfer {
             dl_set stimdg:lr_choice_scale [dl_repeat $lr_scale $n]
         }
  
-        $s add_method setup_haptic_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback} {
+        $s add_method setup_haptic_cued { subject_id subject_set n_per_set shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback have_distractors} {
             set shape_scale 1
             set noise_type none
-            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback
+            my setup_trials identity $subject_id $subject_set $n_per_set haptic $shape_scale $noise_type $n_rep $rotations $joystick_side $subject_handedness $have_feedback $have_distractors
 
             # now create a column for cue centers
             # for half the trials, the cue center matches the target
@@ -112,7 +112,7 @@ namespace eval hapticvis::transfer {
             my setup_trials identity $subject_id $subject_set $n_per_set visual $shape_scale $noise_type $n_rep $rotations 1
         }
 
-        $s add_method setup_trials { db_prefix subject_id subject_set n_per_set trial_type shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback { use_dists 0 } } {
+        $s add_method setup_trials { db_prefix subject_id subject_set n_per_set trial_type shape_scale noise_type n_rep rotations joystick_side subject_handedness have_feedback have_distractors { use_dists 0 } } {
             # find database
             set db {}
             set p ${::ess::system_path}/$::ess::current(project)/hapticvis/db
