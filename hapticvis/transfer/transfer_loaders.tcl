@@ -496,7 +496,7 @@ namespace eval hapticvis::transfer {
               dl_local distractor_center_y [dl_mult [dl_sin $distractor_angle_y] $choice_ecc]
               dl_local distractor_centers [dl_llist [dl_transpose [dl_llist $distractor_center_x $distractor_center_y]]]
   
-              dl_local both_centers [dl_concat $choice_centers $distractor_centers]
+              dl_local both_centers [dl_combine [dl_transpose [dl_llist $choice_center_x $choice_center_y]] [dl_transpose [dl_llist $distractor_center_x $distractor_center_y]]]
               
               if { $noise_type == "none"} {
                   dl_local noise_elements [dl_replicate [dl_llist [dl_llist]] $n_obs]
@@ -543,7 +543,7 @@ namespace eval hapticvis::transfer {
               dl_set stimdg:correct_choice [dl_combine $correct_choice [dl_zeros [dl_length $correct_choice]]]
               dl_set stimdg:correct_location [dl_combine $correct_locations [dl_repeat [dl_slist C] [dl_length $correct_choice]]]
               dl_set stimdg:n_choices [dl_repeat [expr $n_choices + 1] $n_obs]
-              dl_set stimdg:choice_centers [dl_repeat $choice_centers $n_obs]
+              dl_set stimdg:choice_centers [dl_repeat $both_centers $n_obs]
               dl_set stimdg:choice_scale [dl_repeat $choice_scale $n_obs]
               dl_set stimdg:lr_choice_centers [dl_repeat [dl_llist [dl_llist]] $n_obs]
               dl_set stimdg:lr_choice_scale [dl_zeros $n_obs.]
