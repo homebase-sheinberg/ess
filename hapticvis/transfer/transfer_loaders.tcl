@@ -438,7 +438,7 @@ namespace eval hapticvis::transfer {
               set is_cued 0
               set cue_valid -1
               set shape_filled 1
-              set n_choices $n_targets + 1
+              set n_choices [expr $n_targets + 1]
               set choice_ecc 5
               set choice_scale 1.5
   
