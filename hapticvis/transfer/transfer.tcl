@@ -467,6 +467,9 @@ namespace eval hapticvis::transfer {
                 if { $n_choices == 4 } {
                     # ur=9(0) ul=5(1) dl=6(2) dr=10(3)
                     set mapdict { 0 -1 9 0 5 1 6 2 10 3 }
+                } elseif { $n_choices == 5 } {
+                    # ur=9(0) ul=5(1) dl=6(2) dr=10(3) d=2(4)
+                    set mapdict { 0 -1 9 0 5 1 6 2 10 3 2 4}
                 } elseif { $n_choices == 6 } {
                     # u=1(1)  d=2(4) ul=5(2) ur=9(0) d-=6(3) dr=10(5)
                     set mapdict { 0 -1 1 1 2 4 5 2 9 0 6 3 10 5}
@@ -524,6 +527,9 @@ namespace eval hapticvis::transfer {
                 if { $n_choices == 4 } {
                     # 4 skip cardinal
                     set mapdict { 0 -1 1 0 2 -1 3 1 4 -1 5 2 6 -1 7 3 }
+                } elseif { $n_choices == 5 } {
+                    # 5 skip up, left, and right
+                    set mapdict { 0 -1 1 0 2 -1 3 1 4 -1 5 2 6 4 7 3 }
                 } elseif { $n_choices == 6 } {
                     # 6 skip right and left
                     set mapdict { 0 -1 1 0 2 1 3 2 4 -1 5 3 6 4 7 5 }
