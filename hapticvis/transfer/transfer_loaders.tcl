@@ -397,7 +397,7 @@ namespace eval hapticvis::transfer {
           } else { # if you want distractors need to set up the stimdg differently
               
               # make a list of targets and distractors
-              set targets_distractors [dl_concat $targets $distractors]
+              set targets_distractors [dl_combine $targets $distractors]
               
               # go into table and find info about sets/subject
               if { $use_dists } {
