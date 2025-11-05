@@ -385,6 +385,8 @@ namespace eval hapticvis::transfer {
         $s add_method get_choices { n } {
             if { $n == 4 } {
                 return "1 3 5 7"
+            } elseif { $n == 5 } {
+                return "1 3 5 7 6"
             } elseif { $n == 6 } {
                 return "1 2 3 5 6 7"
             } else {
