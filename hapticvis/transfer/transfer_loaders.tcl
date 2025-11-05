@@ -541,7 +541,7 @@ namespace eval hapticvis::transfer {
               dl_set stimdg:shape_filled [dl_repeat $shape_filled $n_obs]
               dl_set stimdg:shape_learned $learned
               dl_set stimdg:noise_elements $noise_elements
-              dl_set stimdg:correct_choice [dl_combine $correct_choice [dl_zeros [dl_length $correct_choice]]]
+              dl_set stimdg:correct_choice [dl_combine $correct_choice [dl_repeat 5 [dl_length $correct_choice]]]
               dl_set stimdg:correct_location [dl_combine $correct_locations [dl_repeat [dl_slist D] [dl_length $correct_choice]]]
               dl_set stimdg:n_choices [dl_repeat [expr $n_choices + 1] $n_obs]
               dl_set stimdg:choice_centers [dl_repeat $both_centers $n_obs]
