@@ -155,7 +155,7 @@ namespace eval hapticvis::transfer {
             
             # randomly choose set from distractors list
             set pick_ind [dl_randchoose 3 1]
-            #set distractor_choice lindex $distractors_list pick_ind
+            set distractor_choice [lindex $distractors_list pick_ind]
             #set distractors trial_db:target_ids:$row:$distractor_choice
             
             # trial info in trialdb_file
