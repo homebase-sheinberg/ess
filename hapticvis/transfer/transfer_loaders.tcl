@@ -488,16 +488,17 @@ namespace eval hapticvis::transfer {
   
               dl_local choice_center_x [dl_mult [dl_cos $choice_angles] $choice_ecc]
               dl_local choice_center_y [dl_mult [dl_sin $choice_angles] $choice_ecc]
-              dl_local choice_centers [dl_llist [dl_transpose [dl_llist $choice_center_x $choice_center_y]]]
+              #dl_local choice_centers [dl_llist [dl_transpose [dl_llist $choice_center_x $choice_center_y]]]
               
               # create choice center information for final: I am using down as my option for distractors
               dl_local distractor_angle_x [dl_mult [expr (2*$::pi)/8.] 6]
               dl_local distractor_angle_y [dl_mult [expr (2*$::pi)/8.] 6]
               dl_local distractor_center_x [dl_mult [dl_cos $distractor_angle_x] $choice_ecc]
               dl_local distractor_center_y [dl_mult [dl_sin $distractor_angle_y] $choice_ecc]
-              dl_local distractor_centers [dl_llist [dl_transpose [dl_llist $distractor_center_x $distractor_center_y]]]
+              #dl_local distractor_centers [dl_llist [dl_transpose [dl_llist $distractor_center_x $distractor_center_y]]]
   
-              dl_local both_centers [dl_llist [dl_combine [dl_transpose $choice_centers] [dl_transpose $distractor_centers]]]
+              dl_local choice_centers [dl_llist [dl_transpose [dl_llist [dl_append $choice_center_x $distractor_center_x] [dl_append $choice_center_y $distractor_center_y]]]]
+              #dl_local both_centers [dl_llist [dl_combine [dl_transpose $choice_centers] [dl_transpose $distractor_centers]]]
               
               if { $noise_type == "none"} {
                   dl_local noise_elements [dl_replicate [dl_llist [dl_llist]] $n_obs]
@@ -544,7 +545,7 @@ namespace eval hapticvis::transfer {
               dl_set stimdg:correct_choice [dl_combine $correct_choice [dl_repeat 5 [dl_length $correct_choice]]]
               dl_set stimdg:correct_location [dl_combine $correct_locations [dl_repeat [dl_slist D] [dl_length $correct_choice]]]
               dl_set stimdg:n_choices [dl_repeat [expr $n_choices + 1] $n_obs]
-              dl_set stimdg:choice_centers [dl_repeat $both_centers $n_obs]
+              dl_set stimdg:choice_centers [dl_repeat $choice_centers $n_obs]
               dl_set stimdg:choice_scale [dl_repeat $choice_scale $n_obs]
               dl_set stimdg:lr_choice_centers [dl_repeat [dl_llist [dl_llist]] $n_obs]
               dl_set stimdg:lr_choice_scale [dl_zeros $n_obs.]
