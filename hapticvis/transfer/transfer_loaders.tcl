@@ -225,6 +225,7 @@ namespace eval hapticvis::transfer {
             dl_set stimdg:subject_handedness [dl_ilist]
             dl_set stimdg:midline_offset [dl_ilist]
             dl_set stimdg:have_feedback [dl_ilist]
+            dl_set stimdg:have_distractors [dl_ilist]
 
             # create condition for setup of stimdg based on if you want distractors or not
             if { $have_distractors == 0 } {
@@ -391,6 +392,7 @@ namespace eval hapticvis::transfer {
               }
               
               dl_set stimdg:have_feedback [dl_repeat $have_feedback $n_obs]
+              dl_set stimdg:have_feedback [dl_repeat $have_distractors $n_obs]
   
               dl_set stimdg:remaining [dl_ones $n_obs]
               return $g
@@ -563,6 +565,7 @@ namespace eval hapticvis::transfer {
               }
               
               dl_set stimdg:have_feedback [dl_repeat $have_feedback $n_obs]
+              dl_set stimdg:have_distractors [dl_combine [dl_zeros [dl_length $correct_choice]] [dl_ones [dl_length $correct_choice]]]
   
               dl_set stimdg:remaining [dl_ones $n_obs]
               return $g
