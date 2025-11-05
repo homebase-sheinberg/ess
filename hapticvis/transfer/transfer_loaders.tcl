@@ -414,13 +414,17 @@ namespace eval hapticvis::transfer {
   
               # total number of trials
               set n_rotations [llength $rotations]
+              
+              # i don't think this if statement does anything?
               if { $use_dists } {
                   set n_targ_trials [expr {[dl_length $targets]*$n_rep*$n_rotations}]
                   set n_dist_trials [expr {[dl_length $dists]*$n_rep*$n_rotations}]
               } else {
-                  set n_targ_trials [expr {[dl_length $targets]*$n_rep*$n_rotations}]
+                  #set n_targ_trials [expr {[dl_length $targets]*$n_rep*$n_rotations}]
+                  set n_targ_trials [expr {[dl_length $targets_distractors]*$n_rep*$n_rotations}]
                   set n_dist_trials 0
               }
+              
               set n_shapes [dl_length $shape_ids]
               set n_targets [dl_length $targets]
               if { $use_dists } {
@@ -438,7 +442,7 @@ namespace eval hapticvis::transfer {
               set is_cued 0
               set cue_valid -1
               set shape_filled 1
-              set n_choices $n_targets
+              set n_choices [dl_length $targets] #$n_targets # to account for extra choice of distractors
               set choice_ecc 5
               set choice_scale 1.5
   
