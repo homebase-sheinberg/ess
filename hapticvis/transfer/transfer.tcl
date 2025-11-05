@@ -199,8 +199,6 @@ namespace eval hapticvis::transfer {
 
                 set have_cue [dl_get stimdg:is_cued $cur_id]
                 set cue_valid [dl_get stimdg:cue_valid $cur_id]
-
-                print "So far all good"
                 
                 if { $have_cue } {
                     foreach i "0 1" {
@@ -213,6 +211,7 @@ namespace eval hapticvis::transfer {
                         }
                     }
                 } else {
+                    print "So far all good"
                     for { set i 0 } { $i < $n_choices } { incr i } {
                         set slot [lindex $choices $i]
                         # set these touching_response knows where choices are
