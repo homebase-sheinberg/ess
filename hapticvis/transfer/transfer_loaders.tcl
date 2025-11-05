@@ -146,6 +146,7 @@ namespace eval hapticvis::transfer {
             set exclude_set $subject_set
             set distractors_list {}
             
+            # go through each item in the original sets and only add the sets not being used
             foreach item $original_sets {
               if {$item != $subject_set} {
                 # If they don't match, append to the new list
@@ -154,9 +155,7 @@ namespace eval hapticvis::transfer {
             }
             
             # randomly choose set from distractors list
-            #set pick_ind [dl_randchoose 3 1]
             set distractor_choice [dl_pickone $distractors_list]
-            #set distractor_choice [lindex $distractors_list pick_ind]
             
             # trial info in trialdb_file
             # trial_db contains columns: subject target_ids dist_ids
@@ -182,7 +181,7 @@ namespace eval hapticvis::transfer {
                 }
             }
 
-
+            # set the list of distractors
             set distractors trial_db:target_ids:$row:$distractor_choice
             
             if { $use_dists } { set task transfer } { set task learning }
@@ -227,173 +226,175 @@ namespace eval hapticvis::transfer {
             dl_set stimdg:midline_offset [dl_ilist]
             dl_set stimdg:have_feedback [dl_ilist]
 
-
-            # go into table and find info about sets/subject
-            if { $use_dists } {
-                set shape_ids "[dl_tcllist $targets] [dl_tcllist $dists]"
-            } else {
-                set shape_ids [dl_tcllist $targets]
-            }
-
-            # get coords for each shape
-            dl_local shape_inds [haptic::get_shape_indices shape_db:id $shape_ids]
-            dl_local coord_x [dl_choose shape_db:x $shape_inds]
-            dl_local coord_y [dl_choose shape_db:y $shape_inds]
-
-            # total number of trials
-            set n_rotations [llength $rotations]
-            if { $use_dists } {
-                set n_targ_trials [expr {[dl_length $targets]*$n_rep*$n_rotations}]
-                set n_dist_trials [expr {[dl_length $dists]*$n_rep*$n_rotations}]
-            } else {
-                set n_targ_trials [expr {[dl_length $targets]*$n_rep*$n_rotations}]
-                set n_dist_trials 0
-            }
-            set n_shapes [dl_length $shape_ids]
-            set n_targets [dl_length $targets]
-            if { $use_dists } {
-                set n_dists [dl_length $dists]
-            } else {
-                set n_dists 0
-            }
-
-            # close the shape_db and trial_db
-            dg_delete shape_db
-            dg_delete trial_db
-
-            set n_obs [expr {$n_rep * $n_rotations * $n_shapes}]
-
-            set is_cued 0
-            set cue_valid -1
-            set shape_filled 1
-            set n_choices $n_targets
-            set choice_ecc 5
-            set choice_scale 1.5
-
-            set shape_reps [expr {$n_rep*$n_rotations}]
-            dl_local shape_id [dl_repeat [dl_ilist {*}$shape_ids] $shape_reps]
-
-            if { $use_dists } {
-                dl_local learned [dl_repeat "1 0" "$n_targ_trials $n_dist_trials"]
-            } else {
-                dl_local learned [dl_ones $n_obs]
-            }
-
-            if { $use_dists } {
-                dl_local correct_choice [dl_combine [dl_repeat [dl_add 1 [dl_fromto 0 $n_choices]] $shape_reps] [dl_zeros [expr {$n_dists*$shape_reps}]]]
-            } else {
-                dl_local correct_choice [dl_repeat [dl_add 1 [dl_fromto 0 $n_choices]] $shape_reps]
-            }
-
-            if { $n_choices == 4 } {
-                dl_local slots [dl_ilist 1 3 5 7]
-                dl_local choice_locs [dl_slist UR UL DL DR]
-            } elseif { $n_choices == 6 } {
-                dl_local slots [dl_ilist 1 2 3 5 6 7]
-                dl_local choice_locs [dl_slist UR U UL DL D DR]
-            } else {
-                dl_local slots [dl_ilist 0 1 2 3 4 5 6 7]
-                dl_local choice_locs [dl_slist R UR U UL L DL D DR]
-            }
-
-            dl_local correct_locations [dl_combine [dl_repeat $choice_locs $shape_reps] [dl_repeat [dl_slist NONE] [expr {$n_dists*$shape_reps}]]]
-
-
-            if { $use_dists } {
-                # create a shuffled list of indices
-                # moving through each unique stim/rotation before repeating
-                dl_local r [dl_replicate [dl_reshape [dl_fromto 0 $shape_reps] $n_rep $n_rotations] $n_shapes]
-                dl_local shuffle_ids [dl_randfill [dl_replicate [dl_llist 3] [expr {$n_shapes*$n_rep}]]]
-                dl_local group_id [dl_collapse [dl_collapse [dl_choose $r $shuffle_ids]]]
-            } else {
-                dl_local group_id [dl_zeros $n_obs]
-            }
-
-            dl_local choice_angles [dl_mult [expr (2*$::pi)/8.] $slots]
-
-            dl_local choice_center_x [dl_mult [dl_cos $choice_angles] $choice_ecc]
-            dl_local choice_center_y [dl_mult [dl_sin $choice_angles] $choice_ecc]
-            dl_local choice_centers [dl_llist [dl_transpose [dl_llist $choice_center_x $choice_center_y]]]
-
-            if { $noise_type == "none"} {
-                dl_local noise_elements [dl_replicate [dl_llist [dl_llist]] $n_obs]
-            } elseif { $noise_type == "circles"} {
-                set nelements 15
-                set njprop 0.05; # jitter proportion
-                set minradius 0.1;
-                set total_elements [expr {${n_obs}*$nelements}]
-                dl_local xs [dl_sub [dl_urand $total_elements] 0.5]
-                dl_local ys [dl_sub [dl_urand $total_elements] 0.5]
-                dl_local rs [dl_add $minradius [dl_mult [dl_urand $total_elements] $njprop]]
-                dl_local noise_elements [dl_reshape [dl_transpose [dl_llist $xs $ys $rs]] $n_obs $nelements]
-            } elseif {$noise_type == "spotlight"} {
-                set nelements 6
-                set njprop 0
-                set minradius 0.25
-                set total_elements [expr {${n_obs}*$nelements}]
-                dl_local xs [dl_flist 0.43 0.0 -0.43 -0.43 0.0 0.43]
-                dl_local ys [dl_flist 0.25 0.5 0.25 -0.25 -0.5 -0.25]
-                dl_local rs [dl_repeat $minradius [dl_length $xs]]
-                dl_local single_trial [dl_transpose [dl_llist $xs $ys $rs]]
-                dl_local noise_elements [dl_replicate [dl_llist $single_trial] $n_obs]
-            }
-
-            dl_set stimdg:stimtype [dl_fromto 0 $n_obs]
-            dl_set stimdg:group $group_id
-            dl_set stimdg:task [dl_repeat [dl_slist $task] $n_obs]
-            dl_set stimdg:trial_type [dl_repeat [dl_slist $trial_type] $n_obs]
-            dl_set stimdg:subject_id [dl_repeat $subject_id $n_obs]
-            dl_set stimdg:subject_set [dl_repeat $subject_set $n_obs]
-
-            dl_set stimdg:shape_set [dl_repeat [dl_ilist -1] $n_obs]
-            dl_set stimdg:shape_set_size [dl_repeat $n_targets $n_obs]
-            dl_set stimdg:shape_id $shape_id
-            dl_set stimdg:shape_coord_x [dl_repeat $coord_x $shape_reps]
-            dl_set stimdg:shape_coord_y [dl_repeat $coord_y $shape_reps]
-            dl_set stimdg:shape_center_x [dl_zeros $n_obs.]
-            dl_set stimdg:shape_center_y [dl_zeros $n_obs.]
-            dl_set stimdg:shape_rot_deg_cw [dl_replicate [dl_flist {*}$rotations] [expr $n_rep*$n_shapes]]
-            dl_set stimdg:shape_scale [dl_repeat $shape_scale $n_obs]
-            dl_set stimdg:shape_filled [dl_repeat $shape_filled $n_obs]
-            dl_set stimdg:shape_learned $learned
-            dl_set stimdg:noise_elements $noise_elements
-            dl_set stimdg:correct_choice $correct_choice
-            dl_set stimdg:correct_location $correct_locations
-            dl_set stimdg:n_choices [dl_repeat $n_choices $n_obs]
-            dl_set stimdg:choice_centers [dl_repeat $choice_centers $n_obs]
-            dl_set stimdg:choice_scale [dl_repeat $choice_scale $n_obs]
-            dl_set stimdg:lr_choice_centers [dl_repeat [dl_llist [dl_llist]] $n_obs]
-            dl_set stimdg:lr_choice_scale [dl_zeros $n_obs.]
-            dl_set stimdg:is_cued [dl_repeat $is_cued $n_obs]
-            dl_set stimdg:cue_valid [dl_repeat [dl_ilist $cue_valid] $n_obs]
-            dl_set stimdg:cued_choices [dl_repeat [dl_llist [dl_llist]] $n_obs]
-            dl_set stimdg:feedback_type [dl_repeat [dl_slist color] $n_obs]
-
-            if { $noise_type == "none" } {
-                dl_set stimdg:follow_dial [dl_zeros $n_obs]
-            } else {
-                dl_set stimdg:follow_dial [dl_ones $n_obs]
-            }
-            dl_set stimdg:follow_pattern [dl_replicate [dl_slist 0] $n_obs]
-            dl_set stimdg:constrained [dl_zeros $n_obs]
-            dl_set stimdg:constraint_locked [dl_zeros $n_obs]
-
-            dl_set stimdg:joystick_side [dl_repeat $joystick_side $n_obs]
-            dl_set stimdg:joystick_on [dl_choose [dl_slist left right] stimdg:joystick_side]
-            dl_set stimdg:hand [dl_not stimdg:joystick_side]
-
-            dl_set stimdg:subject_handedness [dl_repeat $subject_handedness $n_obs]
-
-            if { $joystick_side == 0} {
-                dl_set stimdg:midline_offset [dl_repeat -25 $n_obs]
-            } else {
-                dl_set stimdg:midline_offset [dl_repeat 25 $n_obs]
-            }
-            
-            dl_set stimdg:have_feedback [dl_repeat $have_feedback $n_obs]
-
-            dl_set stimdg:remaining [dl_ones $n_obs]
-            return $g
+            # create condition for setup of stimdg based on if you want distractors or not
+            if { $have_distractors == 0 } {
+              # go into table and find info about sets/subject
+              if { $use_dists } {
+                  set shape_ids "[dl_tcllist $targets] [dl_tcllist $dists]"
+              } else {
+                  set shape_ids [dl_tcllist $targets]
+              }
+  
+              # get coords for each shape
+              dl_local shape_inds [haptic::get_shape_indices shape_db:id $shape_ids]
+              dl_local coord_x [dl_choose shape_db:x $shape_inds]
+              dl_local coord_y [dl_choose shape_db:y $shape_inds]
+  
+              # total number of trials
+              set n_rotations [llength $rotations]
+              if { $use_dists } {
+                  set n_targ_trials [expr {[dl_length $targets]*$n_rep*$n_rotations}]
+                  set n_dist_trials [expr {[dl_length $dists]*$n_rep*$n_rotations}]
+              } else {
+                  set n_targ_trials [expr {[dl_length $targets]*$n_rep*$n_rotations}]
+                  set n_dist_trials 0
+              }
+              set n_shapes [dl_length $shape_ids]
+              set n_targets [dl_length $targets]
+              if { $use_dists } {
+                  set n_dists [dl_length $dists]
+              } else {
+                  set n_dists 0
+              }
+  
+              # close the shape_db and trial_db
+              dg_delete shape_db
+              dg_delete trial_db
+  
+              set n_obs [expr {$n_rep * $n_rotations * $n_shapes}]
+  
+              set is_cued 0
+              set cue_valid -1
+              set shape_filled 1
+              set n_choices $n_targets
+              set choice_ecc 5
+              set choice_scale 1.5
+  
+              set shape_reps [expr {$n_rep*$n_rotations}]
+              dl_local shape_id [dl_repeat [dl_ilist {*}$shape_ids] $shape_reps]
+  
+              if { $use_dists } {
+                  dl_local learned [dl_repeat "1 0" "$n_targ_trials $n_dist_trials"]
+              } else {
+                  dl_local learned [dl_ones $n_obs]
+              }
+  
+              if { $use_dists } {
+                  dl_local correct_choice [dl_combine [dl_repeat [dl_add 1 [dl_fromto 0 $n_choices]] $shape_reps] [dl_zeros [expr {$n_dists*$shape_reps}]]]
+              } else {
+                  dl_local correct_choice [dl_repeat [dl_add 1 [dl_fromto 0 $n_choices]] $shape_reps]
+              }
+  
+              if { $n_choices == 4 } {
+                  dl_local slots [dl_ilist 1 3 5 7]
+                  dl_local choice_locs [dl_slist UR UL DL DR]
+              } elseif { $n_choices == 6 } {
+                  dl_local slots [dl_ilist 1 2 3 5 6 7]
+                  dl_local choice_locs [dl_slist UR U UL DL D DR]
+              } else {
+                  dl_local slots [dl_ilist 0 1 2 3 4 5 6 7]
+                  dl_local choice_locs [dl_slist R UR U UL L DL D DR]
+              }
+  
+              dl_local correct_locations [dl_combine [dl_repeat $choice_locs $shape_reps] [dl_repeat [dl_slist NONE] [expr {$n_dists*$shape_reps}]]]
+  
+  
+              if { $use_dists } {
+                  # create a shuffled list of indices
+                  # moving through each unique stim/rotation before repeating
+                  dl_local r [dl_replicate [dl_reshape [dl_fromto 0 $shape_reps] $n_rep $n_rotations] $n_shapes]
+                  dl_local shuffle_ids [dl_randfill [dl_replicate [dl_llist 3] [expr {$n_shapes*$n_rep}]]]
+                  dl_local group_id [dl_collapse [dl_collapse [dl_choose $r $shuffle_ids]]]
+              } else {
+                  dl_local group_id [dl_zeros $n_obs]
+              }
+  
+              dl_local choice_angles [dl_mult [expr (2*$::pi)/8.] $slots]
+  
+              dl_local choice_center_x [dl_mult [dl_cos $choice_angles] $choice_ecc]
+              dl_local choice_center_y [dl_mult [dl_sin $choice_angles] $choice_ecc]
+              dl_local choice_centers [dl_llist [dl_transpose [dl_llist $choice_center_x $choice_center_y]]]
+  
+              if { $noise_type == "none"} {
+                  dl_local noise_elements [dl_replicate [dl_llist [dl_llist]] $n_obs]
+              } elseif { $noise_type == "circles"} {
+                  set nelements 15
+                  set njprop 0.05; # jitter proportion
+                  set minradius 0.1;
+                  set total_elements [expr {${n_obs}*$nelements}]
+                  dl_local xs [dl_sub [dl_urand $total_elements] 0.5]
+                  dl_local ys [dl_sub [dl_urand $total_elements] 0.5]
+                  dl_local rs [dl_add $minradius [dl_mult [dl_urand $total_elements] $njprop]]
+                  dl_local noise_elements [dl_reshape [dl_transpose [dl_llist $xs $ys $rs]] $n_obs $nelements]
+              } elseif {$noise_type == "spotlight"} {
+                  set nelements 6
+                  set njprop 0
+                  set minradius 0.25
+                  set total_elements [expr {${n_obs}*$nelements}]
+                  dl_local xs [dl_flist 0.43 0.0 -0.43 -0.43 0.0 0.43]
+                  dl_local ys [dl_flist 0.25 0.5 0.25 -0.25 -0.5 -0.25]
+                  dl_local rs [dl_repeat $minradius [dl_length $xs]]
+                  dl_local single_trial [dl_transpose [dl_llist $xs $ys $rs]]
+                  dl_local noise_elements [dl_replicate [dl_llist $single_trial] $n_obs]
+              }
+  
+              dl_set stimdg:stimtype [dl_fromto 0 $n_obs]
+              dl_set stimdg:group $group_id
+              dl_set stimdg:task [dl_repeat [dl_slist $task] $n_obs]
+              dl_set stimdg:trial_type [dl_repeat [dl_slist $trial_type] $n_obs]
+              dl_set stimdg:subject_id [dl_repeat $subject_id $n_obs]
+              dl_set stimdg:subject_set [dl_repeat $subject_set $n_obs]
+  
+              dl_set stimdg:shape_set [dl_repeat [dl_ilist -1] $n_obs]
+              dl_set stimdg:shape_set_size [dl_repeat $n_targets $n_obs]
+              dl_set stimdg:shape_id $shape_id
+              dl_set stimdg:shape_coord_x [dl_repeat $coord_x $shape_reps]
+              dl_set stimdg:shape_coord_y [dl_repeat $coord_y $shape_reps]
+              dl_set stimdg:shape_center_x [dl_zeros $n_obs.]
+              dl_set stimdg:shape_center_y [dl_zeros $n_obs.]
+              dl_set stimdg:shape_rot_deg_cw [dl_replicate [dl_flist {*}$rotations] [expr $n_rep*$n_shapes]]
+              dl_set stimdg:shape_scale [dl_repeat $shape_scale $n_obs]
+              dl_set stimdg:shape_filled [dl_repeat $shape_filled $n_obs]
+              dl_set stimdg:shape_learned $learned
+              dl_set stimdg:noise_elements $noise_elements
+              dl_set stimdg:correct_choice $correct_choice
+              dl_set stimdg:correct_location $correct_locations
+              dl_set stimdg:n_choices [dl_repeat $n_choices $n_obs]
+              dl_set stimdg:choice_centers [dl_repeat $choice_centers $n_obs]
+              dl_set stimdg:choice_scale [dl_repeat $choice_scale $n_obs]
+              dl_set stimdg:lr_choice_centers [dl_repeat [dl_llist [dl_llist]] $n_obs]
+              dl_set stimdg:lr_choice_scale [dl_zeros $n_obs.]
+              dl_set stimdg:is_cued [dl_repeat $is_cued $n_obs]
+              dl_set stimdg:cue_valid [dl_repeat [dl_ilist $cue_valid] $n_obs]
+              dl_set stimdg:cued_choices [dl_repeat [dl_llist [dl_llist]] $n_obs]
+              dl_set stimdg:feedback_type [dl_repeat [dl_slist color] $n_obs]
+  
+              if { $noise_type == "none" } {
+                  dl_set stimdg:follow_dial [dl_zeros $n_obs]
+              } else {
+                  dl_set stimdg:follow_dial [dl_ones $n_obs]
+              }
+              dl_set stimdg:follow_pattern [dl_replicate [dl_slist 0] $n_obs]
+              dl_set stimdg:constrained [dl_zeros $n_obs]
+              dl_set stimdg:constraint_locked [dl_zeros $n_obs]
+  
+              dl_set stimdg:joystick_side [dl_repeat $joystick_side $n_obs]
+              dl_set stimdg:joystick_on [dl_choose [dl_slist left right] stimdg:joystick_side]
+              dl_set stimdg:hand [dl_not stimdg:joystick_side]
+  
+              dl_set stimdg:subject_handedness [dl_repeat $subject_handedness $n_obs]
+  
+              if { $joystick_side == 0} {
+                  dl_set stimdg:midline_offset [dl_repeat -25 $n_obs]
+              } else {
+                  dl_set stimdg:midline_offset [dl_repeat 25 $n_obs]
+              }
+              
+              dl_set stimdg:have_feedback [dl_repeat $have_feedback $n_obs]
+  
+              dl_set stimdg:remaining [dl_ones $n_obs]
+              return $g
+          }
         }
     }
 }
