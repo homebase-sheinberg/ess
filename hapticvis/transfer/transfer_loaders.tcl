@@ -496,7 +496,7 @@ namespace eval hapticvis::transfer {
               dl_local distractor_center_y [dl_mult [dl_sin $distractor_angle_y] $choice_ecc]
               dl_local distractor_centers [dl_llist [dl_transpose [dl_llist $distractor_center_x $distractor_center_y]]]
   
-              dl_local both_centers [dl_llist [dl_transpose [dl_combine [dl_transpose $choice_centers] [dl_transpose $distractor_centers]]]]
+              dl_local both_centers [dl_llist [dl_combine [dl_transpose $choice_centers] [dl_transpose $distractor_centers]]]
               
               if { $noise_type == "none"} {
                   dl_local noise_elements [dl_replicate [dl_llist [dl_llist]] $n_obs]
