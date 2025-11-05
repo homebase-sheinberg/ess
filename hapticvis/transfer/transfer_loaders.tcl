@@ -498,7 +498,7 @@ namespace eval hapticvis::transfer {
   
               dl_local choice_centers [dl_llist [dl_transpose [dl_llist [dl_append $choice_center_x $distractor_center_x] [dl_append $choice_center_y $distractor_center_y]]]]
               #dl_local both_centers [dl_llist [dl_combine [dl_transpose $choice_centers] [dl_transpose $distractor_centers]]]
-              print "Both Centers: $both_centers"
+              print "New Choice Centers: $choice_centers"
               
               if { $noise_type == "none"} {
                   dl_local noise_elements [dl_replicate [dl_llist [dl_llist]] $n_obs]
