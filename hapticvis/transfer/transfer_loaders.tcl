@@ -403,7 +403,8 @@ namespace eval hapticvis::transfer {
               if { $use_dists } {
                   set shape_ids "[dl_tcllist $targets] [dl_tcllist $dists]"
               } else {
-                  set shape_ids [dl_tcllist $targets]
+                  #set shape_ids [dl_tcllist $targets]
+                  set shape_ids [dl_tcllist $targets_distractors]
               }
   
               # get coords for each shape
