@@ -144,8 +144,16 @@ namespace eval hapticvis::transfer {
             # set list of distractors to add
             set original_sets [dl_tcllist [dl_fromto 0 4]]
             set exclude_set $subject_set
+            set distractors_list {}
             
-            set distractors_list [lmap item $original_sets] #{
+            foreach item $original_sets {
+              if {$item != $subject_set} {
+                # If they don't match, append to the new list
+                lappend distractors_list $item
+              }
+            }
+            
+            #set distractors_list [lmap item $original_sets] #{
             #  if {$item != $exclude_set} {
             #    set item
             #  } else {
