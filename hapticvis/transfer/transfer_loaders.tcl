@@ -157,7 +157,6 @@ namespace eval hapticvis::transfer {
             #set pick_ind [dl_randchoose 3 1]
             set distractor_choice [dl_pickone $distractors_list]
             #set distractor_choice [lindex $distractors_list pick_ind]
-            set distractors trial_db:target_ids:$row:$distractor_choice
             
             # trial info in trialdb_file
             # trial_db contains columns: subject target_ids dist_ids
@@ -183,6 +182,9 @@ namespace eval hapticvis::transfer {
                 }
             }
 
+
+            set distractors trial_db:target_ids:$row:$distractor_choice
+            
             if { $use_dists } { set task transfer } { set task learning }
 
             dl_set stimdg:stimtype [dl_ilist]
