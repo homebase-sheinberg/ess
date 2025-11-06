@@ -492,8 +492,8 @@ namespace eval hapticvis::transfer {
               
               # create choice center information for final: I am using down as my option for distractors
               set distractor_angle [expr {(2*$::pi)/8.*6}]
-              set distractor_center_x [expr (cos($distractor_angle))*10] #*$choice_ecc]
-              set distractor_center_y [expr (sin($distractor_angle))*10] #*$choice_ecc]
+              set distractor_center_x [expr (cos($distractor_angle))*$choice_ecc]
+              set distractor_center_y [expr (sin($distractor_angle))*$choice_ecc]
   
               dl_local choice_centers [dl_llist [dl_transpose [dl_llist [dl_append $choice_center_x $distractor_center_x] [dl_append $choice_center_y $distractor_center_y]]]]
               
