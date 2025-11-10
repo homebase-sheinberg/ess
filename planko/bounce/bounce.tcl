@@ -14,6 +14,7 @@ namespace eval planko::bounce {
         $s add_param rmt_host $::ess::rmt_host stim ipaddr
         $s add_param juice_ml .6 variable float
         $s add_param save_ems 0 variable bool
+        $s add_param use_joystick 0 variable int
         $s add_param use_buttons 0 variable int
         $s add_param left_button 24 variable int
         $s add_param right_button 25 variable int
@@ -33,11 +34,6 @@ namespace eval planko::bounce {
 
             # initialize juicer
             ::ess::juicer_init
-
-            if { $use_buttons } {
-                # initialize joystick here
-                ::ess::joystick_init
-            }
 
             # open connection to rmt and upload ${protocol}_stim.tcl
             my configure_stim $rmt_host
@@ -72,6 +68,12 @@ namespace eval planko::bounce {
             if { $save_ems } {
                 # initialize eye movements
                 ::ess::em_init
+            }
+
+            if { $use_joystick } {
+                # initialize joystick (right sided) here
+                dservSet joystick/lines { 1 19 2 23 4 20 8 22 }
+                ::ess::joystick_init
             }
 
             # wait until variants have potentially changed buttons
@@ -138,7 +140,11 @@ namespace eval planko::bounce {
             if { $use_buttons } {
                 if { [dservGet gpio/input/$left_button] } { return 1 }
                 if { [dservGet gpio/input/$right_button] } { return 2 }
-                return 0
+            }
+            if { $use_joystick } {
+                set joy_position [dservGet ess/joystick/value]
+                if { $joy_position == 4 } { return 1 }
+                if { $joy_position == 8 } { return 2 }
             }
             return 0
         }
@@ -152,6 +158,9 @@ namespace eval planko::bounce {
                 set stimtype [dl_get stimdg:stimtype $cur_id]
 
                 set side [dl_get stimdg:side $cur_id]
+
+                # control timing of playback
+                set perception_only [dl_get stimdg:perception_only $cur_id]
 
                 foreach v "lcatcher_x lcatcher_y rcatcher_x rcatcher_y" {
                     set $v [dl_get stimdg:$v $cur_id]
@@ -214,7 +223,7 @@ namespace eval planko::bounce {
             ::ess::em_region_off 0
             ::ess::touch_region_on 0
             ::ess::touch_region_on 1
-            rmtSend "!stimon"
+            if { $perception_only } { rmtSend "!stimon_and_drop" } { rmtSend "!stimon" }
         }
 
         $s add_method stim_off {} {
@@ -348,10 +357,6 @@ namespace eval planko::bounce {
         }
     }
 }
-
-
-
-
 
 
 
