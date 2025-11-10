@@ -218,8 +218,8 @@ namespace eval match_to_sample::colormatch {
                 return 0
             } elseif { [::ess::touch_in_win 2] } {
                 if { $abort_on_bad_touch } {
-                    set correct 0
-                    return 1
+                    set correct 1
+                    return 0
                 }
             } else {
                 return -1
