@@ -171,7 +171,7 @@ namespace eval match_to_sample {
   }
   
   #
-  # sample_off_final (FINAL OFF, 30 ms, then choices)
+  # sample_off_final (FINAL OFF, 30 ms, then choices) 
   #
   $sys add_action sample_off_final {
       my sample_off
