@@ -1,6 +1,6 @@
 #
 # PROTOCOL
-#   match_to_sample colormatch
+#   match_to_sample non-match 
 #
 # DESCRIPTION
 #   Present a target color and two choices
