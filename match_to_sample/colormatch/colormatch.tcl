@@ -131,12 +131,12 @@ namespace eval match_to_sample::colormatch {
                 set stimtype [dl_get stimdg:stimtype $cur_id]
 
                 # set these touching_response knows where choices are
-                set targ_x [dl_get stimdg:match_x $stimtype]
-                set targ_y [dl_get stimdg:match_y $stimtype]
-                set targ_r [dl_get stimdg:match_r $stimtype]
-                set dist_x [dl_get stimdg:nonmatch_x $stimtype]
-                set dist_y [dl_get stimdg:nonmatch_y $stimtype]
-                set dist_r [dl_get stimdg:nonmatch_r $stimtype]
+                set targ_x [dl_get stimdg:nonmatch_x $stimtype]
+                set targ_y [dl_get stimdg:nonmatch_y $stimtype]
+                set targ_r [dl_get stimdg:nonmatch_r $stimtype]
+                set dist_x [dl_get stimdg:match_x $stimtype]
+                set dist_y [dl_get stimdg:match_y $stimtype]
+                set dist_r [dl_get stimdg:match_r $stimtype]
 
                 ::ess::touch_region_off 0
                 ::ess::touch_region_off 1
