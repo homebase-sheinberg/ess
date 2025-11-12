@@ -114,7 +114,7 @@ namespace eval match_to_sample {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 100
+      timerTick 120
   }
   $sys add_transition sample_on {
       if { [timerExpired] } { return sample_off }
@@ -139,7 +139,7 @@ namespace eval match_to_sample {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 100
+      timerTick 120
   }
   $sys add_transition sample_on2 {
       if { [timerExpired] } { return sample_off2 }
@@ -164,7 +164,7 @@ namespace eval match_to_sample {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 100
+      timerTick 120
   }
   $sys add_transition sample_on3 {
       if { [timerExpired] } { return sample_off_final }
