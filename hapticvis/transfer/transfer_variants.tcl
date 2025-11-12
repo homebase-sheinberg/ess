@@ -57,9 +57,9 @@ namespace eval hapticvis::transfer {
     set haptic_cued_params {
         interblock_time 500
         pre_stim_time 100
-        cue_delay 250
-        cue_duration 6250
-        sample_delay 0
+        cue_delay 0
+        cue_duration 6000
+        sample_delay 500
         sample_duration 5000
         choice_duration 30000
         choice_delay 0
