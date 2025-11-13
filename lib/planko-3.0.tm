@@ -4,6 +4,9 @@
 # planko-3.0.tm
 #   Enhanced package for generating planko boards with threading support
 #
+
+puts "loading planko package"
+
 package provide planko 3.0
 
 package require box2d
@@ -507,7 +510,7 @@ namespace eval planko {
                 set $v [dl_get $dg:$v $i]
             }
 	    if { [dl_exists $dg:visible] } {
-		set visible [dl_get $dg:visible]
+		set visible [dl_get $dg:visible $i]
 	    } else {
 		set visible 1
 	    }
