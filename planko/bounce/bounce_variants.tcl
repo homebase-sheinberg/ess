@@ -136,6 +136,7 @@ namespace eval planko::bounce {
             loader_options {
                 nr { 4 6 8 10 20 25 30 60 100 }
                 nplanks { {4 4} {8 8} {4+8 {4 8}} }
+		show_planks { {yes 1} {no 0} }
                 board_params {
                     { jittered {
                             ball_jitter_x 10
@@ -162,15 +163,3 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
-
-
-
-
-
-
-
-
-
-
-
-
