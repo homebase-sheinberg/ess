@@ -503,9 +503,14 @@ namespace eval planko {
 
         # load in objects
         for { set i 0 } { $i < $n } { incr i } {
-            foreach v "name shape visible type tx ty sx sy angle restitution" {
+            foreach v "name shape type tx ty sx sy angle restitution" {
                 set $v [dl_get $dg:$v $i]
             }
+	    if { [dl_exists $dg:visible] } {
+		set visible [dl_get $dg:visible]
+	    } else {
+		set visible 1
+	    }
 
             if { $shape == "Box" } {
                 set body [box2d::createBox $world $name $type $tx $ty $sx $sy $angle]
