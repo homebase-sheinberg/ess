@@ -134,6 +134,7 @@ namespace eval emcalib {
         $sys add_action fixjump {
             set jump_time [now]
             my fixjump
+            ::ess::evt_put FIXSPOT SET [now]
             timerTick $reacquire_time
         }
 
@@ -162,7 +163,7 @@ namespace eval emcalib {
         #
         $sys add_action sample_position {
             my sample_position
-            timerTick [expr {$sample_count*$ms_per_sample+100}]
+            timerTick [expr {$sample_count*$ms_per_sample+500}]
         }
 
         $sys add_transition sample_position {
@@ -322,23 +323,4 @@ namespace eval emcalib {
         return $sys
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
