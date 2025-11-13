@@ -14,6 +14,11 @@ namespace eval planko::bounce {
                 ball_color {{0.0 1.0 1.0}}
             }
         }
+        { original {
+                plank_restitution {0.3}
+                ball_color {{0.0 1.0 1.0}}
+            }
+        }
         { cool {
                 plank_restitution {0.4}
                 ball_color {{0.6 1.0 0.3}}
@@ -130,13 +135,13 @@ namespace eval planko::bounce {
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
-	perception {
+        perception {
             description "perception on trials with different balls"
             loader_proc setup_perception
             loader_options {
                 nr { 4 6 8 10 20 25 30 60 100 }
                 nplanks { {4 4} {8 8} {4+8 {4 8}} }
-		show_planks { {yes 1} {no 0} }
+                show_planks { {yes 1} {no 0} }
                 board_params {
                     { jittered {
                             ball_jitter_x 10
@@ -158,7 +163,7 @@ namespace eval planko::bounce {
                 planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
-        }	
+        }
     }
 
     set variants [subst $variants]
