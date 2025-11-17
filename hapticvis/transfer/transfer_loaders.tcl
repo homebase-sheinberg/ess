@@ -82,7 +82,7 @@ namespace eval hapticvis::transfer {
             dl_local target_choice_center [dl_choose stimdg:choice_centers [dl_pack $target_loc]]
             dl_local choice_loc_ids [dl_fromto 0 [dl_repeat $n_choices $n]]
             dl_local dist_locs [dl_select $choice_loc_ids [dl_noteq $choice_loc_ids $target_loc]]
-            print "Distractor Locations: $dist_locs"
+            print "Distractor Locations: $dist_locs:0"
             
             # pull out all non-target choice locations
             dl_local dist_choice_centers [dl_choose stimdg:choice_centers $dist_locs]
