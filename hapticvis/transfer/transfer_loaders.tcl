@@ -89,7 +89,7 @@ namespace eval hapticvis::transfer {
 
             # choose random index to select dist center randomly
             dl_local dist_id [dl_irand $n [expr $n_choices-1]]
-            print "Distractor Locations: [dl_tcllist $dist_id]"
+            print "Distractor Locations: [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [expr $n_choices-1]]"
             dl_local dist_choice_center [dl_choose $dist_choice_centers [dl_pack $dist_id]]
 
             # for half presentations show actual location for other half not
