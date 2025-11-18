@@ -216,7 +216,7 @@ namespace eval hapticvis::transfer {
                 n_per_set { 4 }
                 shape_scale { 3 4 5 6 }
                 noise_type { none }
-                n_rep { 6 3 9 12 18 21 }
+                n_rep { 6 1 2 12 18 24 }
                 rotations {
                     {three {60 180 300}} {single {180}}
                 }
