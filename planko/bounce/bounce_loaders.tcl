@@ -101,6 +101,9 @@ namespace eval planko::bounce {
                 dg_delete $w
             }
 
+	    # full simulation
+	    dl_set $g:perception_only [dl_zeros $n_obs]
+	    
             # add ball color(s) to stimdg
             # each world is repeated so this is correct
             dl_local colors [dl_slist {*}[dict get $ball_params ball_color]]
@@ -115,6 +118,20 @@ namespace eval planko::bounce {
             return $g
         }
 
+	$s add_method setup_perception { nr nplanks show_planks board_params ball_params } {
+	    set g [my setup_multiworld $nr $nplanks $board_params $ball_params]
+	    # perception only
+	    set n [dl_length $g:id]
+	    dl_set $g:perception_only [dl_ones $n]
+
+	    # adjust plank visibility (should move to planko packa
+	    dl_set $g:show_planks [dl_repeat $show_planks $n]
+	    dl_local is_plank [dl_regmatch $g:name plank*]
+	    dl_set $g:visible [dl_replace $g:visible $is_plank $show_planks]
+
+	    # set fix_color to reddish
+	    dl_set $g:fix_color [dl_repeat [dl_slist "0.8 0.2 0.1"] $n]
+	}
     }
 }
 

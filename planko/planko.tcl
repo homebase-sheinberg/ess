@@ -16,6 +16,10 @@ namespace eval planko {
         #                          System Parameters                         #
         ######################################################################
 
+        $sys add_param show_fixspot 0 variable bool
+        $sys add_param acquire_time 2000 time int
+        $sys add_param fixhold_time 500 time int
+
         $sys add_param interblock_time 1000 time int
         $sys add_param prestim_time 250 time int
 
@@ -32,6 +36,8 @@ namespace eval planko {
         $sys add_variable obs_count 0
         $sys add_variable cur_id 0
 
+        $sys add_variable perception_only
+
         $sys add_variable start_delay 0
         $sys add_variable stimtype 0
 
@@ -40,7 +46,6 @@ namespace eval planko {
 
         $sys add_variable response 0
         $sys add_variable first_time 1
-
 
         $sys add_variable side -1
         $sys add_variable resp -1
@@ -116,7 +121,35 @@ namespace eval planko {
             my prestim
         }
         $sys add_transition pre_stim {
+            if { [timerExpired] } {
+                if { $show_fixspot } { return fixon } { return stim_on }
+            }
+        }
+
+        #
+        # fixon
+        #
+        $sys add_action fixon {
+            my fixation_on
+            ::ess::evt_put FIXSPOT ON [now]
+            timerTick $acquire_time
+        }
+        $sys add_transition fixon {
+            if { [timerExpired] } { return abort }
+            if { [my acquired_fixspot] } { return fixhold }
+        }
+
+        #
+        # fixhold
+        #
+        $sys add_action fixhold {
+            ::ess::evt_put FIXATE IN [now]
+            timerTick $fixhold_time
+        }
+
+        $sys add_transition fixhold {
             if { [timerExpired] } { return stim_on }
+            if { [my out_of_start_win] } { return abort }
         }
 
         #
@@ -192,12 +225,15 @@ namespace eval planko {
         # feedback
         #
         $sys add_action feedback {
-            my feedback $resp $correct
-            timerTick $max_feedback_time
+            if { !$perception_only } {
+                set feedback_time [my feedback_time]
+                my feedback $resp $correct
+                timerTick $feedback_time
+            }
         }
 
         $sys add_transition feedback {
-            if { [timerExpired] || [my feedback_complete] } {
+            if { $perception_only || [timerExpired] || [my feedback_complete] } {
                 if { $correct } { return correct } { return incorrect }
             }
         }
@@ -263,6 +299,17 @@ namespace eval planko {
 
         $sys add_transition no_response {
             return post_trial
+        }
+
+        #
+        # abort
+        #
+        $sys add_action abort {
+            my fixation_off
+            ::ess::evt_put ENDTRIAL INCORRECT [now]
+        }
+        $sys add_transition abort {
+            return finish
         }
 
         #
@@ -362,9 +409,15 @@ namespace eval planko {
         $sys add_method stim_unhide {} {}
         $sys add_method feedback { resp correct } { print $resp/$correct }
         $sys add_method feedback_complete {} { return 0 }
+        $sys add_method feedback_time {} { return $max_feedback_time }
         $sys add_method reward {} {}
         $sys add_method noreward {} {}
         $sys add_method finale {} {}
+
+        $sys add_method fixation_on {} {}
+        $sys add_method acquired_fixspot {} { return 0 }
+        $sys add_method out_of_start_win {} { return 0 }
+        $sys add_method fixation_off {} {}
 
         $sys add_method responded {} { return 0 }
 

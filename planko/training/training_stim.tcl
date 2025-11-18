@@ -65,10 +65,6 @@ proc update_position { ball body start } {
 ##############################################################
 
 proc make_stims { trial } {
-
-    resetObjList ;# unload existing objects
-    glistInit 1 ;# initialize stimuli
-
     set dg stimdg
 
     set bworld [Box2D]
@@ -183,10 +179,28 @@ proc make_circle {} {
 }
 
 proc nexttrial { id } {
-    set ::curtrial $id
-    glistInit 1
+    glistInit 2
     resetObjList
+
+    set ::curtrial $id
     set ::world [make_stims $id]
+
+    set fix_color ".7 .7 .1"
+    set mg [metagroup]
+    set obj [polygon]
+    polycirc $obj 1
+    polycolor $obj {*}$fix_color
+    translateObj $obj 0 0
+    set fix_targ_r 0.2
+    scaleObj $obj [expr {2*$fix_targ_r}]; # diameter is 2r
+    set center [polygon]
+    polycirc $center 1
+    polycolor $center 0 0 0
+    translateObj $center 0 0
+    scaleObj $center [expr {0.3*2*$fix_targ_r}];
+    metagroupAdd $mg $obj
+    metagroupAdd $mg $center
+    glistAddObject $mg 1
 }
 
 proc show_response { resp } {
@@ -226,6 +240,16 @@ proc stimoff {} {
     redraw
 }
 
+proc fixon {} {
+    glistSetCurGroup 1
+    glistSetVisible 1
+    redraw
+}
+
+proc fixoff {} {
+    glistSetVisible 0; redraw;
+}
+
 proc plankson {} {
     foreach p $::planks {
         setVisible $p 1
@@ -247,5 +271,3 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
-
-

@@ -14,6 +14,7 @@ namespace eval planko::bounce {
         $s add_param rmt_host $::ess::rmt_host stim ipaddr
         $s add_param juice_ml .6 variable float
         $s add_param save_ems 0 variable bool
+        $s add_param use_joystick 0 variable int
         $s add_param use_buttons 0 variable int
         $s add_param left_button 24 variable int
         $s add_param right_button 25 variable int
@@ -22,6 +23,11 @@ namespace eval planko::bounce {
         $s add_variable touch_last 0
         $s add_variable touch_x
         $s add_variable touch_y
+
+        $s add_param fix_radius 3.0 variable float
+        $s add_variable fix_targ_x
+        $s add_variable fix_targ_y
+        $s add_variable fix_targ_r
 
         $s set_protocol_init_callback {
             ::ess::init
@@ -34,6 +40,9 @@ namespace eval planko::bounce {
 
             # initialize touch processor
             ::ess::touch_init
+
+            # initialize eye movements
+            ::ess::em_init
 
             # listen for planko/complete event
             dservAddExactMatch planko/complete
@@ -59,6 +68,12 @@ namespace eval planko::bounce {
             if { $save_ems } {
                 # initialize eye movements
                 ::ess::em_init
+            }
+
+            if { $use_joystick } {
+                # initialize joystick (right sided) here
+                dservSet joystick/lines { 1 19 2 23 4 20 8 22 }
+                ::ess::joystick_init
             }
 
             # wait until variants have potentially changed buttons
@@ -125,7 +140,11 @@ namespace eval planko::bounce {
             if { $use_buttons } {
                 if { [dservGet gpio/input/$left_button] } { return 1 }
                 if { [dservGet gpio/input/$right_button] } { return 2 }
-                return 0
+            }
+            if { $use_joystick } {
+                set joy_position [dservGet ess/joystick/value]
+                if { $joy_position == 4 } { return 1 }
+                if { $joy_position == 8 } { return 2 }
             }
             return 0
         }
@@ -140,6 +159,9 @@ namespace eval planko::bounce {
 
                 set side [dl_get stimdg:side $cur_id]
 
+                # control timing of playback
+                set perception_only [dl_get stimdg:perception_only $cur_id]
+
                 foreach v "lcatcher_x lcatcher_y rcatcher_x rcatcher_y" {
                     set $v [dl_get stimdg:$v $cur_id]
                 }
@@ -149,6 +171,14 @@ namespace eval planko::bounce {
                 ::ess::touch_reset
                 ::ess::touch_win_set 0 $lcatcher_x $lcatcher_y 2 0
                 ::ess::touch_win_set 1 $rcatcher_x $rcatcher_y 2 0
+
+                if { $show_fixspot } {
+                    set fix_targ_x 0
+                    set fix_targ_y 0
+                    set fix_targ_r 0.2
+                    ::ess::em_region_off 0
+                    ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 0
+                }
 
                 dservSet planko/complete waiting
 
@@ -171,10 +201,29 @@ namespace eval planko::bounce {
             soundPlay 1 70 200
         }
 
+        $s add_method fixation_on {} {
+            rmtSend "!fixon"
+            ::ess::em_region_on 0
+            ::ess::evt_put EMPARAMS CIRC [now] 0 $fix_targ_x $fix_targ_y $fix_targ_r
+        }
+
+        $s add_method fixation_off {} {
+            rmtSend "!fixoff"
+        }
+
+        $s add_method acquired_fixspot {} {
+            return [::ess::em_eye_in_region 0]
+        }
+
+        $s add_method out_of_start_win {} {
+            return [expr ![::ess::em_eye_in_region 0]]
+        }
+
         $s add_method stim_on {} {
+            ::ess::em_region_off 0
             ::ess::touch_region_on 0
             ::ess::touch_region_on 1
-            rmtSend "!stimon"
+            if { $perception_only } { rmtSend "!stimon_and_drop" } { rmtSend "!stimon" }
         }
 
         $s add_method stim_off {} {
@@ -253,7 +302,7 @@ namespace eval planko::bounce {
                 evtSetScript 28 0 [namespace current]::stimoff
                 evtSetScript 37 -1 [namespace current]::response
                 evtSetScript 49 -1 [namespace current]::feedback
-                
+
                 clearwin
                 setbackground [dlg_rgbcolor 10 10 10]
                 setwindow -8 -8 8 8
@@ -308,10 +357,6 @@ namespace eval planko::bounce {
         }
     }
 }
-
-
-
-
 
 
 
