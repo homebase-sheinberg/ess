@@ -103,7 +103,7 @@ namespace eval hapticvis::transfer {
             dl_local cue_center [dl_replace $target_choice_center $use_dist $dist_choice_center]
             dl_set stimdg:cue_valid [dl_not $use_dist]
             dl_set stimdg:cued_choices $cue_center
-            # print "Cued Choices: [dl_tcllist $cue_center]"
+            print "Cued Choices: [dl_tcllist $cue_center]"
 
             # now add left right choice options
             set lr_ecc 6.0
