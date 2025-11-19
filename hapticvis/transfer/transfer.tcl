@@ -452,7 +452,7 @@ namespace eval hapticvis::transfer {
 
         $s add_method highlight_response_lr {} {
             set p [dservGet ess/joystick/position]
-            #::ess::evt_put DECIDE SELECT [now] $p
+            ::ess::evt_put DECIDE SELECT [now] $p
             rmtSend "highlight_response_lr $p"
         }
 
