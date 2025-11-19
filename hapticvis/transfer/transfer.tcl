@@ -641,7 +641,7 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
-                ::ess::evt_put DECIDE SELECT [now] $cur_position
+                ::ess::evt_put DECIDE SELECT [now] $r
                 if { $task == "learning" } {
                     if { ($cue_valid == 1 && $r == 1) || ($cue_valid == 0 && $r == 0) } {
                         set slot [expr $target_slot-1]
