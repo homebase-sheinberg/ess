@@ -548,6 +548,7 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
+                ::ess::evt_put DECIDE SELECT [now] [dict keys [dict filter $mapdict value $r]]
                 if { $task == "learning" } {
                     if { $have_feedback == 1 } {
                         if { $r == [expr {$target_slot-1}] } {
