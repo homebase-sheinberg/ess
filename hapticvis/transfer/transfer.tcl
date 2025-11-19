@@ -624,7 +624,6 @@ namespace eval hapticvis::transfer {
                 # only if the button is pressed should we count as response
                 if { [dservGet ess/joystick/button] } {
                     set made_selection 1
-                    ::ess::evt_put DECIDE SELECT [now] $cur_position
                 } else {
                     if { $updated_position } { set r -2 } { set r -1 }
                 }
@@ -642,6 +641,7 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
+                ::ess::evt_put DECIDE SELECT [now] $cur_position
                 if { $task == "learning" } {
                     if { ($cue_valid == 1 && $r == 1) || ($cue_valid == 0 && $r == 0) } {
                         set slot [expr $target_slot-1]
