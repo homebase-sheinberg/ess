@@ -51,8 +51,13 @@ namespace eval hapticvis::transfer {
             dl_local dist_choice_centers [dl_choose stimdg:choice_centers $dist_locs]
 
             # choose random index to select dist center randomly
+            if { $n_rep == 2 } { # have the invalid cues be randomly chosen
+              dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            } else { # have each type of invalid cue represented an equal amount of times
+              dl_local dist_id [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]] [expr {$n / [dl_length [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]]]}]]
+            }
             # dl_local dist_id [dl_irand $n [expr $n_choices-1]]
-            dl_local dist_id [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]] [expr {$n_choices*2}]]
+            # dl_local dist_id [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]] [expr {$n_choices*2}]]
             dl_local dist_choice_center [dl_choose $dist_choice_centers [dl_pack $dist_id]]
 
             # for half presentations show actual location for other half not
