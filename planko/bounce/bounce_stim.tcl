@@ -47,15 +47,15 @@ proc update_position { ball body start } {
     if { $i != "" } {
         set x [dl_get stimdg:ball_x:$curtrial $i]
         set y [dl_get stimdg:ball_y:$curtrial $i]
-        Box2D_setTransform $::world $body $x $y 
+        Box2D_setTransform $::world $body $x $y
     }
     if { ![setObjProp $ball landed] } {
         if { [expr {$now > [dl_get stimdg:land_time $curtrial]}] } {
             setObjProp $ball landed 1
             set side [dl_get stimdg:side $curtrial]
             if { $side } { set hit right } { set hit left }
-             qpcs::dsSet $::dservhost planko/complete $hit
-        }        
+            qpcs::dsSet $::dservhost planko/complete $hit
+        }
     }
 }
 
@@ -83,7 +83,7 @@ proc make_stims { trial } {
     }
 
     for { set i 0 } { $i < $n } { incr i } {
-        foreach v "name shape type tx ty sx sy angle restitution" {
+        foreach v "name shape visible type tx ty sx sy angle restitution" {
             set $v [dl_get $dg:$v:$trial $i]
         }
         if { $shape == "Box" } {
@@ -91,13 +91,14 @@ proc make_stims { trial } {
         } elseif { $shape == "Circle" } {
             set body [create_circle $bworld $name $type $tx $ty $sx $angle $ball_color]
         }
+        setVisible $body $visible
         Box2D_setRestitution $bworld [setObjProp $body body] $restitution
 
         glistAddObject $body 0
 
         # track this so we can set in motion
-        if { $name == "ball" } { 
-            set ::ball $body 
+        if { $name == "ball" } {
+            set ::ball $body
             setObjProp $body landed 0
         }
 
@@ -183,7 +184,12 @@ proc nexttrial { id } {
     set ::curtrial $id
     set ::world [make_stims $id]
 
-    set fix_color ".7 .7 .1"
+    if { [dl_exists stimdg:fix_color] } {
+        set fix_color [dl_get stimdg:fix_color $id]
+    } else {
+        set fix_color ".7 .7 .1"
+    }
+
     set mg [metagroup]
     set obj [polygon]
     polycirc $obj 1
@@ -207,9 +213,9 @@ proc show_response { resp } {
     if { $simulate } {
         Box2D_setBodyType $::world $body 2; # dynamic
     } else {
-        Box2D_setBodyType $::world $body 1; # kinematic 
+        Box2D_setBodyType $::world $body 1; # kinematic
         addPreScript $::ball "update_position $::ball $body $::StimTime"
-    } 
+    }
     if { $resp == 0 } { set c $::left_catcher } { set c $::right_catcher }
     set color "0.7 0.7 0.7"
     foreach p $c {
@@ -241,9 +247,9 @@ proc stimon_and_drop {} {
     if { $simulate } {
         Box2D_setBodyType $::world $body 2; # dynamic
     } else {
-        Box2D_setBodyType $::world $body 1; # kinematic 
+        Box2D_setBodyType $::world $body 1; # kinematic
         addPreScript $::ball "update_position $::ball $body $::StimTime"
-    } 
+    }
     redraw
 }
 

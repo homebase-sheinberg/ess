@@ -18,8 +18,7 @@ namespace eval planko::training {
                 params { { defaults {} } }
             }
             init {
-                #planko::enable_threading 4
-                planko::disable_threading
+                planko::enable_threading 4
             }
             deinit {
                 planko::disable_threading

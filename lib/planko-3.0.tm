@@ -4,6 +4,9 @@
 # planko-3.0.tm
 #   Enhanced package for generating planko boards with threading support
 #
+
+puts "loading planko package"
+
 package provide planko 3.0
 
 package require box2d
@@ -370,6 +373,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_slist ball]
         dl_set $g:shape [dl_slist Circle]
+	dl_set $g:visible [dl_ilist 1]
         dl_set $g:type $b2_staticBody
         dl_set $g:tx [dl_flist $params(ball_xpos)]
         dl_set $g:ty [dl_flist $params(ball_ypos)]
@@ -392,6 +396,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_slist ${name}_b ${name}_r ${name}_l]
         dl_set $g:shape [dl_repeat [dl_slist Box] 3]
+	dl_set $g:visible [dl_repeat [dl_ilist 1] 3]
         dl_set $g:type [dl_repeat $b2_staticBody 3]
         dl_set $g:tx [dl_flist $tx [expr {$tx+2.5}] [expr {$tx-2.5}]]
         dl_set $g:ty [dl_flist $y $ty $ty]
@@ -414,6 +419,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_slist ${name}]
         dl_set $g:shape [dl_slist Box]
+	dl_set $g:visible [dl_ilist 1]
         dl_set $g:type $b2_staticBody
         dl_set $g:tx [dl_flist $tx]
         dl_set $g:ty [dl_flist $y]
@@ -456,6 +462,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_paste [dl_repeat [dl_slist plank] $n] [dl_fromto 0 $n]]
         dl_set $g:shape [dl_repeat [dl_slist Box] $n]
+	dl_set $g:visible [dl_ones $n]
         dl_set $g:type [dl_repeat $b2_staticBody $n]
         dl_set $g:tx $tx
         dl_set $g:ty $ty
@@ -502,6 +509,11 @@ namespace eval planko {
             foreach v "name shape type tx ty sx sy angle restitution" {
                 set $v [dl_get $dg:$v $i]
             }
+	    if { [dl_exists $dg:visible] } {
+		set visible [dl_get $dg:visible $i]
+	    } else {
+		set visible 1
+	    }
 
             if { $shape == "Box" } {
                 set body [box2d::createBox $world $name $type $tx $ty $sx $sy $angle]
@@ -661,7 +673,7 @@ namespace eval planko {
 
     proc pack_world { g } {
         # these are columns that are lists for each world
-        set cols "name shape type tx ty sx sy angle restitution ball_t ball_x ball_y contact_t contact_bodies"
+        set cols "name shape visible type tx ty sx sy angle restitution ball_t ball_x ball_y contact_t contact_bodies"
 
         # put the lists into a list of lists so we can append worlds together
         foreach c $cols {
@@ -955,7 +967,7 @@ namespace eval planko {
 
     proc get_world { dg trial } {
 	set w [dg_create]
-	set vars "name shape type tx ty sx sy angle restitution contact_t contact_bodies ball_t ball_x ball_y"
+	set vars "name shape visible type tx ty sx sy angle restitution contact_t contact_bodies ball_t ball_x ball_y"
 	foreach l $vars {
 	    dl_set $w:$l $dg:$l:$trial
 	}

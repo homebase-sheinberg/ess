@@ -51,7 +51,13 @@ namespace eval hapticvis::transfer {
             dl_local dist_choice_centers [dl_choose stimdg:choice_centers $dist_locs]
 
             # choose random index to select dist center randomly
-            dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            if { $n_rep == 2 } { # have the invalid cues be randomly chosen
+              dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            } else { # have each type of invalid cue represented an equal amount of times
+              dl_local dist_id [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]] [expr {$n / [dl_length [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]]]}]]
+            }
+            # dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            # dl_local dist_id [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]] [expr {$n_choices*2}]]
             dl_local dist_choice_center [dl_choose $dist_choice_centers [dl_pack $dist_id]]
 
             # for half presentations show actual location for other half not
@@ -82,11 +88,23 @@ namespace eval hapticvis::transfer {
             dl_local target_choice_center [dl_choose stimdg:choice_centers [dl_pack $target_loc]]
             dl_local choice_loc_ids [dl_fromto 0 [dl_repeat $n_choices $n]]
             dl_local dist_locs [dl_select $choice_loc_ids [dl_noteq $choice_loc_ids $target_loc]]
+            # print "Distractor Locations: [dl_tcllist $dist_locs]"
+            # print "Number of Trials: $n"
+            
             # pull out all non-target choice locations
             dl_local dist_choice_centers [dl_choose stimdg:choice_centers $dist_locs]
 
             # choose random index to select dist center randomly
-            dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            if { $n_rep == 2 } { # have the invalid cues be randomly chosen
+              dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            } else { # have each type of invalid cue represented an equal amount of times
+              dl_local dist_id [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]] [expr {$n / [dl_length [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]]]}]]
+            }
+            # dl_local dist_id [dl_irand $n [expr $n_choices-1]]
+            # dl_local dist_id [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]] [expr {$n / [dl_length [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]]]}]]
+            # print "Length no replication: [dl_length [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [llength $rotations]]]"
+            # print "Test Distractor Locations: [dl_tcllist [dl_replicate [dl_repeat [dl_fromto 0 [expr $n_choices-1]] [expr $n_choices-1]] [expr {$n_choices*2}]]]"
+            #print "Current Distractor Locations: [dl_tcllist $dist_id]"
             dl_local dist_choice_center [dl_choose $dist_choice_centers [dl_pack $dist_id]]
 
             # for half presentations show actual location for other half not
@@ -95,6 +113,7 @@ namespace eval hapticvis::transfer {
             dl_local cue_center [dl_replace $target_choice_center $use_dist $dist_choice_center]
             dl_set stimdg:cue_valid [dl_not $use_dist]
             dl_set stimdg:cued_choices $cue_center
+            #print "Cued Choices: [dl_tcllist $cue_center]"
 
             # now add left right choice options
             set lr_ecc 6.0

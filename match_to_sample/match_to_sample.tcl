@@ -170,10 +170,8 @@ namespace eval match_to_sample {
 	
 	$sys add_transition response {
 	    if { [my response_correct] } {
-		set sample_pre_time 0
 		return correct
 	    } else {
-		set sample_pre_time 500
 		return incorrect
 	    }
 	}
