@@ -103,8 +103,8 @@ namespace eval emcalib::9point {
                 ::ess::em_sampler_configure $sample_count
                 ::ess::em_region_off 0
                 ::ess::em_region_off 1
-                ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 0
-                ::ess::em_fixwin_set 1 $jump_targ_x $jump_targ_y $fix_radius 0
+                ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 
+                ::ess::em_fixwin_set 1 $jump_targ_x $jump_targ_y $fix_radius 
 
                 rmtSend "nexttrial $stimtype"
             }
@@ -206,7 +206,7 @@ namespace eval emcalib::9point {
                 variable calib_x; variable calib_y
                 variable cur_x; variable cur_y
                 lassign $data calib_x calib_y
-                set msg [format "%.0f %.0f" $calib_x $calib_y]
+                set msg [format "%.2f %.2f" $calib_x $calib_y]
                 clearwin
                 set white [dlg_rgbcolor 200 200 200]
                 dlg_text $cur_x $cur_y [list $msg] -size 16 -just 0 -color $white
