@@ -40,15 +40,7 @@ namespace eval video::play-or-skip {
             dservAddExactMatch video/complete
             dpointSetScript video/complete ess::do_update
 
-            soundReset
-            soundSetVoice 81 0 0
-            soundSetVoice 57 17 1
-            soundSetVoice 60 0 2
-            soundSetVoice 42 0 3
-            soundSetVoice 21 0 4
-            soundSetVoice 8 0 5
-            soundSetVoice 113 100 6
-            foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
+	    ::ess::sound_init
         }
 
         $s set_protocol_deinit_callback {
@@ -133,7 +125,7 @@ namespace eval video::play-or-skip {
         }
 
         $s add_method prestim {} {
-            soundPlay 1 70 200
+            ::ess::sound_play 1 70 200
         }
 
         $s add_method show_next_video {} {
@@ -163,7 +155,7 @@ namespace eval video::play-or-skip {
         }
 
         $s add_method reward {} {
-            soundPlay 3 70 70
+            ::ess::sound_play 3 70 70
             ::ess::reward $juice_ml
             ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
         }
@@ -173,7 +165,7 @@ namespace eval video::play-or-skip {
         }
 
         $s add_method finale {} {
-            soundPlay 6 60 400
+            ::ess::sound_play 6 60 400
         }
 
         $s add_method play {} {
