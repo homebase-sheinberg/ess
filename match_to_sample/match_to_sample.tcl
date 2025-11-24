@@ -168,12 +168,10 @@ namespace eval match_to_sample {
 	    ::ess::evt_put CHOICES OFF [now] 
 	}
 	
-  $sys add_transition response {
+	$sys add_transition response {
 	    if { [my response_correct] } {
-		set sample_pre_time 0
 		return correct
 	    } else {
-		set sample_pre_time 500
 		return incorrect
 	    }
 	}
