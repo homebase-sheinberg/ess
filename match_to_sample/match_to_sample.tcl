@@ -16,11 +16,11 @@ namespace eval match_to_sample {
 	#                          System Parameters                         #
 	######################################################################
 	
-	$sys add_param start_delay          0      time int
-	$sys add_param interblock_time   1000      time int
-	$sys add_param sample_pre_time      0      time int
-	$sys add_param sample_time      15000      time int
-	$sys add_param delay_time        1000      time int
+	$sys add_param start_delay         0      time int
+	$sys add_param interblock_time  1000      time int
+	$sys add_param sample_pre_time     0      time int
+	$sys add_param sample_time      700      time int; # comment
+	$sys add_param delay_time       1000      time int
 	
 	$sys add_param response_timeout 10000      time int
 	
@@ -106,31 +106,84 @@ namespace eval match_to_sample {
 	}
 	
 	#
-	# sample_on
-	#
-	$sys add_action sample_on {
-	    my sample_on
-	    ::ess::evt_put STIMTYPE STIMID [now] $stimtype	
-        ::ess::evt_put SAMPLE ON [now] 
-	    timerTick $sample_time
-	}
+	# sample_on modified for 100 on 100 off. 
+  #
+  # sample_on  (FIRST ON, 150 ms)
+  #
+  $sys add_action sample_on {
+      my sample_on
+      ::ess::evt_put SAMPLE ON [now]
+      ::ess::evt_put STIMTYPE STIMID [now] $stimtype
+      timerTick 150
+  }
+  $sys add_transition sample_on {
+      if { [timerExpired] } { return sample_off }
+  }
+  
+  #
+  # sample_off (FIRST OFF, 100 ms)
+  #
+  $sys add_action sample_off {
+      my sample_off
+      ::ess::evt_put SAMPLE OFF [now]
+      timerTick 100
+  }
+  $sys add_transition sample_off {
+      if { [timerExpired] } { return sample_on2 }
+  }
+  
+  #
+  # sample_on2 (SECOND ON, 150 ms)
+  #
+  $sys add_action sample_on2 {
+      my sample_on
+      ::ess::evt_put SAMPLE ON [now]
+      ::ess::evt_put STIMTYPE STIMID [now] $stimtype
+      timerTick 150
+  }
+  $sys add_transition sample_on2 {
+      if { [timerExpired] } { return sample_off2 }
+  }
+  
+  #
+  # sample_off2 (SECOND OFF, 100 ms)
+  #
+  $sys add_action sample_off2 {
+      my sample_off
+      ::ess::evt_put SAMPLE OFF [now]
+      timerTick 100
+  }
+  $sys add_transition sample_off2 {
+      if { [timerExpired] } { return sample_on3 }
+  }
+  
+  #
+  # sample_on3 (THIRD ON, 150 ms)
+  #
+  $sys add_action sample_on3 {
+      my sample_on
+      ::ess::evt_put SAMPLE ON [now]
+      ::ess::evt_put STIMTYPE STIMID [now] $stimtype
+      timerTick 150
+  }
+  $sys add_transition sample_on3 {
+      if { [timerExpired] } { return sample_off_final }
+  }
+  
+  #
+  # sample_off_final (FINAL OFF, 30 ms, then choices) 
+  #
+  $sys add_action sample_off_final {
+      my sample_off
+      ::ess::evt_put SAMPLE OFF [now]
+      timerTick 30
+  }
+  $sys add_transition sample_off_final {
+      if { [timerExpired] } { return choices_on }
+  }
+
 	
-	$sys add_transition sample_on {
-	    if { [timerExpired] } { return sample_off }
-	}
 	
-	#
-	# sample_off
-	#
-	$sys add_action sample_off {
-	    my sample_off
-	    ::ess::evt_put SAMPLE OFF [now] 
-	    timerTick $delay_time
-	}
-	
-	$sys add_transition sample_off {
-	    if { [timerExpired] } { return choices_on }
-	}
 	
 	#
 	# choices_on
@@ -320,6 +373,3 @@ namespace eval match_to_sample {
 	return $sys
     }
 }
-
-
-

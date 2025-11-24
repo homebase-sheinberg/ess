@@ -36,8 +36,15 @@ namespace eval match_to_sample::phd {
 	    # configure juice channel pin
 	    ::ess::juicer_init
 
-	    # configure sound module
-	    ::ess::sound_init
+	    soundReset
+	    soundSetVoice 81 0    0
+	    soundSetVoice 57 17   1
+	    soundSetVoice 60 0    2
+	    soundSetVoice 42 0    3
+	    soundSetVoice 21 0    4
+	    soundSetVoice 8  0    5
+	    soundSetVoice 113 100 6
+	    foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
 	}
 	    
 	$s set_protocol_deinit_callback {
@@ -118,7 +125,7 @@ namespace eval match_to_sample::phd {
 
 	
 	$s add_method presample {} {
-	    ::ess::sound_play 1 70 200
+	    soundPlay 1 70 200
 	}
 
 	$s add_method haptic_show { id } {
@@ -167,17 +174,17 @@ namespace eval match_to_sample::phd {
 	}
 
 	$s add_method reward {} {
-	    ::ess::sound_play 3 70 70
+	    soundPlay 3 70 70
 	    ::ess::reward $juice_ml
 	    ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
 	}
 
 	$s add_method noreward {} {
-	    ::ess::sound_play 4 90 300
+	    soundPlay 4 90 300
 	}
 
 	$s add_method finale {} {
-	    ::ess::sound_play 6 60 400
+	    soundPlay 6 60 400
 	}
 
 	$s add_method response_correct {} {
