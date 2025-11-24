@@ -48,6 +48,12 @@ namespace eval emcalib::9point {
             dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
             set obs_count 0
             rmtSend reset
+
+	    # reset online values
+	    set target_x {}
+	    set target_y {}
+	    set raw_x {}
+	    set raw_y {}
         }
 
         $s set_start_callback {
@@ -153,7 +159,12 @@ namespace eval emcalib::9point {
         }
 
         $s add_method store_calibration {} {
-            ::ess::evt_put EMPARAMS CALIB [now] {*}[::ess::em_sampler_vals]
+	    lassign [::ess::em_sampler_vals] x y
+            ::ess::evt_put EMPARAMS CALIB [now] $x $y
+	    lappend target_x $jump_targ_x
+	    lappend target_y $jump_targ_y
+	    lappend raw_x $x
+	    lappend raw_y $y
         }
 
         $s add_method reward {} {
@@ -170,6 +181,7 @@ namespace eval emcalib::9point {
 
         $s add_method finale {} {
             ::ess::sound_play 6 60 400
+	    send em [list em::do_fit $raw_x $raw_y $target_x $target_y]
         }
 
         $s set_viz_config {

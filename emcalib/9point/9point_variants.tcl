@@ -12,7 +12,7 @@ namespace eval emcalib::9point {
             description "standard 9 point"
             loader_proc basic_calib
             loader_options {
-                nr { 2 4 }
+                nr { 2 1 4 }
                 radius { 0.2 0.3 }
             }
             init { rmtSend "setBackground 10 10 10" }
