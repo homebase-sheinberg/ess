@@ -106,15 +106,13 @@ namespace eval match_to_sample {
 	}
 	
 	#
-	# sample_on modified for 100 on 100 off. 
-  #
-  # sample_on  (FIRST ON, 150 ms)
+  # sample_on  (FIRST ON, 120 ms)
   #
   $sys add_action sample_on {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 150
+      timerTick 120
   }
   $sys add_transition sample_on {
       if { [timerExpired] } { return sample_off }
@@ -133,13 +131,13 @@ namespace eval match_to_sample {
   }
   
   #
-  # sample_on2 (SECOND ON, 150 ms)
+  # sample_on2 (SECOND ON, 120 ms)
   #
   $sys add_action sample_on2 {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 150
+      timerTick 120
   }
   $sys add_transition sample_on2 {
       if { [timerExpired] } { return sample_off2 }
@@ -158,13 +156,13 @@ namespace eval match_to_sample {
   }
   
   #
-  # sample_on3 (THIRD ON, 150 ms)
+  # sample_on3 (THIRD ON, 120 ms)
   #
   $sys add_action sample_on3 {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 150
+      timerTick 120
   }
   $sys add_transition sample_on3 {
       if { [timerExpired] } { return sample_off_final }
@@ -182,10 +180,6 @@ namespace eval match_to_sample {
       if { [timerExpired] } { return choices_on }
   }
 
-	
-	
-	
-	#
 	# choices_on
 	#
 	$sys add_action choices_on {
