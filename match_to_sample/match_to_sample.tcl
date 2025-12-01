@@ -119,12 +119,12 @@ namespace eval match_to_sample {
   }
   
   #
-  # sample_off (FIRST OFF, 100 ms)
+  # sample_off (FIRST OFF, 120 ms)
   #
   $sys add_action sample_off {
       my sample_off
       ::ess::evt_put SAMPLE OFF [now]
-      timerTick 100
+      timerTick 120
   }
   $sys add_transition sample_off {
       if { [timerExpired] } { return sample_on2 }
@@ -144,12 +144,12 @@ namespace eval match_to_sample {
   }
   
   #
-  # sample_off2 (SECOND OFF, 100 ms)
+  # sample_off2 (SECOND OFF, 120 ms)
   #
   $sys add_action sample_off2 {
       my sample_off
       ::ess::evt_put SAMPLE OFF [now]
-      timerTick 100
+      timerTick 120
   }
   $sys add_transition sample_off2 {
       if { [timerExpired] } { return sample_on3 }
@@ -169,12 +169,12 @@ namespace eval match_to_sample {
   }
   
   #
-  # sample_off_final (FINAL OFF, 30 ms, then choices) 
+  # sample_off_final (FINAL OFF, 50 ms, then choices) 
   #
   $sys add_action sample_off_final {
       my sample_off
       ::ess::evt_put SAMPLE OFF [now]
-      timerTick 30
+      timerTick 50
   }
   $sys add_transition sample_off_final {
       if { [timerExpired] } { return choices_on }
