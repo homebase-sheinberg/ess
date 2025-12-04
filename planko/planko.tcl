@@ -17,6 +17,7 @@ namespace eval planko {
         ######################################################################
 
         $sys add_param show_fixspot 0 variable bool
+        $sys add_param min_response 250 variable int
         $sys add_param acquire_time 2000 time int
         $sys add_param fixhold_time 500 time int
 
@@ -26,6 +27,7 @@ namespace eval planko {
         $sys add_param response_timeout 25000 time int
         $sys add_param max_feedback_time 8000 time int
         $sys add_param post_feedback_time 1000 time int
+        $sys add_param incorrect_delay_time 0 time int
 
         $sys add_param stimup_time -1 time int
 
@@ -43,6 +45,8 @@ namespace eval planko {
 
         $sys add_variable stim_timer 1
         $sys add_variable stim_up 0
+
+        $sys add_variable min_response_timer 2
 
         $sys add_variable response 0
         $sys add_variable first_time 1
@@ -176,6 +180,7 @@ namespace eval planko {
         # wait_for_response
         #
         $sys add_action wait_for_response {
+            timerTick $min_response_timer $min_response
         }
 
         $sys add_transition wait_for_response {
@@ -184,9 +189,11 @@ namespace eval planko {
                 return stim_hide
             }
 
-            set response [my responded]
-            if { $response != 0 } { return response }
-
+            # only accept responses after min_response ms
+            if { [timerExpired $min_response_timer] } {
+                set response [my responded]
+                if { $response != 0 } { return response }
+            }
         }
 
         #
@@ -317,10 +324,15 @@ namespace eval planko {
         #
         $sys add_action post_trial {
             ::ess::save_trial_info $correct $rt $stimtype
+            if { !$correct } {
+                timerTick $incorrect_delay_time
+            }
         }
 
         $sys add_transition post_trial {
-            return finish
+            if { [timerExpired] } {
+                return finish
+            }
         }
 
         #
