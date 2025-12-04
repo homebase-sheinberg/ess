@@ -139,7 +139,7 @@ namespace eval planko::bounce {
             description "perception on trials with different balls"
             loader_proc setup_perception
             loader_options {
-                nr { 4 6 8 10 20 25 30 60 100 }
+                nr { 4 6 8 10 20 25 30 60 100 200 }
                 nplanks { {4 4} {8 8} {4+8 {4 8}} }
                 show_planks { {yes 1} {no 0} }
                 board_params {
