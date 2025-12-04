@@ -132,6 +132,27 @@ namespace eval planko::bounce {
 	    # set fix_color to reddish
 	    dl_set $g:fix_color [dl_repeat [dl_slist "0.8 0.2 0.1"] $n]
 	}
+
+	$s add_method setup_biased_perception { nr nplanks keep_left keep_right show_planks board_params ball_params } {
+	    set g [my setup_multiworld $nr $nplanks $board_params $ball_params]
+	    # perception only
+	    set n [dl_length $g:id]
+	    dl_set $g:perception_only [dl_ones $n]
+
+	    # adjust plank visibility (should move to planko packa
+	    dl_set $g:show_planks [dl_repeat $show_planks $n]
+	    dl_local is_plank [dl_regmatch $g:name plank*]
+	    dl_set $g:visible [dl_replace $g:visible $is_plank $show_planks]
+
+	    # set fix_color to reddish
+	    dl_set $g:fix_color [dl_repeat [dl_slist "0.8 0.2 0.1"] $n]
+
+	    # now mark some trials as done to practice one side or other
+	    dl_local skip_left [dl_and [dl_eq stimdg:side 0] [dl_lt [dl_urand $n] $keep_left]]
+	    dl_local skip_right [dl_and [dl_eq stimdg:side 1] [dl_lt [dl_urand $n] $keep_right]]
+	    dl_local skip [dl_or $skip_left $skip_right]
+	    dl_set stimdg:remaining $skip
+	}
     }
 }
 
