@@ -168,7 +168,7 @@ namespace eval planko {
 	}
 
 	# put serialized dg into the variable "result"
-	dg_toString64 $g result
+	dg_toString $g result
 	dg_delete $g  ;# clean up on remote
 	return $result
     }
@@ -184,7 +184,7 @@ namespace eval planko {
 	}]
 	
 	set data [remoteEval $compute_host "send ess [list $ess_script]"]
-	return [dg_fromString64 $data]
+	return [dg_fromString $data]
     }
     
     proc generate_worlds_parallel { n d } {
