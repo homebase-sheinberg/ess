@@ -15,6 +15,7 @@ package require points
 
 namespace eval planko {
     variable params
+    variable compute_host ""    
     variable use_threading 0
     variable num_threads 4
     variable min_threading_batch 4
@@ -116,6 +117,11 @@ namespace eval planko {
         return [dict create enabled $use_threading threads $num_threads min_batch $min_threading_batch]
     }
 
+    proc set_compute_host { host } {
+        variable compute_host
+        set compute_host $host
+    }
+        
     proc create_worker_script {} {
 	return {
 	    # Setup worker thread environment (same as before)
@@ -151,6 +157,36 @@ namespace eval planko {
 	}
     }
 
+    proc generate_worlds_serialized { n d } {
+	variable use_threading
+	variable min_threading_batch
+	
+	if {$use_threading && $n >= $min_threading_batch} {
+	    set g [generate_worlds_parallel $n $d]
+	} else {
+	    set g [generate_worlds_serial $n $d]
+	}
+	
+	set result [dg_toString $g]
+	dg_delete $g  ;# clean up on remote
+	return $result
+    }
+    
+    proc generate_worlds_remote { n d } {
+	variable compute_host
+	variable num_threads
+	
+	set script [subst {
+	    package require dlsh
+	    package require planko
+	    planko::enable_threading $num_threads
+	    planko::generate_worlds_serialized $n [list $d]
+	}]
+	
+	set data [remoteEval $compute_host $script]
+	return [dg_fromString $data]
+    }
+    
     proc generate_worlds_parallel { n d } {
 	variable num_threads
 	
@@ -351,12 +387,13 @@ namespace eval planko {
 
     # Main world generation dispatcher
     proc generate_worlds { n d } {
+	variable compute_host
         variable use_threading
-        variable num_threads
         variable min_threading_batch
 
-        # Use threading if enabled and batch is large enough
-        if {$use_threading && $n >= $min_threading_batch } {
+        if { $compute_host ne "" } {
+            return [generate_worlds_remote $n $d]
+        } elseif { $use_threading && $n >= $min_threading_batch } {
             return [generate_worlds_parallel $n $d]
         } else {
             return [generate_worlds_serial $n $d]
