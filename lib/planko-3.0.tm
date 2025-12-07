@@ -166,8 +166,9 @@ namespace eval planko {
 	} else {
 	    set g [generate_worlds_serial $n $d]
 	}
-	
-	set result [dg_toString $g]
+
+	# put serialized dg into the variable "result"
+	dg_toString64 $g result
 	dg_delete $g  ;# clean up on remote
 	return $result
     }
@@ -176,15 +177,14 @@ namespace eval planko {
 	variable compute_host
 	variable num_threads
 	
-	set script [subst {
-	    package require dlsh
+	set ess_script [subst {
 	    package require planko
 	    planko::enable_threading $num_threads
 	    planko::generate_worlds_serialized $n [list $d]
 	}]
 	
-	set data [remoteEval $compute_host $script]
-	return [dg_fromString $data]
+	set data [remoteEval $compute_host "send ess [list $ess_script]"]
+	return [dg_fromString64 $data]
     }
     
     proc generate_worlds_parallel { n d } {
