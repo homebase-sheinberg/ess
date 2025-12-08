@@ -66,12 +66,14 @@ namespace eval planko {
     }
 
     # Threading configuration and management
-    proc enable_threading { } {
+    proc enable_threading { { threads {} } } {
         variable use_threading
         variable num_threads
 	variable compute_host
-	
-	if { $compute_host != "" } { set threads 64 } { set threads 4 }
+
+	if { $threads == {} } {
+	    if { $compute_host != "" } { set threads 64 } { set threads 4 }
+	}
 	     
         if {[catch {package require Thread}]} {
             puts "Warning: Thread package not available, falling back to serial generation"
@@ -182,7 +184,7 @@ namespace eval planko {
 	
 	set ess_script [subst {
 	    package require planko
-	    planko::enable_threading
+	    planko::enable_threading 64
 	    planko::generate_worlds_serialized $n [list $d]
 	}]
 	
