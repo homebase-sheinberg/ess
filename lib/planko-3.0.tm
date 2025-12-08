@@ -93,27 +93,6 @@ namespace eval planko {
         puts "Threading disabled"
     }
 
-    proc configure_threading { args } {
-        array set opts {
-            -threads 6
-            -min_batch_size 10
-            -enable auto
-        }
-        array set opts $args
-
-        variable num_threads $opts(-threads)
-        variable min_threading_batch $opts(-min_batch_size)
-
-        if {$opts(-enable) eq "auto"} {
-            return [enable_threading]
-        } elseif {$opts(-enable)} {
-            return [enable_threading]
-        } else {
-            disable_threading
-            return 0
-        }
-    }
-
     proc get_threading_info {} {
         variable use_threading
         variable num_threads

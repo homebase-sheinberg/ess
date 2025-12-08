@@ -72,10 +72,8 @@ namespace eval planko::bounce {
                 }
             }
             init {
-                planko::enable_threading
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
@@ -100,10 +98,8 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
@@ -128,10 +124,8 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
@@ -157,10 +151,8 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
@@ -188,10 +180,8 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
