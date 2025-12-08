@@ -103,9 +103,9 @@ namespace eval planko {
         variable min_threading_batch $opts(-min_batch_size)
 
         if {$opts(-enable) eq "auto"} {
-            return [enable_threading $num_threads]
+            return [enable_threading]
         } elseif {$opts(-enable)} {
-            return [enable_threading $num_threads]
+            return [enable_threading]
         } else {
             disable_threading
             return 0
@@ -182,7 +182,7 @@ namespace eval planko {
 	
 	set ess_script [subst {
 	    package require planko
-	    planko::enable_threading $num_threads
+	    planko::enable_threading
 	    planko::generate_worlds_serialized $n [list $d]
 	}]
 	
@@ -789,7 +789,7 @@ namespace eval planko {
         set serial_count [dl_length $serial_worlds:name]
 
         # Generate worlds with parallel mode
-        if {[enable_threading 4]} {
+        if {[enable_threading]} {
             puts "Generating $n worlds in parallel mode..."
             set start [clock milliseconds]
             set parallel_worlds [generate_worlds $n $test_params]
@@ -1112,7 +1112,7 @@ if {[catch {package require Thread} err]} {
 } else {
     puts "Thread package loaded successfully"
     # Now safe to enable threading
-    planko::enable_threading 4
+    planko::enable_threading
 }
 
 # until we track down crashes...
