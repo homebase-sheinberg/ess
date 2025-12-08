@@ -72,7 +72,7 @@ namespace eval planko::bounce {
                 }
             }
             init {
-                planko::enable_threading 4
+                planko::enable_threading
             }
             deinit {
                 planko::disable_threading
@@ -100,7 +100,7 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading 4
+                planko::enable_threading
             }
             deinit {
                 planko::disable_threading
@@ -128,7 +128,7 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading 4
+                planko::enable_threading
             }
             deinit {
                 planko::disable_threading
@@ -157,7 +157,7 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading 4
+                planko::enable_threading
             }
             deinit {
                 planko::disable_threading
@@ -188,7 +188,7 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading 4
+                planko::enable_threading
             }
             deinit {
                 planko::disable_threading

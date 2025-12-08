@@ -66,10 +66,13 @@ namespace eval planko {
     }
 
     # Threading configuration and management
-    proc enable_threading { {threads 6} } {
+    proc enable_threading { } {
         variable use_threading
         variable num_threads
-
+	variable compute_host
+	
+	if { $compute_host != "" } { set threads 64 } { set threads 4 }
+	     
         if {[catch {package require Thread}]} {
             puts "Warning: Thread package not available, falling back to serial generation"
             set use_threading 0
