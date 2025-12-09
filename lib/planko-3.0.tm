@@ -23,6 +23,35 @@ namespace eval planko {
     # Thread-local world tracking
     variable thread_worlds {}
 
+    # Detect number of CPUs available
+    proc detect_num_cpus {} {
+        # Try nproc command first (most reliable on Linux)
+        if {![catch {exec nproc} result]} {
+            if {[string is integer -strict $result] && $result > 0} {
+                return $result
+            }
+        }
+
+        # Try Linux /proc/cpuinfo
+        if {[file exists /proc/cpuinfo]} {
+            set f [open /proc/cpuinfo r]
+            set data [read $f]
+            close $f
+            set count [llength [regexp -all -inline -line {^processor\s*:} $data]]
+            if {$count > 0} { return $count }
+        }
+        
+        # Try sysctl (macOS/BSD)
+        if {![catch {exec sysctl -n hw.ncpu} result]} {
+            if {[string is integer -strict $result] && $result > 0} {
+                return $result
+            }
+        }
+        
+        # Default fallback
+        return 4
+    }
+
     proc safe_dg_fromString { data name } {
         # Check if the data group already exists and delete it
         if {[dg_exists $name]} {
@@ -69,12 +98,11 @@ namespace eval planko {
     proc enable_threading { { threads {} } } {
         variable use_threading
         variable num_threads
-	variable compute_host
 
-	if { $threads == {} } {
-	    if { $compute_host != "" } { set threads 64 } { set threads 4 }
-	}
-	     
+        if {$threads eq {}} {
+            set threads [detect_num_cpus]
+        }
+		     
         if {[catch {package require Thread}]} {
             puts "Warning: Thread package not available, falling back to serial generation"
             set use_threading 0
@@ -83,7 +111,7 @@ namespace eval planko {
 
         set use_threading 1
         set num_threads $threads
-        puts "Threading enabled with $num_threads threads"
+        puts "Threading enabled with $num_threads threads (detected [detect_num_cpus] CPUs)"
         return 1
     }
 
@@ -147,8 +175,10 @@ namespace eval planko {
 	
 	if {$use_threading && $n >= $min_threading_batch} {
 	    set g [generate_worlds_parallel $n $d]
+	    puts "created parallelized worlds"
 	} else {
 	    set g [generate_worlds_serial $n $d]
+	    puts "created serialized worlds"
 	}
 
 	# put serialized dg into the variable "result"
@@ -159,11 +189,10 @@ namespace eval planko {
     
     proc generate_worlds_remote { n d } {
 	variable compute_host
-	variable num_threads
 	
+	# Remote system will auto-detect its own CPU count
 	set ess_script [subst {
 	    package require planko
-	    planko::enable_threading 64
 	    planko::generate_worlds_serialized $n [list $d]
 	}]
 	
@@ -1095,6 +1124,3 @@ if {[catch {package require Thread} err]} {
     # Now safe to enable threading
     planko::enable_threading
 }
-
-# until we track down crashes...
-planko::disable_threading
