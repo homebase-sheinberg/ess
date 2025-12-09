@@ -24,14 +24,43 @@ namespace eval planko {
     variable thread_worlds {}
 
     # Detect number of CPUs available
-    proc detect_num_cpus {} {
+    proc detect_num_cpus {{physical false}} {
+	if {$physical} {
+	    # Linux: count physical cores
+	    if {[file exists /proc/cpuinfo]} {
+		set f [open /proc/cpuinfo r]
+		set data [read $f]
+		close $f
+		# Count unique physical id + core id combinations
+		set cores [dict create]
+		set phys_id 0
+		set core_id 0
+		foreach line [split $data "\n"] {
+		    if {[regexp {^physical id\s*:\s*(\d+)} $line -> id]} {
+			set phys_id $id
+		    } elseif {[regexp {^core id\s*:\s*(\d+)} $line -> id]} {
+			set core_id $id
+			dict set cores "$phys_id:$core_id" 1
+		    }
+		}
+		set count [dict size $cores]
+		if {$count > 0} { return $count }
+	    }
+	    # macOS
+	    if {![catch {exec sysctl -n hw.physicalcpu} result]} {
+		if {[string is integer -strict $result] && $result > 0} {
+		    return $result
+		}
+	    }
+	}
+	
         # Try nproc command first (most reliable on Linux)
         if {![catch {exec nproc} result]} {
             if {[string is integer -strict $result] && $result > 0} {
                 return $result
             }
         }
-
+	
         # Try Linux /proc/cpuinfo
         if {[file exists /proc/cpuinfo]} {
             set f [open /proc/cpuinfo r]
