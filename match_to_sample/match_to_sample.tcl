@@ -106,75 +106,75 @@ namespace eval match_to_sample {
 	}
 	
 	#
-  # sample_on  (FIRST ON, 300 ms)
+  # sample_on  (FIRST ON, 120 ms)
   #
   $sys add_action sample_on {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 300
+      timerTick 120
   }
   $sys add_transition sample_on {
       if { [timerExpired] } { return sample_off }
   }
   
   #
-  # sample_off (FIRST OFF, 300 ms)
+  # sample_off (FIRST OFF, 100 ms)
   #
   $sys add_action sample_off {
       my sample_off
       ::ess::evt_put SAMPLE OFF [now]
-      timerTick 300
+      timerTick 100
   }
   $sys add_transition sample_off {
       if { [timerExpired] } { return sample_on2 }
   }
   
   #
-  # sample_on2 (SECOND ON, 300 ms)
+  # sample_on2 (SECOND ON, 120 ms)
   #
   $sys add_action sample_on2 {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 300
+      timerTick 120
   }
   $sys add_transition sample_on2 {
       if { [timerExpired] } { return sample_off2 }
   }
   
   #
-  # sample_off2 (SECOND OFF, 300 ms)
+  # sample_off2 (SECOND OFF, 100 ms)
   #
   $sys add_action sample_off2 {
       my sample_off
       ::ess::evt_put SAMPLE OFF [now]
-      timerTick 300
+      timerTick 100
   }
   $sys add_transition sample_off2 {
       if { [timerExpired] } { return sample_on3 }
   }
   
   #
-  # sample_on3 (THIRD ON, 300 ms)
+  # sample_on3 (THIRD ON, 120 ms)
   #
   $sys add_action sample_on3 {
       my sample_on
       ::ess::evt_put SAMPLE ON [now]
       ::ess::evt_put STIMTYPE STIMID [now] $stimtype
-      timerTick 300
+      timerTick 120
   }
   $sys add_transition sample_on3 {
       if { [timerExpired] } { return sample_off_final }
   }
   
   #
-  # sample_off_final (FINAL OFF, 300 ms, then choices) 
+  # sample_off_final (FINAL OFF, 30 ms, then choices) 
   #
   $sys add_action sample_off_final {
       my sample_off
       ::ess::evt_put SAMPLE OFF [now]
-      timerTick 300
+      timerTick 30
   }
   $sys add_transition sample_off_final {
       if { [timerExpired] } { return choices_on }
