@@ -27,7 +27,6 @@ namespace eval planko {
         $sys add_param response_timeout 25000 time int
         $sys add_param max_feedback_time 8000 time int
         $sys add_param post_feedback_time 1000 time int
-        $sys add_param incorrect_delay_time 0 time int
 
         $sys add_param stimup_time -1 time int
 
@@ -324,15 +323,10 @@ namespace eval planko {
         #
         $sys add_action post_trial {
             ::ess::save_trial_info $correct $rt $stimtype
-            if { !$correct } {
-                timerTick $incorrect_delay_time
-            }
         }
 
         $sys add_transition post_trial {
-            if { [timerExpired] } {
-                return finish
-            }
+            return finish
         }
 
         #
