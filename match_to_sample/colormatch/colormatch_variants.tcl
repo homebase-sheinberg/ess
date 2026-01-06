@@ -10,7 +10,7 @@ namespace eval match_to_sample::colormatch {
     variable variants {
         noDistractor {
             description "no distractor"
-            loader_proc setup_trials
+            loader_proc setup_transparent_trials
             loader_options {
                 n_rep { 50 100 200 400 800}
                 targ_scale 1.5
