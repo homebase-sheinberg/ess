@@ -74,7 +74,7 @@ namespace eval match_to_sample::colormatch {
         }
 
         $s add_method setup_transparent_trials { n_rep targ_scale transparency } {
-            my setup_trials $n_rep $targ_scale easy
+            my setup_trials $n_rep $targ_scale random
             set n [dl_length stimdg:stimtype]
             dl_local tchoices [dl_flist {*}$transparency]
             dl_local tvals [dl_choose $tchoices [dl_irand $n [dl_length $tchoices]]]
