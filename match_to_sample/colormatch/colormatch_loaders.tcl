@@ -35,10 +35,8 @@ namespace eval match_to_sample::colormatch {
                 dl_local sample_colors [dl_repeat [dl_llist $red $green] $n_per_side]
                 dl_local nonmatch_colors [dl_repeat [dl_llist $green $red] $n_per_side]
             } elseif { $color_choices == "noDistractor" } {
-                dl_local nonmatch_hues [dl_mod [dl_add 180 $sample_hues] 360]
-
-                dl_local sample_colors [dl_urand [dl_repeat 3 $n_obs]]
-                dl_local nonmatch_colors [dl_repeat [dl_llist $transparent] $n_obs]
+                dl_local sample_colors [dl_urand [dl_repeat 3 $transparency $n_obs]]
+                dl_local nonmatch_colors [dl_urand [dl_repeat 3 $n_obs]]
             } elseif { $color_choices == "random" } {
                 dl_local sample_colors [dl_urand [dl_repeat 3 $n_obs]]
                 dl_local nonmatch_colors [dl_urand [dl_repeat 3 $n_obs]]
@@ -80,10 +78,10 @@ namespace eval match_to_sample::colormatch {
             set n [dl_length stimdg:stimtype]
             dl_local tchoices [dl_flist {*}$transparency]
             dl_local tvals [dl_choose $tchoices [dl_irand $n [dl_length $tchoices]]]
-            dl_local nonmatch_cols [dl_transpose stimdg:nonmatch_color]
-            dl_append $nonmatch_cols $tvals
-            dl_set stimdg:nonmatch_color [dl_transpose $nonmatch_cols]
-            dl_set stimdg:nonmatch_transparency $tvals
+            dl_local match_cols [dl_transpose stimdg:match_color]
+            dl_append $match_cols $tvals
+            dl_set stimdg:match_color [dl_transpose $match_cols]
+            dl_set stimdg:match_transparency $tvals
         }
     }
 }
