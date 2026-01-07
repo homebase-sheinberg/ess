@@ -15,7 +15,6 @@ namespace eval match_to_sample::colormatch {
         $s add_param rmt_host $::ess::rmt_host stim ipaddr
 
         $s add_param juice_ml 0.8 variable float
-        $s add_param abort_on_bad_touch 0 variable bool
 
         $s add_param use_buttons 1 variable int
         $s add_param left_button 24 variable int
@@ -132,7 +131,6 @@ namespace eval match_to_sample::colormatch {
 
                 ::ess::touch_region_off 0
                 ::ess::touch_region_off 1
-                ::ess::touch_region_off 2
 
                 ::ess::touch_reset
 
@@ -174,7 +172,6 @@ namespace eval match_to_sample::colormatch {
             rmtSend "!choices_on"
             ::ess::touch_region_on 0
             ::ess::touch_region_on 1
-            ::ess::touch_region_on 2
         }
 
         $s add_method choices_off {} {
@@ -208,11 +205,6 @@ namespace eval match_to_sample::colormatch {
             } elseif { [::ess::touch_in_win 1] } {
                 set correct 0
                 return 1
-            } elseif { [::ess::touch_in_win 2] } {
-                if { $abort_on_bad_touch } {
-                    set correct 0
-                    return 1
-                }
             } else {
                 return -1
             }
