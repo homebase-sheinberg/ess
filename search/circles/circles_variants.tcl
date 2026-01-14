@@ -35,7 +35,7 @@ namespace eval search::circles {
                     { 0,2,4,6,8 { [dl_tcllist [dl_series 0 8 2]] } }
                     { 0,5,10 { 0 5 10 } }
                 }
-                targ_r { 1.5 2.0 }
+                targ_r { 0.5 1.0 1.5 2.0 2.5 }
                 dist_prop { 1.2 1.1 0.9 0.8 }
                 mindist {1.5 2.0}
                 targ_range { 8 9 10 }
@@ -66,4 +66,5 @@ namespace eval search::circles {
     # use subst to replace variables in variant definition above
     set variants [subst $variants]
 }
+
 
