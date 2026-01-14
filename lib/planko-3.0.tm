@@ -222,6 +222,7 @@ namespace eval planko {
 	# Remote system will auto-detect its own CPU count
 	set ess_script [subst {
 	    package require planko
+	    planko::detect_num_cpus
 	    planko::generate_worlds_serialized $n [list $d]
 	}]
 	
