@@ -34,26 +34,21 @@ namespace eval emcalib {
         # Determine valid trials
         # Valid = ENDOBS occurred and ENDTRIAL subtype < ABORT (2)
         #
-        dl_local endobs_mask [$f select_evt ENDOBS]
-        dl_local endobs_subtypes [$f event_subtypes $endobs_mask]
-        
-        dl_local endtrial_mask [$f select_evt ENDTRIAL]
-        dl_local endtrial_subtypes [$f event_subtypes $endtrial_mask]
+        dl_local endobs_subtypes [$f event_subtype_values ENDOBS]
+        dl_local endtrial_subtypes [$f event_subtype_values ENDTRIAL]
         
         # ENDOBS COMPLETE = 1, ENDTRIAL ABORT = 2
-        # Valid trials: has endobs, endobs is complete (1), endtrial < 2
+        # Valid trials: endobs is complete (1), endtrial < 2
         dl_local valid [dl_and \
-            [dl_sums $endobs_mask] \
-            [dl_eq [dl_unpack $endobs_subtypes] 1] \
-            [dl_lt [dl_unpack $endtrial_subtypes] 2]]
+            [dl_eq $endobs_subtypes 1] \
+            [dl_lt $endtrial_subtypes 2]]
         
         if {!$opts(include_invalid)} {
-            # Filter to valid trials only
             set n_total [dl_length $valid]
             set n_valid [dl_sum $valid]
             puts "emcalib::extract_trials: $n_valid valid of $n_total obs periods"
         } else {
-            dl_local valid [dl_ones [dl_length $g:e_types]]
+            dl_local valid [dl_ones [dl_length $endobs_subtypes]]
         }
         
         #
@@ -66,73 +61,61 @@ namespace eval emcalib {
         #
         
         # Trial outcome (ENDOBS subtype: 0=INCOMPLETE, 1=COMPLETE, 2=BREAK, etc.)
-        dl_set $trials:outcome [dl_select [dl_unpack $endobs_subtypes] $valid]
+        dl_set $trials:outcome [dl_select [$f event_subtype_values ENDOBS] $valid]
         
         # Trial duration (ENDOBS time)
-        dl_local endobs_times [$f event_times $endobs_mask]
-        dl_set $trials:duration [dl_select [dl_unpack $endobs_times] $valid]
+        dl_set $trials:duration [dl_select [$f event_time_values ENDOBS] $valid]
         
         # Fixation acquired time (FIXATE IN)
-        dl_local fixate_mask [$f select_evt FIXATE IN]
-        if {[dl_sum [dl_sums $fixate_mask]] > 0} {
-            dl_local fixate_times [$f event_times $fixate_mask]
-            dl_set $trials:fixate [dl_select [dl_unpack $fixate_times] $valid]
+        dl_local fixate_times [$f event_time_values FIXATE IN]
+        if {$fixate_times ne ""} {
+            dl_set $trials:fixate [dl_select $fixate_times $valid]
         }
         
         # Refixation time (FIXATE REFIXATE) - if present
-        dl_local refix_mask [$f select_evt FIXATE REFIXATE]
-        if {[dl_sum [dl_sums $refix_mask]] > 0} {
-            dl_local refix_times [$f event_times $refix_mask]
-            dl_set $trials:refixate [dl_select [dl_unpack $refix_times] $valid]
+        dl_local refix_times [$f event_time_values FIXATE REFIXATE]
+        if {$refix_times ne ""} {
+            dl_set $trials:refixate [dl_select $refix_times $valid]
         }
         
         #
         # Extract eye position means from EMPARAMS CALIB events
         # These are computed by the sampler during the experiment
+        # Params come as "x, y" pairs that need to be separated
         #
         dl_local calib_mask [$f select_evt EMPARAMS CALIB]
-        if {[dl_sum [dl_sums $calib_mask]] > 0} {
-            dl_local calib_params [$f event_params $calib_mask]
-            # Params are "{x, y}" strings - need to parse
-            dl_local calib_valid [dl_select $calib_params $valid]
+        if {$calib_mask ne "" && [dl_sum [dl_sums $calib_mask]] > 0} {
+            # Select for valid trials first, then unpack
+            dl_local calib_params_valid [dl_select [$f event_params $calib_mask] $valid]
+            dl_local calib_params [dl_unpack [dl_deepUnpack $calib_params_valid]]
             
-            # Extract x and y from params
-            # Each param is a string like "-3.84, -5.12"
-            set eye_x [dl_flist]
-            set eye_y [dl_flist]
-            foreach params [dl_tcllist [dl_unpack $calib_valid]] {
-                # Parse the comma-separated values
-                set vals [split $params ", "]
-                if {[llength $vals] >= 2} {
-                    dl_append $eye_x [lindex $vals 0]
-                    dl_append $eye_y [lindex $vals 1]
-                } else {
-                    dl_append $eye_x 0.0
-                    dl_append $eye_y 0.0
-                }
-            }
-            dl_set $trials:eye_mean_x $eye_x
-            dl_set $trials:eye_mean_y $eye_y
+            # Params are flattened x,y pairs - reshape and transpose to separate
+            dl_local reformatted [dl_transpose [dl_reshape $calib_params - 2]]
+            dl_set $trials:eye_mean_x $reformatted:0
+            dl_set $trials:eye_mean_y $reformatted:1
         }
         
         #
-        # Extract stimulus parameters (stimdg columns)
+        # Extract stimulus parameters via STIMTYPE event
+        # The STIMTYPE event param contains the index into stimdg
         #
-        if {[dl_exists $g:<stimdg>stimtype]} {
-            # Get stimtype indices for valid trials
-            dl_local stimtype [dl_select $g:<stimdg>stimtype $valid]
-            dl_set $trials:stimtype $stimtype
+        dl_local stimtype [$f event_param_values STIMTYPE]
+        if {$stimtype ne ""} {
+            dl_local stimtype_valid [dl_select $stimtype $valid]
+            dl_set $trials:stimtype $stimtype_valid
+            
+            set g [$f group]
             
             # Calibration target positions
             if {[dl_exists $g:<stimdg>jump_targ_x]} {
-                dl_set $trials:calib_x [dl_choose $g:<stimdg>jump_targ_x $stimtype]
-                dl_set $trials:calib_y [dl_choose $g:<stimdg>jump_targ_y $stimtype]
+                dl_set $trials:calib_x [dl_choose $g:<stimdg>jump_targ_x $stimtype_valid]
+                dl_set $trials:calib_y [dl_choose $g:<stimdg>jump_targ_y $stimtype_valid]
             }
             
             # Fixation target
             if {[dl_exists $g:<stimdg>fix_targ_x]} {
-                dl_set $trials:fix_x [dl_choose $g:<stimdg>fix_targ_x $stimtype]
-                dl_set $trials:fix_y [dl_choose $g:<stimdg>fix_targ_y $stimtype]
+                dl_set $trials:fix_x [dl_choose $g:<stimdg>fix_targ_x $stimtype_valid]
+                dl_set $trials:fix_y [dl_choose $g:<stimdg>fix_targ_y $stimtype_valid]
             }
         }
         
