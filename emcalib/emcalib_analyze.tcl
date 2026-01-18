@@ -51,23 +51,28 @@ namespace eval emcalib {
         
         lassign $coeffs x_coeffs y_coeffs
         
-        # Calculate RMS error
+        # Calculate RMS error (returns {rms_x rms_y})
         set rms [em::biquadratic_rms $coeffs $eye_x $eye_y $calib_x $calib_y]
+        lassign $rms rms_x rms_y
+        set rms_combined [expr {sqrt(($rms_x*$rms_x + $rms_y*$rms_y) / 2.0)}]
         
         # Build result
+        set n_trials [llength $eye_x]
         set result [dict create \
             source $filepath \
             filename [file tail $filepath] \
             timestamp [clock seconds] \
             x_coeffs $x_coeffs \
             y_coeffs $y_coeffs \
-            rms_error $rms \
-            n_trials [llength $eye_x]]
+            rms_x $rms_x \
+            rms_y $rms_y \
+            rms_error $rms_combined \
+            n_trials $n_trials]
         
         # Publish to dserv
         publish_calibration $result
         
-        puts "emcalib::analyze: Calibration complete, RMS error: [format %.3f $rms] deg, n=$n_trials"
+        puts "emcalib::analyze: Calibration complete, RMS error: [format %.3f $rms_x] x [format %.3f $rms_y] deg, n=$n_trials"
         
         return $result
     }
