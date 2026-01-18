@@ -12,7 +12,7 @@ namespace eval match_to_sample::phd {
         #
         # extract qrs representation for a given shape
         #
-        $s add_method get_shape_qrs { db shapeID filled { displayID 51 } } {
+        $s add_loader get_shape_qrs { db shapeID filled { displayID 51 } } {
 
             # extract qrs hex location for each pin
             set sqlcmd { SELECT q,r,s FROM pistonAddressesTable  WHERE DisplayID=$displayID }
@@ -51,7 +51,7 @@ namespace eval match_to_sample::phd {
             dl_return $hexpos
         }
 
-        $s add_method get_shape_family { db family algo algoargs { n 4 } } {
+        $s add_loader get_shape_family { db family algo algoargs { n 4 } } {
 
             # find all shapes from family shapeFamily with familyAlgo = $algo
             set sqlcmd {
@@ -64,7 +64,7 @@ namespace eval match_to_sample::phd {
             return $shapes
         }
 
-        $s add_method open_grasp_db { dbname srcfile } {
+        $s add_loader open_grasp_db { dbname srcfile } {
             # create an in-memory database loaded with graspdb tables
             package require sqlite3
 
@@ -98,7 +98,7 @@ namespace eval match_to_sample::phd {
             return $dbname
         }
 
-        $s add_method setup_trials { dbfile trial_type filled limit } {
+        $s add_loader setup_trials { dbfile trial_type filled limit } {
 
             # build our stimdg
             if { [dg_exists stimdg] } { dg_delete stimdg }

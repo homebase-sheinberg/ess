@@ -8,7 +8,7 @@
 
 namespace eval emcalib::9point {
     proc loaders_init { s } {
-        $s add_method basic_calib { nr radius } {
+        $s add_loader basic_calib { nr radius } {
             set n_rep $nr
 
             if { [dg_exists stimdg] } { dg_delete stimdg }

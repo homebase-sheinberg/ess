@@ -8,7 +8,7 @@
 
 namespace eval video::play-or-skip {
     proc loaders_init { s } {
-        $s add_method basic_load { nr } {
+        $s add_loader basic_load { nr } {
             if { [dg_exists stimdg] } { dg_delete stimdg }
             set g [dg_create stimdg]
             dg_rename $g stimdg

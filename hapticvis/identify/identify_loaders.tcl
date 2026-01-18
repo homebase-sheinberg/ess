@@ -15,18 +15,18 @@ package require haptic
 
 namespace eval hapticvis::identify {
     proc loaders_init { s } {
-	$s add_method add_subject_blocks { subject_id block_id dbfile shapedb } {
+	$s add_loader add_subject_blocks { subject_id block_id dbfile shapedb } {
 	    set row [dl_find [trialdb:subject $subject_id]]
 	    if { $row >= 0 } { return }
 	}
 	
-	$s add_method setup_visual { subject_id subject_set n_per_set \
+	$s add_loader setup_visual { subject_id subject_set n_per_set \
 					 shape_scale noise_type n_rep rotations } {
 	     my setup_trials identity $subject_id $subject_set $n_per_set visual \
 		 $shape_scale $noise_type $n_rep $rotations
 	}
 	
-	$s add_method setup_haptic { subject_id subject_set n_per_set \
+	$s add_loader setup_haptic { subject_id subject_set n_per_set \
 					 n_rep rotations } {
 	     set shape_scale 1
 	     set noise_type none
@@ -34,7 +34,7 @@ namespace eval hapticvis::identify {
 		 $shape_scale $noise_type $n_rep $rotations
 	}
 
-	$s add_method setup_haptic_constrained_locked { \
+	$s add_loader setup_haptic_constrained_locked { \
 					 subject_id subject_set n_per_set \
 					 n_rep rotations } {
             set shape_scale 1
@@ -45,7 +45,7 @@ namespace eval hapticvis::identify {
             dl_set stimdg:constraint_locked [dl_ones [dl_length stimdg:stimtype]]
 	}
 	
-	$s add_method setup_haptic_constrained_unlocked { \
+	$s add_loader setup_haptic_constrained_unlocked { \
 					 subject_id subject_set n_per_set \
 					 n_rep rotations } {
             set shape_scale 1
@@ -55,7 +55,7 @@ namespace eval hapticvis::identify {
             dl_set stimdg:constrained [dl_ones [dl_length stimdg:stimtype]]
 	}
 	
-	$s add_method setup_haptic_follow_dial { subject_id subject_set n_per_set \
+	$s add_loader setup_haptic_follow_dial { subject_id subject_set n_per_set \
 						     n_rep rotations } {
             set shape_scale 1
             set noise_type none
@@ -65,7 +65,7 @@ namespace eval hapticvis::identify {
             dl_set stimdg:constrained [dl_ones [dl_length stimdg:stimtype]]
         }
 	
-	$s add_method setup_haptic_follow_pattern { subject_id subject_set n_per_set \
+	$s add_loader setup_haptic_follow_pattern { subject_id subject_set n_per_set \
 							n_rep rotations } {
             set shape_scale 1
             set noise_type none
@@ -75,7 +75,7 @@ namespace eval hapticvis::identify {
             dl_set stimdg:constrained [dl_ones [dl_length stimdg:stimtype]]
 	}
 	
-	$s add_method setup_trials { db_prefix subject_id subject_set n_per_set \
+	$s add_loader setup_trials { db_prefix subject_id subject_set n_per_set \
 		 trial_type shape_scale noise_type n_rep rotations } {
 	     # find database
 	     set db {}

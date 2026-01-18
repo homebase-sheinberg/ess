@@ -8,7 +8,7 @@
 
 namespace eval match_to_sample::colormatch {
     proc loaders_init { s } {
-        $s add_method setup_trials { n_rep targ_scale color_choices } {
+        $s add_loader setup_trials { n_rep targ_scale color_choices } {
 
             # build our stimdg
             if { [dg_exists stimdg] } { dg_delete stimdg }
@@ -75,7 +75,7 @@ namespace eval match_to_sample::colormatch {
             return $g
         }
 
-        $s add_method setup_transparent_trials { n_rep targ_scale transparency } {
+        $s add_loader setup_transparent_trials { n_rep targ_scale transparency } {
             my setup_trials $n_rep $targ_scale easy
             set n [dl_length stimdg:stimtype]
             dl_local tchoices [dl_flist {*}$transparency]

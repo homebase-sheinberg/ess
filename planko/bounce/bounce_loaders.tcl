@@ -10,7 +10,7 @@ namespace eval planko::bounce {
     package require planko
 
     proc loaders_init { s } {
-        $s add_method basic_planko { nr nplanks params } {
+        $s add_loader basic_planko { nr nplanks params } {
             set n_rep $nr
 
             if { [dg_exists stimdg] } { dg_delete stimdg }
@@ -36,7 +36,7 @@ namespace eval planko::bounce {
             return $g
         }
 
-        $s add_method setup_bounce { nr nplanks board_params ball_params } {
+        $s add_loader setup_bounce { nr nplanks board_params ball_params } {
             if { [dg_exists stimdg] } { dg_delete stimdg }
             set g stimdg
 
@@ -73,7 +73,7 @@ namespace eval planko::bounce {
         }
 
         # find worlds that work with multiple ball types
-        $s add_method setup_multiworld { nr nplanks board_params ball_params } {
+        $s add_loader setup_multiworld { nr nplanks board_params ball_params } {
             if { [dg_exists stimdg] } { dg_delete stimdg }
             set g stimdg
 
@@ -121,7 +121,7 @@ namespace eval planko::bounce {
             return $g
         }
 
-        $s add_method setup_perception { nr nplanks show_planks board_params ball_params } {
+        $s add_loader setup_perception { nr nplanks show_planks board_params ball_params } {
             set g [my setup_multiworld $nr $nplanks $board_params $ball_params]
             # perception only
             set n [dl_length $g:id]
@@ -136,7 +136,7 @@ namespace eval planko::bounce {
             dl_set $g:fix_color [dl_repeat [dl_slist "0.8 0.2 0.1"] $n]
         }
 
-        $s add_method setup_biased_perception { nr nplanks keep_left keep_right show_planks board_params ball_params } {
+        $s add_loader setup_biased_perception { nr nplanks keep_left keep_right show_planks board_params ball_params } {
             set g [my setup_multiworld $nr $nplanks $board_params $ball_params]
             # perception only
             set n [dl_length $g:id]

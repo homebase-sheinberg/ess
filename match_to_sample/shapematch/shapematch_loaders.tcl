@@ -10,7 +10,7 @@ package require blob; # for creating random shapes
 
 namespace eval match_to_sample::shapematch {
     proc loaders_init { s } {
-        $s add_method setup_trials { n_rep targ_scale shape_choices shape_params } {
+        $s add_loader setup_trials { n_rep targ_scale shape_choices shape_params } {
 
             # could specify these in shape_params
             set npolys 3
