@@ -66,10 +66,17 @@ namespace eval planko {
             dl_local valid [dl_ones [dl_length $endobs_subtypes]]
         }
         
+        set n_trials [dl_sum $valid]
+        
         #
         # Extract trial indices
         #
         dl_set $trials:obsid [dl_indices $valid]
+        
+        #
+        # Add standard metadata columns (trialid, date, time, filename, system, protocol, variant, subject)
+        #
+        df::add_metadata_columns $trials $f $n_trials
         
         #
         # Extract event-based data for valid trials
@@ -100,9 +107,7 @@ namespace eval planko {
         
         dl_local pattern_off_times [$f event_time_values PATTERN OFF]
         if {$pattern_off_times ne ""} {
-            # There may be multiple OFF events per trial - take first
-            dl_local pattern_off_nested [dl_select [$f event_times [$f select_evt PATTERN OFF]] $valid]
-            dl_set $trials:stimoff [dl_unpack [dl_select $pattern_off_nested [dl_llist [dl_ilist 0]]]]
+            dl_set $trials:stimoff [dl_select $pattern_off_times $valid]
         }
         
         #
@@ -151,17 +156,32 @@ namespace eval planko {
             }
         }
         
-        #
-        # REWARD event - if present
-        #
-        dl_local reward_times [$f event_time_values REWARD]
-        if {$reward_times ne ""} {
-            dl_set $trials:reward_time [dl_select $reward_times $valid]
+        # Add status as alias for correct (historical convention)
+        if {[dl_exists $trials:correct]} {
+            dl_set $trials:status $trials:correct
         }
         
-        dl_local reward_params [$f event_param_values REWARD]
-        if {$reward_params ne ""} {
+        #
+        # REWARD event - sparse (only on correct trials)
+        # Use -1 for reward_time when no reward, 0 for reward_ul
+        #
+        dl_local reward_mask [$f select_evt REWARD MICROLITERS]
+        if {$reward_mask ne "" && [dl_sum [dl_sums $reward_mask]] > 0} {
+            dl_local has_reward [dl_sums $reward_mask]
+            dl_local no_reward [dl_not $has_reward]
+            
+            # Reward time: -1 for no reward
+            dl_local reward_times [$f event_times $reward_mask]
+            dl_local reward_times [dl_unpack [dl_replace $reward_times $no_reward [dl_llist [dl_ilist -1]]]]
+            dl_set $trials:reward_time [dl_select $reward_times $valid]
+            
+            # Reward amount: 0 for no reward (params are depth 2, so extra dl_llist wrapper and extra unpack)
+            dl_local reward_params [$f event_params $reward_mask]
+            dl_local reward_params [dl_unpack [dl_unpack [dl_replace $reward_params $no_reward [dl_llist [dl_llist [dl_ilist 0]]]]]]
             dl_set $trials:reward_ul [dl_select $reward_params $valid]
+            
+            # Rewarded flag
+            dl_set $trials:rewarded [dl_select $has_reward $valid]
         }
         
         #

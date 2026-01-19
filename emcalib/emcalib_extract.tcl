@@ -61,10 +61,17 @@ namespace eval emcalib {
             dl_local valid [dl_ones [dl_length $endobs_subtypes]]
         }
         
+        set n_trials [dl_sum $valid]
+        
         #
         # Extract trial indices
         #
         dl_set $trials:obsid [dl_indices $valid]
+        
+        #
+        # Add standard metadata columns (trialid, date, time, filename, system, protocol, variant, subject)
+        #
+        df::add_metadata_columns $trials $f $n_trials
         
         #
         # Extract event-based data for valid trials
