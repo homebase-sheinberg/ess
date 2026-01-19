@@ -32,16 +32,26 @@ namespace eval emcalib {
         
         #
         # Determine valid trials
-        # Valid = ENDOBS occurred and ENDTRIAL subtype < ABORT (2)
+        # Valid = ENDOBS complete (1) and ENDTRIAL exists and subtype < ABORT (2)
+        # Handle case where last trial may be incomplete (missing events)
         #
         dl_local endobs_subtypes [$f event_subtype_values ENDOBS]
-        dl_local endtrial_subtypes [$f event_subtype_values ENDTRIAL]
+        dl_local endtrial_mask [$f select_evt ENDTRIAL]
         
-        # ENDOBS COMPLETE = 1, ENDTRIAL ABORT = 2
-        # Valid trials: endobs is complete (1), endtrial < 2
+        # Check that ENDTRIAL exists for each obs period
+        dl_local has_endtrial [dl_sums $endtrial_mask]
+        
+        # Get ENDTRIAL subtypes (will be shorter if some trials incomplete)
+        dl_local endtrial_subtypes_nested [$f event_subtypes $endtrial_mask]
+        
+        # Valid trials: endobs==1, has endtrial, endtrial < 2
+        # Use dl_sums on nested structure to get one value per trial
+        dl_local endtrial_ok [dl_sums [dl_lt $endtrial_subtypes_nested 2]]
+        
         dl_local valid [dl_and \
             [dl_eq $endobs_subtypes 1] \
-            [dl_lt $endtrial_subtypes 2]]
+            $has_endtrial \
+            $endtrial_ok]
         
         if {!$opts(include_invalid)} {
             set n_total [dl_length $valid]
