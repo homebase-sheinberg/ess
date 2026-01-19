@@ -43,14 +43,14 @@ namespace eval planko {
         
         # Check for RESP events - valid trials have a response (subtype 1 or 2, not NONE)
         dl_local resp_mask [$f select_evt RESP]
-        dl_local has_resp [dl_sums $resp_mask]
+        dl_local has_resp [dl_anys $resp_mask]
         
         # Get RESP subtypes to check for actual responses vs NONE
         # RESP subtypes: 1=LEFT, 2=RIGHT, NONE=no response
         dl_local resp_subtypes_nested [$f event_subtypes $resp_mask]
         
         # Valid response: subtype > 0 (LEFT=1 or RIGHT=2)
-        dl_local resp_ok [dl_sums [dl_gt $resp_subtypes_nested 0]]
+        dl_local resp_ok [dl_anys [dl_gt $resp_subtypes_nested 0]]
         
         # Valid trials: endobs==COMPLETE(1) and has valid response
         dl_local valid [dl_and \
@@ -136,7 +136,7 @@ namespace eval planko {
         # FEEDBACK ON params: resp correct
         #
         dl_local feedback_mask [$f select_evt FEEDBACK ON]
-        if {$feedback_mask ne "" && [dl_sum [dl_sums $feedback_mask]] > 0} {
+        if {$feedback_mask ne "" && [dl_any $feedback_mask]} {
             dl_local feedback_params_valid [dl_select [$f event_params $feedback_mask] $valid]
             dl_local feedback_params [dl_unpack [dl_deepUnpack $feedback_params_valid]]
             
@@ -166,8 +166,8 @@ namespace eval planko {
         # Use -1 for reward_time when no reward, 0 for reward_ul
         #
         dl_local reward_mask [$f select_evt REWARD MICROLITERS]
-        if {$reward_mask ne "" && [dl_sum [dl_sums $reward_mask]] > 0} {
-            dl_local has_reward [dl_sums $reward_mask]
+        if {$reward_mask ne "" && [dl_any $reward_mask]} {
+            dl_local has_reward [dl_anys $reward_mask]
             dl_local no_reward [dl_not $has_reward]
             
             # Reward time: -1 for no reward

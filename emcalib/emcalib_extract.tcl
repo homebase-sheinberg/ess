@@ -39,14 +39,13 @@ namespace eval emcalib {
         dl_local endtrial_mask [$f select_evt ENDTRIAL]
         
         # Check that ENDTRIAL exists for each obs period
-        dl_local has_endtrial [dl_sums $endtrial_mask]
+        dl_local has_endtrial [dl_anys $endtrial_mask]
         
         # Get ENDTRIAL subtypes (will be shorter if some trials incomplete)
         dl_local endtrial_subtypes_nested [$f event_subtypes $endtrial_mask]
         
         # Valid trials: endobs==1, has endtrial, endtrial < 2
-        # Use dl_sums on nested structure to get one value per trial
-        dl_local endtrial_ok [dl_sums [dl_lt $endtrial_subtypes_nested 2]]
+        dl_local endtrial_ok [dl_anys [dl_lt $endtrial_subtypes_nested 2]]
         
         dl_local valid [dl_and \
             [dl_eq $endobs_subtypes 1] \
@@ -101,7 +100,7 @@ namespace eval emcalib {
         # Params come as "x, y" pairs that need to be separated
         #
         dl_local calib_mask [$f select_evt EMPARAMS CALIB]
-        if {$calib_mask ne "" && [dl_sum [dl_sums $calib_mask]] > 0} {
+        if {$calib_mask ne "" && [dl_any $calib_mask]} {
             # Select for valid trials first, then unpack
             dl_local calib_params_valid [dl_select [$f event_params $calib_mask] $valid]
             dl_local calib_params [dl_unpack [dl_deepUnpack $calib_params_valid]]
