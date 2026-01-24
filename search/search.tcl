@@ -162,6 +162,7 @@ namespace eval search {
             my stim_off
             ::ess::evt_put PATTERN ON [now]
             ::ess::evt_put RESP NONE [now]
+	    ::ess::evt_put ENDTRIAL ABORT [now]
             set correct -1
 
         }
@@ -170,12 +171,12 @@ namespace eval search {
             return post_trial
         }
 
-
         #
         # correct
         #
         $sys add_action correct {
             set correct 1
+	    ::ess::evt_put ENDTRIAL CORRECT [now]
             my reward
         }
 
@@ -186,6 +187,7 @@ namespace eval search {
         #
         $sys add_action incorrect {
             set correct 0
+            ::ess::evt_put ENDTRIAL INCORRECT [now]
             my noreward
         }
 
