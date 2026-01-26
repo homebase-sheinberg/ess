@@ -12,7 +12,7 @@ namespace eval search::circles {
             description "no distractors"
             loader_proc basic_search
             loader_options {
-                nr { 200 100 50 }
+                nr { 200 100 50 20 10 }
                 nd { 0 }
                 targ_r { 1.5 2.0 }
                 dist_prop { 1 }
@@ -66,5 +66,6 @@ namespace eval search::circles {
     # use subst to replace variables in variant definition above
     set variants [subst $variants]
 }
+
 
 
