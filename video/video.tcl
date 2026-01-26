@@ -155,6 +155,7 @@ namespace eval video {
         $sys add_action response {
             set resp_time [now]
             ::ess::evt_put RESP $response $resp_time
+	    ::ess::evt_put ENDTRIAL CORRECT [now]
             set rt [expr {($resp_time-$stimon_time)/1000}]
         }
 
@@ -184,10 +185,11 @@ namespace eval video {
         #
         $sys add_action no_response {
             my stim_off
-            ::ess::evt_put PATTERN ON [now]
-            ::ess::evt_put RESP NONE [now]
+	    set curt [now]
+            ::ess::evt_put PATTERN OFF $curt
+            ::ess::evt_put RESP NONE $curt
+	    ::ess::evt_put ENDTRIAL ABORT $curt
             set correct -1
-
         }
 
         $sys add_transition no_response {
