@@ -35,13 +35,15 @@ namespace eval emcalib {
         # Valid = ENDOBS complete (1) and ENDTRIAL exists and subtype < ABORT (2)
         # Handle case where last trial may be incomplete (missing events)
         #
+        # Note: event_subtype_values is safe here because ENDOBS exists for every
+        # obs period by definition (it's what ends the obs period)
         dl_local endobs_subtypes [$f event_subtype_values ENDOBS]
         dl_local endtrial_mask [$f select_evt ENDTRIAL]
         
         # Check that ENDTRIAL exists for each obs period
         dl_local has_endtrial [dl_anys $endtrial_mask]
         
-        # Get ENDTRIAL subtypes (will be shorter if some trials incomplete)
+        # Get ENDTRIAL subtypes (nested, one per obs period)
         dl_local endtrial_subtypes_nested [$f event_subtypes $endtrial_mask]
         
         # Valid trials: endobs==1, has endtrial, endtrial < 2
@@ -77,21 +79,26 @@ namespace eval emcalib {
         #
         
         # Trial outcome (ENDOBS subtype: 0=INCOMPLETE, 1=COMPLETE, 2=BREAK, etc.)
-        dl_set $trials:outcome [dl_select [$f event_subtype_values ENDOBS] $valid]
+        # ENDOBS is guaranteed to exist for every obs period, so direct select is safe
+        dl_local valid_indices [dl_indices $valid]
+        dl_set $trials:outcome [dl_choose [$f event_subtype_values ENDOBS] $valid_indices]
         
         # Trial duration (ENDOBS time)
-        dl_set $trials:duration [dl_select [$f event_time_values ENDOBS] $valid]
+        # ENDOBS is guaranteed to exist for every obs period, so direct select is safe
+        dl_set $trials:duration [dl_choose [$f event_time_values ENDOBS] $valid_indices]
         
         # Fixation acquired time (FIXATE IN)
-        dl_local fixate_times [$f event_time_values FIXATE IN]
+        # Use safe method - event may not exist in all obs periods
+        dl_local fixate_times [$f event_times_valid $valid FIXATE IN]
         if {$fixate_times ne ""} {
-            dl_set $trials:fixate [dl_select $fixate_times $valid]
+            dl_set $trials:fixate $fixate_times
         }
         
         # Refixation time (FIXATE REFIXATE) - if present
-        dl_local refix_times [$f event_time_values FIXATE REFIXATE]
+        # Use safe method - event may not exist in all obs periods
+        dl_local refix_times [$f event_times_valid $valid FIXATE REFIXATE]
         if {$refix_times ne ""} {
-            dl_set $trials:refixate [dl_select $refix_times $valid]
+            dl_set $trials:refixate $refix_times
         }
         
         #
@@ -101,8 +108,9 @@ namespace eval emcalib {
         #
         dl_local calib_mask [$f select_evt EMPARAMS CALIB]
         if {$calib_mask ne "" && [dl_any $calib_mask]} {
-            # Select for valid trials first, then unpack
-            dl_local calib_params_valid [dl_select [$f event_params $calib_mask] $valid]
+            # Select for valid trials first using dl_choose, then unpack
+            dl_local calib_params_nested [$f event_params $calib_mask]
+            dl_local calib_params_valid [dl_choose $calib_params_nested $valid_indices]
             dl_local calib_params [dl_unpack [dl_deepUnpack $calib_params_valid]]
             
             # Params are flattened x,y pairs - reshape and transpose to separate
@@ -114,10 +122,11 @@ namespace eval emcalib {
         #
         # Extract stimulus parameters via STIMTYPE event
         # The STIMTYPE event param contains the index into stimdg
+        # STIMTYPE is emitted in start_obs, so it should exist for all obs periods
         #
         dl_local stimtype [$f event_param_values STIMTYPE]
         if {$stimtype ne ""} {
-            dl_local stimtype_valid [dl_select $stimtype $valid]
+            dl_local stimtype_valid [dl_choose $stimtype $valid_indices]
             dl_set $trials:stimtype $stimtype_valid
             
             set g [$f group]
@@ -139,12 +148,12 @@ namespace eval emcalib {
         # Extract eye movement data
         #
         if {[dl_exists $g:ems]} {
-            dl_set $trials:ems [dl_select $g:ems $valid]
+            dl_set $trials:ems [dl_choose $g:ems $valid_indices]
         }
         
         # Raw eye tracking data if present
         if {[dl_exists $g:<ds>eyetracking/raw]} {
-            dl_set $trials:eye_raw [dl_select $g:<ds>eyetracking/raw $valid]
+            dl_set $trials:eye_raw [dl_choose $g:<ds>eyetracking/raw $valid_indices]
         }
         
         #

@@ -35,13 +35,15 @@ namespace eval hapticvis {
         # ENDTRIAL subtypes: CORRECT=0, INCORRECT=1, ABORT=2
         # No-response trials go through no_response state which puts ENDTRIAL ABORT
         #
+        # Note: event_subtype_values is safe here because ENDOBS exists for every
+        # obs period by definition
         dl_local endobs_subtypes [$f event_subtype_values ENDOBS]
         dl_local endtrial_mask [$f select_evt ENDTRIAL]
         
         # Check that ENDTRIAL exists for each obs period
         dl_local has_endtrial [dl_anys $endtrial_mask]
         
-        # Get ENDTRIAL subtypes
+        # Get ENDTRIAL subtypes (nested, one per obs period)
         dl_local endtrial_subtypes_nested [$f event_subtypes $endtrial_mask]
         
         # Get subtype IDs for CORRECT and INCORRECT
@@ -70,10 +72,13 @@ namespace eval hapticvis {
         
         set n_trials [dl_sum $valid]
         
+        # Compute valid indices once for use throughout
+        dl_local valid_indices [dl_indices $valid]
+        
         #
         # Extract trial indices
         #
-        dl_set $trials:obsid [dl_indices $valid]
+        dl_set $trials:obsid $valid_indices
         
         #
         # Add standard metadata columns (trialid, date, time, filename, system, protocol, variant, subject)
@@ -85,74 +90,81 @@ namespace eval hapticvis {
         #
         
         # Trial outcome (ENDOBS subtype: 0=INCOMPLETE, 1=COMPLETE, 2=BREAK, etc.)
-        dl_set $trials:outcome [dl_select [$f event_subtype_values ENDOBS] $valid]
+        # ENDOBS is guaranteed to exist for every obs period
+        dl_set $trials:outcome [dl_choose [$f event_subtype_values ENDOBS] $valid_indices]
         
         # Trial duration (ENDOBS time in ms)
-        dl_set $trials:duration [dl_select [$f event_time_values ENDOBS] $valid]
+        # ENDOBS is guaranteed to exist for every obs period
+        dl_set $trials:duration [dl_choose [$f event_time_values ENDOBS] $valid_indices]
         
         #
         # STIMTYPE event - contains stimdg index
+        # STIMTYPE is emitted early in each trial, should exist for all obs periods
         #
         dl_local stimtype [$f event_param_values STIMTYPE]
         if {$stimtype ne ""} {
-            dl_local stimtype_valid [dl_select $stimtype $valid]
+            dl_local stimtype_valid [dl_choose $stimtype $valid_indices]
             dl_set $trials:stimtype $stimtype_valid
         }
         
         #
         # STIMULUS events - overall stimulus timing
+        # Use safe methods - events may not exist if trial aborts early
         #
-        dl_local stim_on_times [$f event_time_values STIMULUS ON]
+        dl_local stim_on_times [$f event_times_valid $valid STIMULUS ON]
         if {$stim_on_times ne ""} {
-            dl_set $trials:stim_on [dl_select $stim_on_times $valid]
+            dl_set $trials:stim_on $stim_on_times
         }
         
-        dl_local stim_off_times [$f event_time_values STIMULUS OFF]
+        dl_local stim_off_times [$f event_times_valid $valid STIMULUS OFF]
         if {$stim_off_times ne ""} {
-            dl_set $trials:stim_off [dl_select $stim_off_times $valid]
+            dl_set $trials:stim_off $stim_off_times
         }
         
         #
         # SAMPLE events - sample stimulus timing (the shape to match)
+        # Use safe methods - events may not exist if trial aborts early
         #
-        dl_local sample_on_times [$f event_time_values SAMPLE ON]
+        dl_local sample_on_times [$f event_times_valid $valid SAMPLE ON]
         if {$sample_on_times ne ""} {
-            dl_set $trials:sample_on [dl_select $sample_on_times $valid]
+            dl_set $trials:sample_on $sample_on_times
         }
         
-        dl_local sample_off_times [$f event_time_values SAMPLE OFF]
+        dl_local sample_off_times [$f event_times_valid $valid SAMPLE OFF]
         if {$sample_off_times ne ""} {
-            dl_set $trials:sample_off [dl_select $sample_off_times $valid]
+            dl_set $trials:sample_off $sample_off_times
         }
         
         #
         # CHOICES events - choice stimuli timing
         # Note: Not all variants emit CHOICES (e.g., visual_recognition uses left/right old/new)
+        # Use safe methods - events may not exist if trial aborts before choices
         #
         if {[$f has_event_type CHOICES]} {
-            dl_local choices_on_times [$f event_time_values CHOICES ON]
+            dl_local choices_on_times [$f event_times_valid $valid CHOICES ON]
             if {$choices_on_times ne ""} {
-                dl_set $trials:choices_on [dl_select $choices_on_times $valid]
+                dl_set $trials:choices_on $choices_on_times
             }
             
-            dl_local choices_off_times [$f event_time_values CHOICES OFF]
+            dl_local choices_off_times [$f event_times_valid $valid CHOICES OFF]
             if {$choices_off_times ne ""} {
-                dl_set $trials:choices_off [dl_select $choices_off_times $valid]
+                dl_set $trials:choices_off $choices_off_times
             }
         }
         
         #
         # CUE events - cue timing (only for cued variants)
+        # Use safe methods - events may not exist if trial aborts before cue
         #
         if {[$f has_event_type CUE]} {
-            dl_local cue_on_times [$f event_time_values CUE ON]
+            dl_local cue_on_times [$f event_times_valid $valid CUE ON]
             if {$cue_on_times ne ""} {
-                dl_set $trials:cue_on [dl_select $cue_on_times $valid]
+                dl_set $trials:cue_on $cue_on_times
             }
             
-            dl_local cue_off_times [$f event_time_values CUE OFF]
+            dl_local cue_off_times [$f event_times_valid $valid CUE OFF]
             if {$cue_off_times ne ""} {
-                dl_set $trials:cue_off [dl_select $cue_off_times $valid]
+                dl_set $trials:cue_off $cue_off_times
             }
         }
         
@@ -162,6 +174,8 @@ namespace eval hapticvis {
         # We store both the final decision (flat) and all decisions (nested) for change-of-mind analysis
         # Note: Not all variants emit DECIDE events
         #
+        # This section handles nested data - we select valid trials first, then process
+        #
         if {[$f has_event_type DECIDE]} {
             dl_local decide_mask [$f select_evt DECIDE SELECT]
             if {$decide_mask ne "" && [dl_any $decide_mask]} {
@@ -169,36 +183,41 @@ namespace eval hapticvis {
                 dl_local decide_times [$f event_times $decide_mask]
                 dl_local decide_params [$f event_params $decide_mask]
                 
+                # Select valid trials first, keeping nested structure
+                dl_local decide_times_valid [dl_choose $decide_times $valid_indices]
+                dl_local decide_params_valid [dl_choose $decide_params $valid_indices]
+                
                 # Store all decisions (nested - for change of mind analysis)
-                dl_set $trials:decide_all_times [dl_select $decide_times $valid]
-                dl_set $trials:decide_all_params [dl_select $decide_params $valid]
+                dl_set $trials:decide_all_times $decide_times_valid
+                dl_set $trials:decide_all_params $decide_params_valid
                 
                 # Count number of decisions per trial (for change-of-mind detection)
-                dl_set $trials:n_decides [dl_select [dl_lengths $decide_times] $valid]
+                dl_set $trials:n_decides [dl_lengths $decide_times_valid]
                 
                 # Extract final decision (last one per trial - flat)
                 # Use dl_lastPos to get mask for last element in each nested list
-                dl_local last_mask [dl_lastPos $decide_times]
-                dl_local final_times [dl_unpack [dl_select $decide_times $last_mask]]
-                dl_local final_params [dl_unpack [dl_select $decide_params $last_mask]]
-                dl_set $trials:decide_time [dl_select $final_times $valid]
-                dl_set $trials:decide_param [dl_select [dl_unpack $final_params] $valid]
+                dl_local last_mask [dl_lastPos $decide_times_valid]
+                dl_local final_times [dl_unpack [dl_select $decide_times_valid $last_mask]]
+                dl_local final_params [dl_unpack [dl_select $decide_params_valid $last_mask]]
+                dl_set $trials:decide_time $final_times
+                dl_set $trials:decide_param [dl_unpack $final_params]
             }
         }
         
         #
         # RESP event - response and timing
         # RESP subtype indicates which choice was selected (slot number)
+        # Use safe methods - RESP only exists on response trials (not ABORT)
         #
-        dl_local resp_times [$f event_time_values RESP]
+        dl_local resp_times [$f event_times_valid $valid RESP]
         if {$resp_times ne ""} {
-            dl_set $trials:resp_time [dl_select $resp_times $valid]
+            dl_set $trials:resp_time $resp_times
         }
         
-        dl_local resp_subtypes [$f event_subtype_values RESP]
+        dl_local resp_subtypes [$f event_subtypes_valid $valid RESP]
         if {$resp_subtypes ne ""} {
             # response: which choice slot was selected
-            dl_set $trials:response [dl_select $resp_subtypes $valid]
+            dl_set $trials:response $resp_subtypes
         }
         
         #
@@ -212,10 +231,11 @@ namespace eval hapticvis {
         #
         # ENDTRIAL event - trial result
         # CORRECT=0, INCORRECT=1, ABORT=2
+        # ENDTRIAL is guaranteed for valid trials (we checked has_endtrial above)
         #
         dl_local endtrial_subtypes [$f event_subtype_values ENDTRIAL]
         if {$endtrial_subtypes ne ""} {
-            dl_local endtrial_valid [dl_select $endtrial_subtypes $valid]
+            dl_local endtrial_valid [dl_choose $endtrial_subtypes $valid_indices]
             # correct: 1 if CORRECT, 0 if INCORRECT
             dl_set $trials:correct [dl_eq $endtrial_valid $correct_id]
         }
@@ -228,6 +248,7 @@ namespace eval hapticvis {
         #
         # REWARD event - sparse (only on correct trials)
         # Use -1 for reward_time when no reward, 0 for reward_ul
+        # Handle missing rewards by inserting placeholder values before selection
         #
         dl_local reward_mask [$f select_evt REWARD MICROLITERS]
         if {$reward_mask ne "" && [dl_any $reward_mask]} {
@@ -237,15 +258,15 @@ namespace eval hapticvis {
             # Reward time: -1 for no reward
             dl_local reward_times [$f event_times $reward_mask]
             dl_local reward_times [dl_unpack [dl_replace $reward_times $no_reward [dl_llist [dl_ilist -1]]]]
-            dl_set $trials:reward_time [dl_select $reward_times $valid]
+            dl_set $trials:reward_time [dl_choose $reward_times $valid_indices]
             
             # Reward amount: 0 for no reward (params are depth 2)
             dl_local reward_params [$f event_params $reward_mask]
             dl_local reward_params [dl_unpack [dl_unpack [dl_replace $reward_params $no_reward [dl_llist [dl_llist [dl_ilist 0]]]]]]
-            dl_set $trials:reward_ul [dl_select $reward_params $valid]
+            dl_set $trials:reward_ul [dl_choose $reward_params $valid_indices]
             
             # Rewarded flag
-            dl_set $trials:rewarded [dl_select $has_reward $valid]
+            dl_set $trials:rewarded [dl_choose $has_reward $valid_indices]
         }
         
         #
@@ -271,9 +292,10 @@ namespace eval hapticvis {
         
         #
         # Extract eye movement data if present
+        # These are per-obs-period data, use dl_choose with valid_indices
         #
         if {[dl_exists $g:ems]} {
-            dl_set $trials:ems [dl_select $g:ems $valid]
+            dl_set $trials:ems [dl_choose $g:ems $valid_indices]
         }
         
         # Collect raw eye tracking data streams into a dict for em:: processing
@@ -288,7 +310,7 @@ namespace eval hapticvis {
             em/frame_id frame_id
         } {
             if {[dl_exists $g:<ds>$ds_path]} {
-                dict set em_streams $dict_key [dl_select $g:<ds>$ds_path $valid]
+                dict set em_streams $dict_key [dl_choose $g:<ds>$ds_path $valid_indices]
             }
         }
         
@@ -299,48 +321,51 @@ namespace eval hapticvis {
         
         # Processed eye position if available
         if {[dl_exists $g:<ds>eyetracking/raw]} {
-            dl_set $trials:eye_raw [dl_select $g:<ds>eyetracking/raw $valid]
+            dl_set $trials:eye_raw [dl_choose $g:<ds>eyetracking/raw $valid_indices]
         }
         
         #
         # Extract touch data if present (touchscreen responses)
+        # Per-obs-period data
         #
         if {[dl_exists $g:<ds>touch/x]} {
-            dl_set $trials:touch_x [dl_select $g:<ds>touch/x $valid]
-            dl_set $trials:touch_y [dl_select $g:<ds>touch/y $valid]
+            dl_set $trials:touch_x [dl_choose $g:<ds>touch/x $valid_indices]
+            dl_set $trials:touch_y [dl_choose $g:<ds>touch/y $valid_indices]
         }
         if {[dl_exists $g:<ds>touch/time]} {
-            dl_set $trials:touch_time [dl_select $g:<ds>touch/time $valid]
+            dl_set $trials:touch_time [dl_choose $g:<ds>touch/time $valid_indices]
         }
         
         #
         # Extract haptic/grasp sensor data if present
         # These are logged via dservLoggerAddMatch in transfer protocol
+        # Per-obs-period data
         #
         if {[dl_exists $g:<ds>grasp/sensor0/vals]} {
-            dl_set $trials:grasp_vals [dl_select $g:<ds>grasp/sensor0/vals $valid]
+            dl_set $trials:grasp_vals [dl_choose $g:<ds>grasp/sensor0/vals $valid_indices]
         }
         if {[dl_exists $g:<ds>grasp/sensor0/touched]} {
-            dl_set $trials:grasp_touched [dl_select $g:<ds>grasp/sensor0/touched $valid]
+            dl_set $trials:grasp_touched [dl_choose $g:<ds>grasp/sensor0/touched $valid_indices]
         }
         if {[dl_exists $g:<ds>grasp/dial_angle]} {
-            dl_set $trials:dial_angle [dl_select $g:<ds>grasp/dial_angle $valid]
+            dl_set $trials:dial_angle [dl_choose $g:<ds>grasp/dial_angle $valid_indices]
         }
         if {[dl_exists $g:<ds>grasp/available]} {
-            dl_set $trials:grasp_available [dl_select $g:<ds>grasp/available $valid]
+            dl_set $trials:grasp_available [dl_choose $g:<ds>grasp/available $valid_indices]
         }
         
         #
         # Extract joystick data if present
+        # Per-obs-period data
         #
         if {[dl_exists $g:<ds>ess/joystick/value]} {
-            dl_set $trials:joystick_value [dl_select $g:<ds>ess/joystick/value $valid]
+            dl_set $trials:joystick_value [dl_choose $g:<ds>ess/joystick/value $valid_indices]
         }
         if {[dl_exists $g:<ds>ess/joystick/button]} {
-            dl_set $trials:joystick_button [dl_select $g:<ds>ess/joystick/button $valid]
+            dl_set $trials:joystick_button [dl_choose $g:<ds>ess/joystick/button $valid_indices]
         }
         if {[dl_exists $g:<ds>ess/joystick/position]} {
-            dl_set $trials:joystick_position [dl_select $g:<ds>ess/joystick/position $valid]
+            dl_set $trials:joystick_position [dl_choose $g:<ds>ess/joystick/position $valid_indices]
         }
         
         return $trials

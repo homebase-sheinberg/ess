@@ -35,13 +35,15 @@ namespace eval match_to_sample {
         # ENDTRIAL subtypes: CORRECT, INCORRECT, ABORT
         # No-response trials go through ABORT state which puts ENDTRIAL ABORT
         #
+        # Note: event_subtype_values is safe here because ENDOBS exists for every
+        # obs period by definition
         dl_local endobs_subtypes [$f event_subtype_values ENDOBS]
         dl_local endtrial_mask [$f select_evt ENDTRIAL]
         
         # Check that ENDTRIAL exists for each obs period
         dl_local has_endtrial [dl_anys $endtrial_mask]
         
-        # Get ENDTRIAL subtypes
+        # Get ENDTRIAL subtypes (nested, one per obs period)
         dl_local endtrial_subtypes_nested [$f event_subtypes $endtrial_mask]
         
         # Get subtype IDs for CORRECT and INCORRECT
@@ -70,10 +72,13 @@ namespace eval match_to_sample {
         
         set n_trials [dl_sum $valid]
         
+        # Compute valid indices once for use throughout
+        dl_local valid_indices [dl_indices $valid]
+        
         #
         # Extract trial indices
         #
-        dl_set $trials:obsid [dl_indices $valid]
+        dl_set $trials:obsid $valid_indices
         
         #
         # Add standard metadata columns (trialid, date, time, filename, system, protocol, variant, subject)
@@ -85,60 +90,66 @@ namespace eval match_to_sample {
         #
         
         # Trial outcome (ENDOBS subtype: 0=INCOMPLETE, 1=COMPLETE, 2=BREAK, etc.)
-        dl_set $trials:outcome [dl_select [$f event_subtype_values ENDOBS] $valid]
+        # ENDOBS is guaranteed to exist for every obs period
+        dl_set $trials:outcome [dl_choose [$f event_subtype_values ENDOBS] $valid_indices]
         
         # Trial duration (ENDOBS time in ms)
-        dl_set $trials:duration [dl_select [$f event_time_values ENDOBS] $valid]
+        # ENDOBS is guaranteed to exist for every obs period
+        dl_set $trials:duration [dl_choose [$f event_time_values ENDOBS] $valid_indices]
         
         #
         # STIMTYPE event - contains stimdg index
+        # STIMTYPE is emitted early in each trial, should exist for all obs periods
         #
         dl_local stimtype [$f event_param_values STIMTYPE]
         if {$stimtype ne ""} {
-            dl_local stimtype_valid [dl_select $stimtype $valid]
+            dl_local stimtype_valid [dl_choose $stimtype $valid_indices]
             dl_set $trials:stimtype $stimtype_valid
         }
         
         #
         # SAMPLE events - sample stimulus timing
+        # Use safe methods - events may not exist if trial aborts early
         #
-        dl_local sample_on_times [$f event_time_values SAMPLE ON]
+        dl_local sample_on_times [$f event_times_valid $valid SAMPLE ON]
         if {$sample_on_times ne ""} {
-            dl_set $trials:sample_on [dl_select $sample_on_times $valid]
+            dl_set $trials:sample_on $sample_on_times
         }
         
-        dl_local sample_off_times [$f event_time_values SAMPLE OFF]
+        dl_local sample_off_times [$f event_times_valid $valid SAMPLE OFF]
         if {$sample_off_times ne ""} {
-            dl_set $trials:sample_off [dl_select $sample_off_times $valid]
+            dl_set $trials:sample_off $sample_off_times
         }
         
         #
         # CHOICES events - choice stimuli timing
+        # Use safe methods - events may not exist if trial aborts before choices
         #
-        dl_local choices_on_times [$f event_time_values CHOICES ON]
+        dl_local choices_on_times [$f event_times_valid $valid CHOICES ON]
         if {$choices_on_times ne ""} {
-            dl_set $trials:choices_on [dl_select $choices_on_times $valid]
+            dl_set $trials:choices_on $choices_on_times
         }
         
-        dl_local choices_off_times [$f event_time_values CHOICES OFF]
+        dl_local choices_off_times [$f event_times_valid $valid CHOICES OFF]
         if {$choices_off_times ne ""} {
-            dl_set $trials:choices_off [dl_select $choices_off_times $valid]
+            dl_set $trials:choices_off $choices_off_times
         }
         
         #
         # RESP event - response and timing
         # RESP subtype indicates which choice was selected
         # In colormatch: 0 = touched match (correct), 1 = touched nonmatch (incorrect)
+        # Use safe methods - RESP only exists on response trials (not ABORT)
         #
-        dl_local resp_times [$f event_time_values RESP]
+        dl_local resp_times [$f event_times_valid $valid RESP]
         if {$resp_times ne ""} {
-            dl_set $trials:resp_time [dl_select $resp_times $valid]
+            dl_set $trials:resp_time $resp_times
         }
         
-        dl_local resp_subtypes [$f event_subtype_values RESP]
+        dl_local resp_subtypes [$f event_subtypes_valid $valid RESP]
         if {$resp_subtypes ne ""} {
             # resp_choice: 0=chose match, 1=chose nonmatch
-            dl_set $trials:resp_choice [dl_select $resp_subtypes $valid]
+            dl_set $trials:resp_choice $resp_subtypes
         }
         
         #
@@ -151,10 +162,11 @@ namespace eval match_to_sample {
         #
         # ENDTRIAL event - trial result
         # CORRECT=0, INCORRECT=1, ABORT=2
+        # ENDTRIAL is guaranteed for valid trials (we checked has_endtrial above)
         #
         dl_local endtrial_subtypes [$f event_subtype_values ENDTRIAL]
         if {$endtrial_subtypes ne ""} {
-            dl_local endtrial_valid [dl_select $endtrial_subtypes $valid]
+            dl_local endtrial_valid [dl_choose $endtrial_subtypes $valid_indices]
             # correct: 1 if CORRECT, 0 if INCORRECT
             dl_set $trials:correct [dl_eq $endtrial_valid $correct_id]
         }
@@ -167,6 +179,7 @@ namespace eval match_to_sample {
         #
         # REWARD event - sparse (only on correct trials)
         # Use -1 for reward_time when no reward, 0 for reward_ul
+        # Handle missing rewards by inserting placeholder values before selection
         #
         dl_local reward_mask [$f select_evt REWARD MICROLITERS]
         if {$reward_mask ne "" && [dl_any $reward_mask]} {
@@ -176,15 +189,15 @@ namespace eval match_to_sample {
             # Reward time: -1 for no reward
             dl_local reward_times [$f event_times $reward_mask]
             dl_local reward_times [dl_unpack [dl_replace $reward_times $no_reward [dl_llist [dl_ilist -1]]]]
-            dl_set $trials:reward_time [dl_select $reward_times $valid]
+            dl_set $trials:reward_time [dl_choose $reward_times $valid_indices]
             
             # Reward amount: 0 for no reward (params are depth 2)
             dl_local reward_params [$f event_params $reward_mask]
             dl_local reward_params [dl_unpack [dl_unpack [dl_replace $reward_params $no_reward [dl_llist [dl_llist [dl_ilist 0]]]]]]
-            dl_set $trials:reward_ul [dl_select $reward_params $valid]
+            dl_set $trials:reward_ul [dl_choose $reward_params $valid_indices]
             
             # Rewarded flag
-            dl_set $trials:rewarded [dl_select $has_reward $valid]
+            dl_set $trials:rewarded [dl_choose $has_reward $valid_indices]
         }
         
         #
@@ -222,9 +235,10 @@ namespace eval match_to_sample {
         
         #
         # Extract eye movement data if present
+        # These are per-obs-period data, use dl_choose with valid_indices
         #
         if {[dl_exists $g:ems]} {
-            dl_set $trials:ems [dl_select $g:ems $valid]
+            dl_set $trials:ems [dl_choose $g:ems $valid_indices]
         }
         
         # Collect raw eye tracking data streams into a dict for em:: processing
@@ -239,7 +253,7 @@ namespace eval match_to_sample {
             em/frame_id frame_id
         } {
             if {[dl_exists $g:<ds>$ds_path]} {
-                dict set em_streams $dict_key [dl_select $g:<ds>$ds_path $valid]
+                dict set em_streams $dict_key [dl_choose $g:<ds>$ds_path $valid_indices]
             }
         }
         
@@ -250,18 +264,19 @@ namespace eval match_to_sample {
         
         # Processed eye position if available
         if {[dl_exists $g:<ds>eyetracking/raw]} {
-            dl_set $trials:eye_raw [dl_select $g:<ds>eyetracking/raw $valid]
+            dl_set $trials:eye_raw [dl_choose $g:<ds>eyetracking/raw $valid_indices]
         }
         
         #
         # Extract touch data if present
+        # Per-obs-period data
         #
         if {[dl_exists $g:<ds>touch/x]} {
-            dl_set $trials:touch_x [dl_select $g:<ds>touch/x $valid]
-            dl_set $trials:touch_y [dl_select $g:<ds>touch/y $valid]
+            dl_set $trials:touch_x [dl_choose $g:<ds>touch/x $valid_indices]
+            dl_set $trials:touch_y [dl_choose $g:<ds>touch/y $valid_indices]
         }
         if {[dl_exists $g:<ds>touch/time]} {
-            dl_set $trials:touch_time [dl_select $g:<ds>touch/time $valid]
+            dl_set $trials:touch_time [dl_choose $g:<ds>touch/time $valid_indices]
         }
         
         return $trials
