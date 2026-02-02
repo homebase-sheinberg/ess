@@ -1,5 +1,5 @@
 # NAME
-#   emcalib_9point.tcl
+#   9point_stim.tcl
 #
 # DESCRIPTION
 #   Stim code for calibration with 9 locations
@@ -7,6 +7,14 @@
 # REQUIRES
 #   polygon
 #   metagroup
+#
+# SUPPORTED RMT CALLS
+#  nexttrial id
+#  fixon
+#  fixoff
+#  fixjump
+#  reset
+#  clearscreen 
 #
 # AUTHOR
 #   DLS
@@ -84,6 +92,12 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
+
+
+
+
+
+
 
 
 

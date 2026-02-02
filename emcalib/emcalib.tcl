@@ -44,11 +44,11 @@ namespace eval emcalib {
 
         $sys add_variable finale_delay 1000
 
-	$sys add_variable target_x
-	$sys add_variable target_y
-	$sys add_variable raw_x
-	$sys add_variable raw_y
-	
+        $sys add_variable target_x
+        $sys add_variable target_y
+        $sys add_variable raw_x
+        $sys add_variable raw_y
+
         ######################################################################
         #                            System States                           #
         ######################################################################
@@ -328,4 +328,5 @@ namespace eval emcalib {
         return $sys
     }
 }
+
 
