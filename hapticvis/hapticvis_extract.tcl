@@ -108,120 +108,94 @@ namespace eval hapticvis {
         }
         
         #
-        # STIMULUS events - overall stimulus timing
-        # Use safe methods - events may not exist if trial aborts early
+        # RESP event - response and timing
+        # Extract early so resp_time can serve as fallback for OFF events.
+        # RESP fires once per valid trial (we filtered to CORRECT/INCORRECT).
         #
-        dl_local stim_on_times [$f event_times_valid $valid STIMULUS ON]
-        if {$stim_on_times ne ""} {
-            dl_set $trials:stim_on $stim_on_times
-        }
+        dl_local resp_times [$f event_times_valid $valid RESP]
+        dl_set $trials:resp_time $resp_times
         
-        dl_local stim_off_times [$f event_times_valid $valid STIMULUS OFF]
-        if {$stim_off_times ne ""} {
-            dl_set $trials:stim_off $stim_off_times
-        }
+        dl_local resp_subtypes [$f event_subtypes_valid $valid RESP]
+        dl_set $trials:response $resp_subtypes
         
         #
-        # SAMPLE events - sample stimulus timing (the shape to match)
-        # Use safe methods - events may not exist if trial aborts early
+        # STIMULUS events
         #
-        dl_local sample_on_times [$f event_times_valid $valid SAMPLE ON]
-        if {$sample_on_times ne ""} {
-            dl_set $trials:sample_on $sample_on_times
-        }
+        dl_local stim_on_times [$f event_time_sparse $valid_indices STIMULUS ON]
+        dl_set $trials:stim_on $stim_on_times
         
-        dl_local sample_off_times [$f event_times_valid $valid SAMPLE OFF]
-        if {$sample_off_times ne ""} {
-            dl_set $trials:sample_off $sample_off_times
+        if {[$f has_event_occurrences STIMULUS OFF]} {
+            dl_set $trials:stim_off [$f event_time_sparse $valid_indices STIMULUS OFF]
+        } else {
+            dl_set $trials:stim_off $resp_times
         }
         
         #
-        # CHOICES events - choice stimuli timing
-        # Note: Not all variants emit CHOICES (e.g., visual_recognition uses left/right old/new)
-        # Use safe methods - events may not exist if trial aborts before choices
-        # Guard: only add columns if CHOICES actually occurred in this file
+        # SAMPLE events
+        #
+        dl_local sample_on_times [$f event_time_sparse $valid_indices SAMPLE ON]
+        dl_set $trials:sample_on $sample_on_times
+        
+        if {[$f has_event_occurrences SAMPLE OFF]} {
+            dl_set $trials:sample_off [$f event_time_sparse $valid_indices SAMPLE OFF]
+        } else {
+            dl_set $trials:sample_off $resp_times
+        }
+        
+        #
+        # CHOICES events - not all variants emit these
         #
         if {[$f has_event_occurrences CHOICES ON]} {
-            dl_local choices_on_times [$f event_times_valid $valid CHOICES ON]
-            if {$choices_on_times ne ""} {
-                dl_set $trials:choices_on $choices_on_times
-            }
-        }
-        if {[$f has_event_occurrences CHOICES OFF]} {
-            dl_local choices_off_times [$f event_times_valid $valid CHOICES OFF]
-            if {$choices_off_times ne ""} {
-                dl_set $trials:choices_off $choices_off_times
+            dl_set $trials:choices_on [$f event_time_sparse $valid_indices CHOICES ON]
+            
+            if {[$f has_event_occurrences CHOICES OFF]} {
+                dl_set $trials:choices_off [$f event_time_sparse $valid_indices CHOICES OFF]
+            } else {
+                dl_set $trials:choices_off $resp_times
             }
         }
         
         #
-        # CUE events - cue timing (only for cued variants)
-        # Use safe methods - events may not exist if trial aborts before cue
-        # Guard: only add columns if CUE actually occurred in this file
+        # CUE events - only for cued variants
         #
         if {[$f has_event_occurrences CUE ON]} {
-            dl_local cue_on_times [$f event_times_valid $valid CUE ON]
-            if {$cue_on_times ne ""} {
-                dl_set $trials:cue_on $cue_on_times
-            }
-        }
-        if {[$f has_event_occurrences CUE OFF]} {
-            dl_local cue_off_times [$f event_times_valid $valid CUE OFF]
-            if {$cue_off_times ne ""} {
-                dl_set $trials:cue_off $cue_off_times
+            dl_set $trials:cue_on [$f event_time_sparse $valid_indices CUE ON]
+            
+            if {[$f has_event_occurrences CUE OFF]} {
+                dl_set $trials:cue_off [$f event_time_sparse $valid_indices CUE OFF]
+            } else {
+                dl_set $trials:cue_off $resp_times
             }
         }
         
         #
         # DECIDE events - decision/selection events during response
         # These track joystick position changes before final selection
-        # We store both the final decision (flat) and all decisions (nested) for change-of-mind analysis
-        # Note: Not all variants emit DECIDE events
-        #
-        # This section handles nested data - we select valid trials first, then process
+        # We store both the final decision (flat) and all decisions (nested)
+        # for change-of-mind analysis.
+        # Note: Not all variants/files emit DECIDE events
         #
         if {[$f has_event_occurrences DECIDE SELECT]} {
             dl_local decide_mask [$f select_evt DECIDE SELECT]
-            if {$decide_mask ne "" && [dl_any $decide_mask]} {
-                # Get all decide times and params (nested by trial)
-                dl_local decide_times [$f event_times $decide_mask]
-                dl_local decide_params [$f event_params $decide_mask]
-                
-                # Select valid trials first, keeping nested structure
-                dl_local decide_times_valid [dl_choose $decide_times $valid_indices]
-                dl_local decide_params_valid [dl_choose $decide_params $valid_indices]
-                
-                # Store all decisions (nested - for change of mind analysis)
-                dl_set $trials:decide_all_times $decide_times_valid
-                dl_set $trials:decide_all_params $decide_params_valid
-                
-                # Count number of decisions per trial (for change-of-mind detection)
-                dl_set $trials:n_decides [dl_lengths $decide_times_valid]
-                
-                # Extract final decision (last one per trial - flat)
-                # Use dl_lastPos to get mask for last element in each nested list
-                dl_local last_mask [dl_lastPos $decide_times_valid]
-                dl_local final_times [dl_unpack [dl_select $decide_times_valid $last_mask]]
-                dl_local final_params [dl_unpack [dl_select $decide_params_valid $last_mask]]
-                dl_set $trials:decide_time $final_times
-                dl_set $trials:decide_param [dl_unpack $final_params]
-            }
-        }
-        
-        #
-        # RESP event - response and timing
-        # RESP subtype indicates which choice was selected (slot number)
-        # Use safe methods - RESP only exists on response trials (not ABORT)
-        #
-        dl_local resp_times [$f event_times_valid $valid RESP]
-        if {$resp_times ne ""} {
-            dl_set $trials:resp_time $resp_times
-        }
-        
-        dl_local resp_subtypes [$f event_subtypes_valid $valid RESP]
-        if {$resp_subtypes ne ""} {
-            # response: which choice slot was selected
-            dl_set $trials:response $resp_subtypes
+            dl_local decide_times [$f event_times $decide_mask]
+            dl_local decide_params [$f event_params $decide_mask]
+            
+            dl_local decide_times_valid [dl_choose $decide_times $valid_indices]
+            dl_local decide_params_valid [dl_choose $decide_params $valid_indices]
+            
+            # Store all decisions (nested - for change of mind analysis)
+            dl_set $trials:decide_all_times $decide_times_valid
+            dl_set $trials:decide_all_params $decide_params_valid
+            
+            # Count number of decisions per trial
+            dl_set $trials:n_decides [dl_lengths $decide_times_valid]
+            
+            # Extract final decision (last one per trial - flat)
+            dl_local last_mask [dl_lastPos $decide_times_valid]
+            dl_local final_times [dl_unpack [dl_select $decide_times_valid $last_mask]]
+            dl_local final_params [dl_unpack [dl_select $decide_params_valid $last_mask]]
+            dl_set $trials:decide_time $final_times
+            dl_set $trials:decide_param [dl_unpack $final_params]
         }
         
         #
@@ -250,27 +224,16 @@ namespace eval hapticvis {
         }
         
         #
-        # REWARD event - sparse (only on correct trials)
-        # Use -1 for reward_time when no reward, 0 for reward_ul
-        # Handle missing rewards by inserting placeholder values before selection
+        # REWARD event - sparse (only on correct trials in learning task)
         #
-        dl_local reward_mask [$f select_evt REWARD MICROLITERS]
-        if {$reward_mask ne "" && [dl_any $reward_mask]} {
-            dl_local has_reward [dl_anys $reward_mask]
-            dl_local no_reward [dl_not $has_reward]
+        if {[$f has_event_occurrences REWARD MICROLITERS]} {
+            dl_local reward_times [$f event_time_sparse $valid_indices REWARD MICROLITERS]
+            dl_set $trials:reward_time $reward_times
             
-            # Reward time: -1 for no reward
-            dl_local reward_times [$f event_times $reward_mask]
-            dl_local reward_times [dl_unpack [dl_replace $reward_times $no_reward [dl_llist [dl_ilist -1]]]]
-            dl_set $trials:reward_time [dl_choose $reward_times $valid_indices]
+            dl_local reward_ul [$f event_param_sparse $valid_indices REWARD MICROLITERS 0]
+            dl_set $trials:reward_ul $reward_ul
             
-            # Reward amount: 0 for no reward (params are depth 2)
-            dl_local reward_params [$f event_params $reward_mask]
-            dl_local reward_params [dl_unpack [dl_unpack [dl_replace $reward_params $no_reward [dl_llist [dl_llist [dl_ilist 0]]]]]]
-            dl_set $trials:reward_ul [dl_choose $reward_params $valid_indices]
-            
-            # Rewarded flag
-            dl_set $trials:rewarded [dl_choose $has_reward $valid_indices]
+            dl_set $trials:rewarded [dl_noteq $reward_times -1]
         }
         
         #
