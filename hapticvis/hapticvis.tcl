@@ -330,11 +330,23 @@ namespace eval hapticvis {
             set response_time [now]
             set rt [expr {($response_time-$sample_on_time)/1000}]
             ::ess::evt_put RESP $resp [now]
+
+	    # clean up display and log events for completeness
             if { $sample_up == 1 } {
                 my sample_off
                 ::ess::evt_put SAMPLE OFF [now]
                 set sample_up -1
             }
+	    if { $cue_up == 1 } {
+		my cue_off
+		::ess::evt_put CUE OFF [now]
+		set cue_up -1
+	    }
+	    if { $choices_up == 1 } {
+		my choices_off
+		::ess::evt_put CHOICES OFF [now]
+		set choices_up -1
+	    }	    
         }
 
         $sys add_transition response {
