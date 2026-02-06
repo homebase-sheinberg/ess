@@ -139,13 +139,15 @@ namespace eval hapticvis {
         # CHOICES events - choice stimuli timing
         # Note: Not all variants emit CHOICES (e.g., visual_recognition uses left/right old/new)
         # Use safe methods - events may not exist if trial aborts before choices
+        # Guard: only add columns if CHOICES actually occurred in this file
         #
-        if {[$f has_event_type CHOICES]} {
+        if {[$f has_event_occurrences CHOICES ON]} {
             dl_local choices_on_times [$f event_times_valid $valid CHOICES ON]
             if {$choices_on_times ne ""} {
                 dl_set $trials:choices_on $choices_on_times
             }
-            
+        }
+        if {[$f has_event_occurrences CHOICES OFF]} {
             dl_local choices_off_times [$f event_times_valid $valid CHOICES OFF]
             if {$choices_off_times ne ""} {
                 dl_set $trials:choices_off $choices_off_times
@@ -155,13 +157,15 @@ namespace eval hapticvis {
         #
         # CUE events - cue timing (only for cued variants)
         # Use safe methods - events may not exist if trial aborts before cue
+        # Guard: only add columns if CUE actually occurred in this file
         #
-        if {[$f has_event_type CUE]} {
+        if {[$f has_event_occurrences CUE ON]} {
             dl_local cue_on_times [$f event_times_valid $valid CUE ON]
             if {$cue_on_times ne ""} {
                 dl_set $trials:cue_on $cue_on_times
             }
-            
+        }
+        if {[$f has_event_occurrences CUE OFF]} {
             dl_local cue_off_times [$f event_times_valid $valid CUE OFF]
             if {$cue_off_times ne ""} {
                 dl_set $trials:cue_off $cue_off_times
@@ -176,7 +180,7 @@ namespace eval hapticvis {
         #
         # This section handles nested data - we select valid trials first, then process
         #
-        if {[$f has_event_type DECIDE]} {
+        if {[$f has_event_occurrences DECIDE SELECT]} {
             dl_local decide_mask [$f select_evt DECIDE SELECT]
             if {$decide_mask ne "" && [dl_any $decide_mask]} {
                 # Get all decide times and params (nested by trial)
