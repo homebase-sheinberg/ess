@@ -37,7 +37,7 @@ proc nexttrial { id } {
     polycirc $obj 1
     polycolor $obj {*}$fix_color
     translateObj $obj $fix_targ_x $fix_targ_y
-    scaleObj $obj [expr {2*$fix_targ_r}]; # diameter is 2r
+    scaleObj $obj [expr {2*$fix_targ_r}];        # diameter is 2r
     set center [polygon]
     polycirc $center 1
     polycolor $center 0 0 0
