@@ -125,6 +125,12 @@ namespace eval hapticvis::transfer {
             if { $::ess::open_datafile != "" } {
                 ::ess::file_close
             }
+        
+            # return arm to "rest position"
+            if { $trial_type == "haptic" } {
+                my haptic_clear
+            }
+
         }
 
         $s set_file_open_callback {
@@ -751,3 +757,4 @@ namespace eval hapticvis::transfer {
     }
 
 }
+
