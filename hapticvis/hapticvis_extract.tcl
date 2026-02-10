@@ -87,22 +87,19 @@ namespace eval hapticvis {
         #
         
         # Trial outcome (ENDOBS subtype: 0=INCOMPLETE, 1=COMPLETE, 2=BREAK, etc.)
-        # ENDOBS is guaranteed to exist for every obs period
-        dl_set $trials:outcome [dl_choose [$f event_subtype_values ENDOBS] $valid_indices]
+        # ENDOBS exists for every obs period, but use sparse for consistency
+        dl_set $trials:outcome [$f event_subtype_sparse $valid_indices ENDOBS {} -1]
         
         # Trial duration (ENDOBS time in ms)
-        # ENDOBS is guaranteed to exist for every obs period
-        dl_set $trials:duration [dl_choose [$f event_time_values ENDOBS] $valid_indices]
+        dl_set $trials:duration [$f event_time_sparse $valid_indices ENDOBS {} -1]
         
         #
         # STIMTYPE event - contains stimdg index
-        # STIMTYPE is emitted early in each trial, should exist for all obs periods
+        # STIMTYPE is emitted early in each trial, but may be missing on
+        # interrupted obs periods. Use sparse method to maintain index alignment.
         #
-        dl_local stimtype [$f event_param_values STIMTYPE]
-        if {$stimtype ne ""} {
-            dl_local stimtype_valid [dl_choose $stimtype $valid_indices]
-            dl_set $trials:stimtype $stimtype_valid
-        }
+        dl_local stimtype_valid [$f event_param_sparse $valid_indices STIMTYPE {} -1]
+        dl_set $trials:stimtype $stimtype_valid
         
         #
         # STIMULUS events - overall stimulus timing
@@ -206,14 +203,11 @@ namespace eval hapticvis {
         #
         # ENDTRIAL event - trial result
         # CORRECT=0, INCORRECT=1, ABORT=2
-        # ENDTRIAL is guaranteed for valid trials (we checked has_endtrial above)
+        # ENDTRIAL is guaranteed for valid trials, but obs periods with missing
+        # ENDTRIAL (e.g., from stop/start) cause event_subtype_values to return
+        # a shorter list, breaking index alignment. Use sparse method for safety.
         #
-        dl_local endtrial_subtypes [$f event_subtype_values ENDTRIAL]
-        if {$endtrial_subtypes ne ""} {
-            dl_local endtrial_valid [dl_choose $endtrial_subtypes $valid_indices]
-            # correct: 1 if CORRECT, 0 if INCORRECT
-            dl_set $trials:correct [dl_eq $endtrial_valid $correct_id]
-        }
+        dl_set $trials:correct [dl_eq [$f event_subtype_sparse $valid_indices ENDTRIAL {} -1] $correct_id]
         
         # Add status as alias for correct (historical convention)
         if {[dl_exists $trials:correct]} {
@@ -346,4 +340,3 @@ namespace eval hapticvis {
         return $trials
     }
 }
-
