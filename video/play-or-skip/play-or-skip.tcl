@@ -1,12 +1,12 @@
 #
 # PROTOCOL
-#   search circles
+#   video play-or-skip
 #
 # DESCRIPTION
-#   Present a large circle with possible distractors
+#   Offer videos to be watched or skipped
 #
 
-namespace eval search::circles {
+namespace eval video::play-or-skip {
     variable params_defaults { n_rep 50 }
 
     proc protocol_init { s } {
@@ -16,17 +16,13 @@ namespace eval search::circles {
 
         $s add_param juice_ml 0.6 variable float
 
-        $s add_param use_buttons 1 variable int
-        $s add_param left_button 24 variable int
-        $s add_param right_button 25 variable int
+        $s add_variable play_x
+        $s add_variable play_y
+        $s add_variable play_r
 
-        $s add_variable targ_x
-        $s add_variable targ_y
-        $s add_variable targ_r
-
-        $s add_variable dist_x
-        $s add_variable dist_y
-        $s add_variable dist_r
+        $s add_variable skip_x
+        $s add_variable skip_y
+        $s add_variable skip_r
 
         $s set_protocol_init_callback {
             ::ess::init
@@ -40,7 +36,10 @@ namespace eval search::circles {
             # initialize touch processor
             ::ess::touch_init
 
-	    # configure sound
+            # listen for end of playback
+            dservAddExactMatch video/complete
+            dpointSetScript video/complete ess::do_update
+
 	    ::ess::sound_init
         }
 
@@ -60,7 +59,7 @@ namespace eval search::circles {
         }
 
         $s set_quit_callback {
-            ::ess::touch_region_off 0
+            foreach t "0 1 2" { ::ess::touch_region_off $t }
             rmtSend clearscreen
             ::ess::end_obs QUIT
         }
@@ -89,7 +88,6 @@ namespace eval search::circles {
         ######################################################################
 
         $s add_method start_obs_reset {} {
-            set buttons_changed 0
         }
 
         $s add_method n_obs {} { return [dl_length stimdg:stimtype] }
@@ -100,14 +98,16 @@ namespace eval search::circles {
                 set cur_id [dl_pickone $left_to_show]
                 set stimtype [dl_get stimdg:stimtype $cur_id]
 
-                # set these touching_spot knows where target is
-                foreach p "targ_x targ_y targ_r" {
-                    set $p [dl_get stimdg:$p $stimtype]
-                }
+                # virtual button info for play and skip
+                lassign [dl_get stimdg:next_button $stimtype] next_x next_y next_r
+                lassign [dl_get stimdg:play_button $stimtype] play_x play_y play_r
+                lassign [dl_get stimdg:skip_button $stimtype] skip_x skip_y skip_r
 
                 for { set i 0 } { $i < 8 } { incr i } { ::ess::touch_region_off $i }
                 ::ess::touch_reset
-                ::ess::touch_win_set 0 $targ_x $targ_y $targ_r 0
+                ::ess::touch_win_set 0 $play_x $play_y $play_r 0
+                ::ess::touch_win_set 1 $skip_x $skip_y $skip_r 0
+                ::ess::touch_win_set 2 $next_x $next_y $next_r 0
 
                 rmtSend "nexttrial $stimtype"
             }
@@ -128,12 +128,23 @@ namespace eval search::circles {
             ::ess::sound_play 1 70 200
         }
 
+        $s add_method show_next_video {} {
+            rmtSend "!show_next_video"
+            ::ess::touch_region_on 2
+        }
+
+        $s add_method select_next_video {} {
+            if { [::ess::touch_in_win 2] } {
+                return 1;
+            }
+        }
+
         $s add_method stim_on {} {
-            ::ess::touch_region_on 0
+            ::ess::touch_region_off 2
+            foreach t "0 1" { ::ess::touch_region_on $t }
             foreach t "press release" {
                 if { [dservExists ess/touch_${t}] } {
                     set touch_last_${t} [dservTimestamp ess/touch_${t}]
-                
                 }
             }
             rmtSend "!stimon"
@@ -157,10 +168,17 @@ namespace eval search::circles {
             ::ess::sound_play 6 60 400
         }
 
+        $s add_method play {} {
+            dservSet video/complete 0
+            rmtSend "!play"
+        }
+        $s add_method play_complete {} { return [dservGet video/complete] }
+
         $s add_method responded {} {
             if { [::ess::touch_in_win 0] } {
-                ::ess::touch_evt_put ess/touch_press [dservGet ess/touch_press]
-                return 1
+                return 1; # play
+            } elseif { [::ess::touch_in_win 1] } {
+                return 2; # skip
             } else {
                 return 0
             }
@@ -181,7 +199,7 @@ namespace eval search::circles {
                 evtSetScript 29 -1 [namespace current]::stimtype
                 evtSetScript 28 1 [namespace current]::stimon
                 evtSetScript 28 0 [namespace current]::stimoff
-                
+
                 clearwin
                 setbackground [dlg_rgbcolor 100 100 100]
                 setwindow -20 -14 20 14
@@ -202,25 +220,9 @@ namespace eval search::circles {
                 variable trial
                 clearwin
 
-                # Draw target
-                foreach v "x y r color" {
-                    set targ_${v} [dl_get stimdg:targ_${v} $trial]
-                }
-                dl_local c [dl_flist {*}$targ_color]
-                set color [dlg_rgbcolor {*}[dl_tcllist [dl_int [dl_mult $c 255]]]]
-                dlg_markers $targ_x $targ_y -marker fcircle -size $targ_r -scaletype x -color $color
-
-                # Draw distractors
-                set ndists [dl_get stimdg:dists_n $trial]
-                for { set i 0 } { $i < $ndists } { incr i } {
-                    foreach v "x y r color" {
-                        set dist_${v} [dl_get stimdg:dist_${v}s:$trial $i]
-                    }
-                    dl_local c [dl_flist {*}$dist_color]
-                    set color [dlg_rgbcolor {*}[dl_tcllist [dl_int [dl_mult $c 255]]]]
-                    dlg_markers $dist_x $dist_y -marker fcircle -size $dist_r -scaletype x -color $color
-
-                }
+                # video window
+                # play_button
+                # skip_button
                 flushwin
             }
 
@@ -236,9 +238,6 @@ namespace eval search::circles {
         return
     }
 }
-
-
-
 
 
 

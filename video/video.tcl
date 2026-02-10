@@ -1,15 +1,14 @@
 #
 #  SYSTEM
-#    search
+#    video
 #
 #  DECRIPTION
-#    System for touch screen training
+#    System for video watching tasks
 #
 
 package require ess
-package require points
 
-namespace eval search {
+namespace eval video {
     proc create {} {
         set sys [::ess::create_system [namespace tail [namespace current]]]
 
@@ -20,6 +19,7 @@ namespace eval search {
         $sys add_param interblock_time 1000 time int
         $sys add_param prestim_time 250 time int
         $sys add_param response_timeout 5000 time int
+        $sys add_param use_response_timeout 0 variable bool
 
         ##
         ## Local variables for this system
@@ -105,7 +105,17 @@ namespace eval search {
             my prestim
         }
         $sys add_transition pre_stim {
-            if { [timerExpired] } { return stim_on }
+            if { [timerExpired] } { return next_video }
+        }
+
+        #
+        # next_video
+        #
+        $sys add_action next_video {
+            my show_next_video
+        }
+        $sys add_transition next_video {
+            if { [my select_next_video] } { return stim_on }
         }
 
         #
@@ -126,14 +136,17 @@ namespace eval search {
         # wait_for_response
         #
         $sys add_action wait_for_response {
-            timerTick $response_timeout
+            if { $use_response_timeout } {
+                timerTick $response_timeout
+            }
         }
 
         $sys add_transition wait_for_response {
-            if [timerExpired] { return no_response }
+            if { $use_response_timeout } {
+                if [timerExpired] { return no_response }
+            }
             set response [my responded]
             if { $response != 0 } { return response }
-
         }
 
         #
@@ -141,57 +154,48 @@ namespace eval search {
         #
         $sys add_action response {
             set resp_time [now]
-            ::ess::evt_put RESP 1 $resp_time
+            ::ess::evt_put RESP $response $resp_time
+	    ::ess::evt_put ENDTRIAL CORRECT [now]
             set rt [expr {($resp_time-$stimon_time)/1000}]
         }
 
         $sys add_transition response {
-            my stim_off
-            ::ess::evt_put PATTERN OFF [now]
             if { $response == 1 } {
-                return correct
+                return play
             } else {
-                return incorrect
+                return post_trial
             }
         }
+
+        #
+        # play
+        #
+        $sys add_action play {
+            my play
+            ::ess::evt_put PATTERN 2 [now]
+        }
+
+        $sys add_transition play {
+            if { [my play_complete] } { return post_trial }
+        }
+
 
         #
         # no_response
         #
         $sys add_action no_response {
             my stim_off
-            ::ess::evt_put PATTERN ON [now]
-            ::ess::evt_put RESP NONE [now]
-	    ::ess::evt_put ENDTRIAL ABORT [now]
+	    set curt [now]
+            ::ess::evt_put PATTERN OFF $curt
+            ::ess::evt_put RESP NONE $curt
+	    ::ess::evt_put ENDTRIAL ABORT $curt
             set correct -1
-
         }
 
         $sys add_transition no_response {
             return post_trial
         }
 
-        #
-        # correct
-        #
-        $sys add_action correct {
-            set correct 1
-	    ::ess::evt_put ENDTRIAL CORRECT [now]
-            my reward
-        }
-
-        $sys add_transition correct { return post_trial }
-
-        #
-        # incorrect
-        #
-        $sys add_action incorrect {
-            set correct 0
-            ::ess::evt_put ENDTRIAL INCORRECT [now]
-            my noreward
-        }
-
-        $sys add_transition incorrect { return post_trial }
 
         #
         # post_trial
@@ -284,19 +288,18 @@ namespace eval search {
 
         $sys add_method endobs {} { incr obs_count }
         $sys add_method prestim {} {}
+        $sys add_method show_next_video {} {}
+        $sys add_method select_next_video {} {}
         $sys add_method stim_on {} {}
+        $sys add_method play {} {}
+        $sys add_method play_complete {} { return 1 }
         $sys add_method stim_off {} {}
         $sys add_method reward {} {}
-        $sys add_method noreward {} {}
         $sys add_method finale {} {}
 
         $sys add_method responded {} { return 0 }
-        $sys add_method response_correct {} { return 1 }
 
 
         return $sys
     }
 }
-
-
-

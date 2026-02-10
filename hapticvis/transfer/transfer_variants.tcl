@@ -53,6 +53,20 @@ namespace eval hapticvis::transfer {
         post_response_time 500
     }
 
+    # state system parameters for haptic cued
+    set haptic_cued_params {
+        interblock_time 500
+        pre_stim_time 100
+        cue_delay 0
+        cue_duration 6000
+        sample_delay 500
+        sample_duration 5000
+        choice_duration 30000
+        choice_delay 0
+        stim_duration 30000
+        post_response_time 500
+    }
+
     set subject_ids [dl_tcllist [dl_fromto 0 30]]
     set subject_sets [dl_tcllist [dl_fromto 0 4]]
 
@@ -72,6 +86,8 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                 subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
+                have_distractors { { no 0 } }
             }
             params [list "$visual_params joystick_side 0"]
         }
@@ -90,6 +106,8 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { right 1 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
+                have_distractors { { no 0 } }
             }
             params [list "$visual_params joystick_side 1"]
         }
@@ -106,6 +124,8 @@ namespace eval hapticvis::transfer {
                 }
                 joystick_side { { left 0 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } { no 0 }}
+                have_distractors { { no 0 } }
             }
             params [list "$haptic_params joystick_side 0"]
         }
@@ -121,7 +141,9 @@ namespace eval hapticvis::transfer {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { right 1 } }
-                subject_handedness { { right 1 } { left 0 } }              
+                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } { no 0 } }
+                have_distractors { { no 0 } }
             }
             params [list "$haptic_params joystick_side 1"]
         }
@@ -134,12 +156,14 @@ namespace eval hapticvis::transfer {
                 n_per_set { 4 }
                 shape_scale { 3 4 5 6 }
                 noise_type { none }
-                n_rep { 6 2 4 8 10 20 }
+                n_rep { 6 2 12 18 24 30 }
                 rotations {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { left 0 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
+                have_distractors { { no 0 } }
             }
             params [list "$visual_cued_params joystick_side 0"]
         }
@@ -152,14 +176,96 @@ namespace eval hapticvis::transfer {
                 n_per_set { 4 }
                 shape_scale { 3 4 5 6 }
                 noise_type { none }
-                n_rep { 6 2 4 8 10 20 }
+                n_rep { 6 2 12 18 24 30 }
                 rotations {
                     {three {60 180 300}} {single {180}}
                 }
                 joystick_side { { right 1 } }
                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
+                have_distractors { { no 0 } }
             }
             params [list "$visual_cued_params joystick_side 1"]
+        }
+        haptic_cued_left {
+            description "respond to cued haptic objects"
+            loader_proc setup_haptic_cued
+            loader_options {
+                subject_id { $subject_ids }
+                subject_set { $subject_sets }
+                n_per_set { 4 }
+                shape_scale { 3 4 5 6 }
+                noise_type { none }
+                n_rep { 6 2 12 18 24 30 }
+                rotations {
+                    {three {60 180 300}} {single {180}}
+                }
+                joystick_side { { left 0 } }
+               subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
+                have_distractors { { no 0 } }
+            }
+            params [list "$haptic_cued_params joystick_side 0"]
+        }
+        haptic_cued_right {
+            description "respond to cued haptic objects"
+            loader_proc setup_haptic_cued
+            loader_options {
+                subject_id { $subject_ids }
+                subject_set { $subject_sets }
+                n_per_set { 4 }
+                shape_scale { 3 4 5 6 }
+                noise_type { none }
+                n_rep { 6 2 12 18 24 30 }
+                rotations {
+                    {three {60 180 300}} {single {180}}
+                }
+                joystick_side { { right 1 } }
+               subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } }
+                have_distractors { { no 0 } }
+            }
+            params [list "$haptic_cued_params joystick_side 1"]
+        }
+        visual_recognition_left {
+            description "recognize visual objects, joystick on (left side)"
+            loader_proc setup_visual
+            loader_options {
+                subject_id { $subject_ids }
+                subject_set { $subject_sets }
+                n_per_set { 4 }
+                shape_scale { 3 4 5 6 }
+                noise_type { circles spotlight none }
+                n_rep { 6 1 2 4 8 10 20 }
+                rotations {
+                    {three {60 180 300}} {single {180}}
+                }
+                joystick_side { { left 0 } }
+                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } { no 0 } }
+                have_distractors { {yes 1 } { no 0 } }
+            }
+            params [list "$visual_params joystick_side 0"]
+        }
+        visual_recognition_right {
+            description "recognize visual objects, joystick on (right side)"
+            loader_proc setup_visual
+            loader_options {
+                subject_id { $subject_ids }
+                subject_set { $subject_sets }
+                n_per_set { 4 }
+                shape_scale { 3 4 5 6 }
+                noise_type { circles spotlight none }
+                n_rep { 6 1 2 4 8 10 20 }
+                rotations {
+                    {three {60 180 300}} {single {180}}
+                }
+                joystick_side { { right 1 } }
+                subject_handedness { { right 1 } { left 0 } }
+                have_feedback { { yes 1 } { no 0 } }
+                have_distractors { { yes 1 } { no 0 } }
+            }
+            params [list "$visual_params joystick_side 1"]
         }
         visual_to_haptic {
             description "learn visual transfer to haptic"

@@ -32,6 +32,7 @@ namespace eval hapticvis::transfer {
         $s add_variable choices {}
         $s add_variable follow_dial 0
         $s add_variable follow_pattern 0
+        $s add_variable have_feedback 1
 
         $s set_protocol_init_callback {
             ::ess::init
@@ -54,18 +55,14 @@ namespace eval hapticvis::transfer {
             dpointSetScript grasp/dial_angle ::ess::hapticvis::transfer::process_dial
             dservSet grasp/dial_angle 0
 
-            soundReset
-            soundSetVoice 81 0 0
-            soundSetVoice 57 17 1
-            soundSetVoice 60 0 2
-            soundSetVoice 42 0 3
-            soundSetVoice 21 0 4
-            soundSetVoice 8 0 5
-            soundSetVoice 113 100 6
-            foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
+	    ::ess::sound_init
         }
 
         $s set_protocol_deinit_callback {
+            if { $use_touchscreen } {
+                ::ess::touch_deinit
+            }
+
             rmtClose
         }
 
@@ -128,6 +125,12 @@ namespace eval hapticvis::transfer {
             if { $::ess::open_datafile != "" } {
                 ::ess::file_close
             }
+        
+            # return arm to "rest position"
+            if { $trial_type == "haptic" } {
+                my haptic_clear
+            }
+
         }
 
         $s set_file_open_callback {
@@ -194,8 +197,7 @@ namespace eval hapticvis::transfer {
 
                 set have_cue [dl_get stimdg:is_cued $cur_id]
                 set cue_valid [dl_get stimdg:cue_valid $cur_id]
-
-
+                
                 if { $have_cue } {
                     foreach i "0 1" {
                         set choice_x [dl_get stimdg:lr_choice_centers:$cur_id:$i 0]
@@ -226,6 +228,7 @@ namespace eval hapticvis::transfer {
                 set shape_id [dl_get stimdg:shape_id $cur_id]
                 set shape_angle [dl_get stimdg:shape_rot_deg_cw $cur_id]
                 set shape_hand [dl_get stimdg:hand $cur_id]
+                set have_feedback [dl_get stimdg:have_feedback $cur_id]
 
                 rmtSend "nexttrial $cur_id"
 
@@ -243,7 +246,7 @@ namespace eval hapticvis::transfer {
         }
 
         $s add_method stim_on {} {
-            soundPlay 1 70 200
+            ::ess::sound_play 1 70 200
             rmtSend "!stim_on"
         }
 
@@ -296,12 +299,16 @@ namespace eval hapticvis::transfer {
 
             set angle [expr {int($a)%360}]
             set url http://${ip}:${port}
+            set zero_pt -177.4
             if {$hand == 0} {
-                set res [rest::get $url [list function pick_and_place hand $hand xoffset -152.4 left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
+                # set arm_offset [expr $zero_pt + 25]
+                set arm_offset [expr $zero_pt - 25]
+                set res [rest::get $url [list function pick_and_place hand 0 xoffset $arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
                 ]
                 ]
             } else {
-                set res [rest::get $url [list function pick_and_place hand $hand left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
+                set arm_offset [expr $zero_pt - 25]
+                set res [rest::get $url [list function pick_and_place hand 0 xoffset $arm_offset left_id $shape_id left_angle $angle return_duplicates 0 dont_present 1 use_dummy 1 dummy_ids 20302,2001 reset_dial $follow_dial dial_following $follow_dial pattern_following $follow_pattern
                 ]
                 ]
             }
@@ -375,6 +382,8 @@ namespace eval hapticvis::transfer {
         $s add_method get_choices { n } {
             if { $n == 4 } {
                 return "1 3 5 7"
+            } elseif { $n == 5 } {
+                return "1 3 5 7 6"
             } elseif { $n == 6 } {
                 return "1 2 3 5 6 7"
             } else {
@@ -409,7 +418,9 @@ namespace eval hapticvis::transfer {
 
         $s add_method reward {} {
             if { $task == "learning" } {
-                soundPlay 3 70 70
+                if { $have_feedback == 1} {
+                    ::ess::sound_play 3 70 70
+                }
                 ::ess::reward $juice_ml
                 ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
             }
@@ -417,12 +428,14 @@ namespace eval hapticvis::transfer {
 
         $s add_method noreward {} {
             if { $task == "learning" } {
-                soundPlay 4 90 300
+                if { $have_feedback == 1 } {
+                    ::ess::sound_play 4 90 300
+                }
             }
         }
 
         $s add_method finale {} {
-            soundPlay 6 60 400
+            ::ess::sound_play 6 60 400
         }
 
         $s add_method response_correct {} {
@@ -435,6 +448,12 @@ namespace eval hapticvis::transfer {
             rmtSend "highlight_response $p"
         }
 
+        $s add_method highlight_response_lr {} {
+            set p [dservGet ess/joystick/position]
+            ::ess::evt_put DECIDE SELECT [now] $p
+            rmtSend "highlight_response_lr $p"
+        }
+
         $s add_method responded {} {
             # if no response to report, return -1
             set r -1
@@ -445,6 +464,9 @@ namespace eval hapticvis::transfer {
                 if { $n_choices == 4 } {
                     # ur=9(0) ul=5(1) dl=6(2) dr=10(3)
                     set mapdict { 0 -1 9 0 5 1 6 2 10 3 }
+                } elseif { $n_choices == 5 } {
+                    # ur=9(0) ul=5(1) dl=6(2) dr=10(3) d=2(4)
+                    set mapdict { 0 -1 9 0 5 1 6 2 10 3 2 4}
                 } elseif { $n_choices == 6 } {
                     # u=1(1)  d=2(4) ul=5(2) ur=9(0) d-=6(3) dr=10(5)
                     set mapdict { 0 -1 1 1 2 4 5 2 9 0 6 3 10 5}
@@ -502,6 +524,9 @@ namespace eval hapticvis::transfer {
                 if { $n_choices == 4 } {
                     # 4 skip cardinal
                     set mapdict { 0 -1 1 0 2 -1 3 1 4 -1 5 2 6 -1 7 3 }
+                } elseif { $n_choices == 5 } {
+                    # 5 skip up, left, and right
+                    set mapdict { 0 -1 1 0 2 -1 3 1 4 -1 5 2 6 4 7 3 }
                 } elseif { $n_choices == 6 } {
                     # 6 skip right and left
                     set mapdict { 0 -1 1 0 2 1 3 2 4 -1 5 3 6 4 7 5 }
@@ -520,24 +545,33 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
+                ::ess::evt_put DECIDE SELECT [now] [dict keys [dict filter $mapdict value $r]]
                 if { $task == "learning" } {
-                    if { $r == [expr {$target_slot-1}] } {
-                        set slot [expr $target_slot-1]
-                        set choice_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
-                        set choice_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
-                        rmtSend "feedback_on correct $choice_x $choice_y"
-                        set correct 1
-                    } elseif { $r >= 0 } {
-                        set slot [expr $target_slot-1]
-                        set target_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
-                        set target_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
+                    if { $have_feedback == 1 } {
+                        if { $r == [expr {$target_slot-1}] } {
+                            set slot [expr $target_slot-1]
+                            set choice_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
+                            set choice_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
+                            rmtSend "feedback_on correct $choice_x $choice_y"
+                            set correct 1
+                        } elseif { $r >= 0 } {
+                            set slot [expr $target_slot-1]
+                            set target_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
+                            set target_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
 
-                        set choice_x [dl_get stimdg:choice_centers:$cur_id:$r 0]
-                        set choice_y [dl_get stimdg:choice_centers:$cur_id:$r 1]
-                        set correct_fb "feedback_on correct $target_x $target_y"
-                        set incorrect_fb "feedback_on incorrect $choice_x $choice_y"
-                        rmtSend "${correct_fb}; ${incorrect_fb}"
-                        set correct 0
+                            set choice_x [dl_get stimdg:choice_centers:$cur_id:$r 0]
+                            set choice_y [dl_get stimdg:choice_centers:$cur_id:$r 1]
+                            set correct_fb "feedback_on correct $target_x $target_y"
+                            set incorrect_fb "feedback_on incorrect $choice_x $choice_y"
+                            rmtSend "${correct_fb}; ${incorrect_fb}"
+                            set correct 0
+                        }
+                    } else {
+                        if { $r == [expr {$target_slot-1}] } {
+                            set correct 1
+                        } elseif { $r >= 0 } {
+                            set correct 0
+                        }
                     }
                 } else {
                     rmtSend "choices_off; feedback_off all"
@@ -557,7 +591,9 @@ namespace eval hapticvis::transfer {
             set updated_position 0
 
             if { $use_joystick } {
+                set mapdict { 0 -1 4 0 8 1 }
                 set joy_position [dservGet ess/joystick/value]
+                # if not middle, left, or right then reject and set back to 0
                 if { $joy_position != 8 && $joy_position != 4 && $joy_position != 0 } {
                     if { [dservExists ess/joystick/position] } {
                         if { [dservGet ess/joystick/position] != 0 } {
@@ -571,6 +607,7 @@ namespace eval hapticvis::transfer {
                         return -2
                     }
                 }
+                set r [dict get $mapdict $joy_position]
                 # note which position has been activated
                 if { [dservExists ess/joystick/position] } {
                     set cur_position [dservGet ess/joystick/position]
@@ -602,10 +639,32 @@ namespace eval hapticvis::transfer {
             }
 
             if { $made_selection } {
-                rmtSend "cue_off; choices_off; feedback_off all"
-                # r should be 0 for cue_valid == 1, 1 for cue_valid == 0
-                set correct [expr {$r == (1-$cue_valid)}]
-                set r 0
+                ::ess::evt_put DECIDE SELECT [now] [dict keys [dict filter $mapdict value $r]]
+                if { $task == "learning" } {
+                    if { ($cue_valid == 1 && $r == 1) || ($cue_valid == 0 && $r == 0) } {
+                        set slot [expr $target_slot-1]
+                        set choice_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
+                        set choice_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
+                        rmtSend "feedback_on correct $choice_x $choice_y"
+                        set correct 1
+                    } elseif { ($cue_valid == 1 && $r == 0) || ($cue_valid == 0 && $r == 1) } {
+                        set slot [expr $target_slot-1]
+                        set target_x [dl_get stimdg:choice_centers:$cur_id:$slot 0]
+                        set target_y [dl_get stimdg:choice_centers:$cur_id:$slot 1]
+
+                        set choice_x [dl_get stimdg:lr_choice_centers:$cur_id:$r 0]
+                        set choice_y [dl_get stimdg:lr_choice_centers:$cur_id:$r 1]
+                        set correct_fb "feedback_on correct $target_x $target_y"
+                        set incorrect_fb "feedback_on incorrect $choice_x $choice_y"
+                        rmtSend "${correct_fb}; ${incorrect_fb}"
+                        set correct 0
+                    }
+                } else {
+                    rmtSend "cue_off; choices_off; feedback_off all"
+                    # r should be 0 for cue_valid == 1, 1 for cue_valid == 0
+                    set correct [expr {$r == (1-$cue_valid)}]
+                    set r 0
+                }
             }
 
             return $r
