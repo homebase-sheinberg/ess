@@ -4,6 +4,9 @@
 # planko-3.0.tm
 #   Enhanced package for generating planko boards with threading support
 #
+
+puts "loading planko package"
+
 package provide planko 3.0
 
 package require box2d
@@ -12,12 +15,71 @@ package require points
 
 namespace eval planko {
     variable params
+    variable compute_host ""    
     variable use_threading 0
     variable num_threads 4
     variable min_threading_batch 4
 
     # Thread-local world tracking
     variable thread_worlds {}
+
+    # Detect number of CPUs available
+    proc detect_num_cpus {{physical false}} {
+	if {$physical} {
+	    # Linux: count physical cores
+	    if {[file exists /proc/cpuinfo]} {
+		set f [open /proc/cpuinfo r]
+		set data [read $f]
+		close $f
+		# Count unique physical id + core id combinations
+		set cores [dict create]
+		set phys_id 0
+		set core_id 0
+		foreach line [split $data "\n"] {
+		    if {[regexp {^physical id\s*:\s*(\d+)} $line -> id]} {
+			set phys_id $id
+		    } elseif {[regexp {^core id\s*:\s*(\d+)} $line -> id]} {
+			set core_id $id
+			dict set cores "$phys_id:$core_id" 1
+		    }
+		}
+		set count [dict size $cores]
+		if {$count > 0} { return $count }
+	    }
+	    # macOS
+	    if {![catch {exec sysctl -n hw.physicalcpu} result]} {
+		if {[string is integer -strict $result] && $result > 0} {
+		    return $result
+		}
+	    }
+	}
+	
+        # Try nproc command first (most reliable on Linux)
+        if {![catch {exec nproc} result]} {
+            if {[string is integer -strict $result] && $result > 0} {
+                return $result
+            }
+        }
+	
+        # Try Linux /proc/cpuinfo
+        if {[file exists /proc/cpuinfo]} {
+            set f [open /proc/cpuinfo r]
+            set data [read $f]
+            close $f
+            set count [llength [regexp -all -inline -line {^processor\s*:} $data]]
+            if {$count > 0} { return $count }
+        }
+        
+        # Try sysctl (macOS/BSD)
+        if {![catch {exec sysctl -n hw.ncpu} result]} {
+            if {[string is integer -strict $result] && $result > 0} {
+                return $result
+            }
+        }
+        
+        # Default fallback
+        return 4
+    }
 
     proc safe_dg_fromString { data name } {
         # Check if the data group already exists and delete it
@@ -62,10 +124,14 @@ namespace eval planko {
     }
 
     # Threading configuration and management
-    proc enable_threading { {threads 6} } {
+    proc enable_threading { { threads {} } } {
         variable use_threading
         variable num_threads
 
+        if {$threads eq {}} {
+            set threads [detect_num_cpus]
+        }
+		     
         if {[catch {package require Thread}]} {
             puts "Warning: Thread package not available, falling back to serial generation"
             set use_threading 0
@@ -74,7 +140,7 @@ namespace eval planko {
 
         set use_threading 1
         set num_threads $threads
-        puts "Threading enabled with $num_threads threads"
+        puts "Threading enabled with $num_threads threads (detected [detect_num_cpus] CPUs)"
         return 1
     }
 
@@ -82,27 +148,6 @@ namespace eval planko {
         variable use_threading
         set use_threading 0
         puts "Threading disabled"
-    }
-
-    proc configure_threading { args } {
-        array set opts {
-            -threads 6
-            -min_batch_size 10
-            -enable auto
-        }
-        array set opts $args
-
-        variable num_threads $opts(-threads)
-        variable min_threading_batch $opts(-min_batch_size)
-
-        if {$opts(-enable) eq "auto"} {
-            return [enable_threading $num_threads]
-        } elseif {$opts(-enable)} {
-            return [enable_threading $num_threads]
-        } else {
-            disable_threading
-            return 0
-        }
     }
 
     proc get_threading_info {} {
@@ -113,6 +158,11 @@ namespace eval planko {
         return [dict create enabled $use_threading threads $num_threads min_batch $min_threading_batch]
     }
 
+    proc set_compute_host { host } {
+        variable compute_host
+        set compute_host $host
+    }
+        
     proc create_worker_script {} {
 	return {
 	    # Setup worker thread environment (same as before)
@@ -148,6 +198,38 @@ namespace eval planko {
 	}
     }
 
+    proc generate_worlds_serialized { n d } {
+	variable use_threading
+	variable min_threading_batch
+	
+	if {$use_threading && $n >= $min_threading_batch} {
+	    set g [generate_worlds_parallel $n $d]
+	    puts "created parallelized worlds"
+	} else {
+	    set g [generate_worlds_serial $n $d]
+	    puts "created serialized worlds"
+	}
+
+	# put serialized dg into the variable "result"
+	dg_toString64 $g result
+	dg_delete $g  ;# clean up on remote
+	return $result
+    }
+    
+    proc generate_worlds_remote { n d } {
+	variable compute_host
+	
+	# Remote system will auto-detect its own CPU count
+	set ess_script [subst {
+	    package require planko
+	    planko::detect_num_cpus
+	    planko::generate_worlds_serialized $n [list $d]
+	}]
+	
+	set data [remoteEval $compute_host "send ess [list $ess_script]"]
+	return [dg_fromString64 $data]
+    }
+    
     proc generate_worlds_parallel { n d } {
 	variable num_threads
 	
@@ -348,12 +430,13 @@ namespace eval planko {
 
     # Main world generation dispatcher
     proc generate_worlds { n d } {
+	variable compute_host
         variable use_threading
-        variable num_threads
         variable min_threading_batch
 
-        # Use threading if enabled and batch is large enough
-        if {$use_threading && $n >= $min_threading_batch } {
+        if { $compute_host ne "" } {
+            return [generate_worlds_remote $n $d]
+        } elseif { $use_threading && $n >= $min_threading_batch } {
             return [generate_worlds_parallel $n $d]
         } else {
             return [generate_worlds_serial $n $d]
@@ -370,6 +453,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_slist ball]
         dl_set $g:shape [dl_slist Circle]
+	dl_set $g:visible [dl_ilist 1]
         dl_set $g:type $b2_staticBody
         dl_set $g:tx [dl_flist $params(ball_xpos)]
         dl_set $g:ty [dl_flist $params(ball_ypos)]
@@ -392,6 +476,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_slist ${name}_b ${name}_r ${name}_l]
         dl_set $g:shape [dl_repeat [dl_slist Box] 3]
+	dl_set $g:visible [dl_repeat [dl_ilist 1] 3]
         dl_set $g:type [dl_repeat $b2_staticBody 3]
         dl_set $g:tx [dl_flist $tx [expr {$tx+2.5}] [expr {$tx-2.5}]]
         dl_set $g:ty [dl_flist $y $ty $ty]
@@ -414,6 +499,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_slist ${name}]
         dl_set $g:shape [dl_slist Box]
+	dl_set $g:visible [dl_ilist 1]
         dl_set $g:type $b2_staticBody
         dl_set $g:tx [dl_flist $tx]
         dl_set $g:ty [dl_flist $y]
@@ -456,6 +542,7 @@ namespace eval planko {
         dl_set $g:id [dl_ilist]
         dl_set $g:name [dl_paste [dl_repeat [dl_slist plank] $n] [dl_fromto 0 $n]]
         dl_set $g:shape [dl_repeat [dl_slist Box] $n]
+	dl_set $g:visible [dl_ones $n]
         dl_set $g:type [dl_repeat $b2_staticBody $n]
         dl_set $g:tx $tx
         dl_set $g:ty $ty
@@ -502,6 +589,11 @@ namespace eval planko {
             foreach v "name shape type tx ty sx sy angle restitution" {
                 set $v [dl_get $dg:$v $i]
             }
+	    if { [dl_exists $dg:visible] } {
+		set visible [dl_get $dg:visible $i]
+	    } else {
+		set visible 1
+	    }
 
             if { $shape == "Box" } {
                 set body [box2d::createBox $world $name $type $tx $ty $sx $sy $angle]
@@ -661,7 +753,7 @@ namespace eval planko {
 
     proc pack_world { g } {
         # these are columns that are lists for each world
-        set cols "name shape type tx ty sx sy angle restitution ball_t ball_x ball_y contact_t contact_bodies"
+        set cols "name shape visible type tx ty sx sy angle restitution ball_t ball_x ball_y contact_t contact_bodies"
 
         # put the lists into a list of lists so we can append worlds together
         foreach c $cols {
@@ -737,7 +829,7 @@ namespace eval planko {
         set serial_count [dl_length $serial_worlds:name]
 
         # Generate worlds with parallel mode
-        if {[enable_threading 4]} {
+        if {[enable_threading]} {
             puts "Generating $n worlds in parallel mode..."
             set start [clock milliseconds]
             set parallel_worlds [generate_worlds $n $test_params]
@@ -955,7 +1047,7 @@ namespace eval planko {
 
     proc get_world { dg trial } {
 	set w [dg_create]
-	set vars "name shape type tx ty sx sy angle restitution contact_t contact_bodies ball_t ball_x ball_y"
+	set vars "name shape visible type tx ty sx sy angle restitution contact_t contact_bodies ball_t ball_x ball_y"
 	foreach l $vars {
 	    dl_set $w:$l $dg:$l:$trial
 	}
@@ -1060,8 +1152,5 @@ if {[catch {package require Thread} err]} {
 } else {
     puts "Thread package loaded successfully"
     # Now safe to enable threading
-    planko::enable_threading 4
+    planko::enable_threading
 }
-
-# until we track down crashes...
-planko::disable_threading
