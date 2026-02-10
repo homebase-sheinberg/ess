@@ -129,6 +129,32 @@ namespace eval planko::bounce {
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
+        training {
+            description "training with simple boards"
+            loader_proc setup_multiworld
+            loader_options {
+                nr { 4 6 8 10 20 25 30 60 100 200 400 }
+                nplanks { {1 1} {2 2} {4 4} {8 8} {4+8 {4 8}} }
+                board_params {
+                    { jittered {
+                            ball_jitter_x 10
+                            ball_start_y 8
+                            minplanks 1
+                            planks_min_dist 1.4
+                            planks_max_x 12.0
+                            lcatcher_x -3.25
+                            rcatcher_x 3.25
+                        }
+                    }
+                }
+                ball_params { $ball_presets }
+            }
+            init {
+            }
+            deinit {
+            }
+            params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
+        }
         perception {
             description "perception on trials with different balls"
             loader_proc setup_perception
@@ -156,6 +182,8 @@ namespace eval planko::bounce {
 
     set variants [subst $variants]
 }
+
+
 
 
 
