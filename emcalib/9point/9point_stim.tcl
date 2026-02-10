@@ -1,5 +1,5 @@
 # NAME
-#   emcalib_9point.tcl
+#   9point_stim.tcl
 #
 # DESCRIPTION
 #   Stim code for calibration with 9 locations
@@ -7,6 +7,14 @@
 # REQUIRES
 #   polygon
 #   metagroup
+#
+# SUPPORTED RMT CALLS
+#  nexttrial id
+#  fixon
+#  fixoff
+#  fixjump
+#  reset
+#  clearscreen 
 #
 # AUTHOR
 #   DLS
@@ -29,7 +37,7 @@ proc nexttrial { id } {
     polycirc $obj 1
     polycolor $obj {*}$fix_color
     translateObj $obj $fix_targ_x $fix_targ_y
-    scaleObj $obj [expr {2*$fix_targ_r}]; # diameter is 2r
+    scaleObj $obj [expr {2*$fix_targ_r}];        # diameter is 2r
     set center [polygon]
     polycirc $center 1
     polycolor $center 0 0 0
@@ -84,6 +92,12 @@ proc reset { } {
 proc clearscreen { } {
     glistSetVisible 0; redraw;
 }
+
+
+
+
+
+
 
 
 

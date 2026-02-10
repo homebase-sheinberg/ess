@@ -3,7 +3,7 @@
 #   emcalib 9point
 #
 # DESCRIPTION
-#   Present targets at 9 locations for calibration task
+#   Present targets at 9 locations for calibration task for biquadratic fit
 #
 
 namespace eval emcalib::9point {
@@ -36,15 +36,8 @@ namespace eval emcalib::9point {
             # initialize eye movements
             ::ess::em_init
 
-            soundReset
-            soundSetVoice 81 0 0
-            soundSetVoice 57 17 1
-            soundSetVoice 60 0 2
-            soundSetVoice 42 0 3
-            soundSetVoice 21 0 4
-            soundSetVoice 8 0 5
-            soundSetVoice 113 100 6
-            foreach i "0 1 2 3 4 5 6" { soundVolume 127 $i }
+	    # initialize sounds
+	    ::ess::sound_init
         }
 
         $s set_protocol_deinit_callback {
@@ -55,6 +48,12 @@ namespace eval emcalib::9point {
             dl_set stimdg:remaining [dl_ones [dl_length stimdg:stimtype]]
             set obs_count 0
             rmtSend reset
+
+	    # reset online values
+	    set target_x {}
+	    set target_y {}
+	    set raw_x {}
+	    set raw_y {}
         }
 
         $s set_start_callback {
@@ -103,8 +102,8 @@ namespace eval emcalib::9point {
                 ::ess::em_sampler_configure $sample_count
                 ::ess::em_region_off 0
                 ::ess::em_region_off 1
-                ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 0
-                ::ess::em_fixwin_set 1 $jump_targ_x $jump_targ_y $fix_radius 0
+                ::ess::em_fixwin_set 0 $fix_targ_x $fix_targ_y $fix_radius 
+                ::ess::em_fixwin_set 1 $jump_targ_x $jump_targ_y $fix_radius 
 
                 rmtSend "nexttrial $stimtype"
             }
@@ -122,7 +121,7 @@ namespace eval emcalib::9point {
         }
 
         $s add_method fixon {} {
-            soundPlay 1 70 200
+            ::ess::sound_play 1 70 200
             rmtSend "!fixon"
             ::ess::em_region_on 0
             ::ess::evt_put EMPARAMS CIRC [now] 0 $fix_targ_x $fix_targ_y $fix_targ_r
@@ -160,11 +159,16 @@ namespace eval emcalib::9point {
         }
 
         $s add_method store_calibration {} {
-            ::ess::evt_put EMPARAMS CALIB [now] {*}[::ess::em_sampler_vals]
+	    lassign [::ess::em_sampler_vals] x y
+            ::ess::evt_put EMPARAMS CALIB [now] $x $y
+	    lappend target_x $jump_targ_x
+	    lappend target_y $jump_targ_y
+	    lappend raw_x $x
+	    lappend raw_y $y
         }
 
         $s add_method reward {} {
-            soundPlay 3 70 70
+            ::ess::sound_play 3 70 70
             ::ess::reward $juice_ml
             ::ess::evt_put REWARD MICROLITERS [now] [expr {int($juice_ml*1000)}]
         }
@@ -176,7 +180,8 @@ namespace eval emcalib::9point {
         }
 
         $s add_method finale {} {
-            soundPlay 6 60 400
+            ::ess::sound_play 6 60 400
+	    send em [list em::do_fit $raw_x $raw_y $target_x $target_y]
         }
 
         $s set_viz_config {
@@ -206,7 +211,7 @@ namespace eval emcalib::9point {
                 variable calib_x; variable calib_y
                 variable cur_x; variable cur_y
                 lassign $data calib_x calib_y
-                set msg [format "%.0f %.0f" $calib_x $calib_y]
+                set msg [format "%.2f %.2f" $calib_x $calib_y]
                 clearwin
                 set white [dlg_rgbcolor 200 200 200]
                 dlg_text $cur_x $cur_y [list $msg] -size 16 -just 0 -color $white
@@ -240,6 +245,7 @@ namespace eval emcalib::9point {
         return
     }
 }
+
 
 
 
