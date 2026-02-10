@@ -4,6 +4,10 @@
 # Computes biquadratic calibration coefficients from trial data
 # and publishes to dserv for use by eye tracking systems.
 #
+# datapoints
+#   em/biquadratic
+#   em/calibration_timestamp
+#
 
 package require em 1.0
 
@@ -58,16 +62,7 @@ namespace eval emcalib {
         
         # Build result
         set n_trials [llength $eye_x]
-        set result [dict create \
-            source $filepath \
-            filename [file tail $filepath] \
-            timestamp [clock seconds] \
-            x_coeffs $x_coeffs \
-            y_coeffs $y_coeffs \
-            rms_x $rms_x \
-            rms_y $rms_y \
-            rms_error $rms_combined \
-            n_trials $n_trials]
+        set result [dict create  source $filepath  filename [file tail $filepath]  timestamp [clock seconds]  x_coeffs $x_coeffs  y_coeffs $y_coeffs  rms_x $rms_x  rms_y $rms_y  rms_error $rms_combined  n_trials $n_trials]
         
         # Publish to dserv
         publish_calibration $result
@@ -90,3 +85,5 @@ namespace eval emcalib {
         puts "emcalib::analyze: Published calibration to em/biquadratic"
     }
 }
+
+
