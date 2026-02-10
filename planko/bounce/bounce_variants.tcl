@@ -57,7 +57,7 @@ namespace eval planko::bounce {
             loader_proc basic_planko
             loader_options {
                 nr { 4 20 60 120 }
-                nplanks { 8 }
+                nplanks { 4 8 }
                 params {
                     { jittered {
                             ball_jitter_x 10
@@ -72,10 +72,8 @@ namespace eval planko::bounce {
                 }
             }
             init {
-                planko::enable_threading 4
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
@@ -100,10 +98,8 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading 4
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
@@ -128,10 +124,8 @@ namespace eval planko::bounce {
                 ball_params { $ball_presets }
             }
             init {
-                planko::enable_threading 4
             }
             deinit {
-                planko::disable_threading
             }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
@@ -139,7 +133,7 @@ namespace eval planko::bounce {
             description "perception on trials with different balls"
             loader_proc setup_perception
             loader_options {
-                nr { 4 6 8 10 20 25 30 60 100 200 }
+                nr { 4 6 8 10 20 25 30 60 100 200 400 }
                 nplanks { {4 4} {8 8} {4+8 {4 8}} }
                 show_planks { {yes 1} {no 0} }
                 board_params {
@@ -156,15 +150,16 @@ namespace eval planko::bounce {
                 }
                 ball_params { $ball_presets }
             }
-            init {
-                planko::enable_threading 4
-            }
-            deinit {
-                planko::disable_threading
-            }
             params { use_buttons 1 left_button 24 right_button 25 save_ems 1 }
         }
     }
 
     set variants [subst $variants]
 }
+
+
+
+
+
+
+

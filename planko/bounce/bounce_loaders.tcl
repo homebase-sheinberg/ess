@@ -10,7 +10,7 @@ namespace eval planko::bounce {
     package require planko
 
     proc loaders_init { s } {
-        $s add_method basic_planko { nr nplanks params } {
+        $s add_loader basic_planko { nr nplanks params } {
             set n_rep $nr
 
             if { [dg_exists stimdg] } { dg_delete stimdg }
@@ -20,6 +20,9 @@ namespace eval planko::bounce {
             # this is a set of params to pass into generate_worlds
             set p "nplanks $nplanks $params"
             set g [planko::generate_worlds $n_obs $p]
+
+            # full simulation
+            dl_set $g:perception_only [dl_zeros $n_obs]
 
             # rename id column to stimtytpe
             dl_set $g:id [dl_fromto 0 $n_obs]
@@ -33,7 +36,7 @@ namespace eval planko::bounce {
             return $g
         }
 
-        $s add_method setup_bounce { nr nplanks board_params ball_params } {
+        $s add_loader setup_bounce { nr nplanks board_params ball_params } {
             if { [dg_exists stimdg] } { dg_delete stimdg }
             set g stimdg
 
@@ -70,7 +73,7 @@ namespace eval planko::bounce {
         }
 
         # find worlds that work with multiple ball types
-        $s add_method setup_multiworld { nr nplanks board_params ball_params } {
+        $s add_loader setup_multiworld { nr nplanks board_params ball_params } {
             if { [dg_exists stimdg] } { dg_delete stimdg }
             set g stimdg
 
@@ -101,9 +104,9 @@ namespace eval planko::bounce {
                 dg_delete $w
             }
 
-	    # full simulation
-	    dl_set $g:perception_only [dl_zeros $n_obs]
-	    
+            # full simulation
+            dl_set $g:perception_only [dl_zeros $n_obs]
+
             # add ball color(s) to stimdg
             # each world is repeated so this is correct
             dl_local colors [dl_slist {*}[dict get $ball_params ball_color]]
@@ -118,23 +121,43 @@ namespace eval planko::bounce {
             return $g
         }
 
-	$s add_method setup_perception { nr nplanks show_planks board_params ball_params } {
-	    set g [my setup_multiworld $nr $nplanks $board_params $ball_params]
-	    # perception only
-	    set n [dl_length $g:id]
-	    dl_set $g:perception_only [dl_ones $n]
+        $s add_loader setup_perception { nr nplanks show_planks board_params ball_params } {
+            set g [my setup_multiworld $nr $nplanks $board_params $ball_params]
+            # perception only
+            set n [dl_length $g:id]
+            dl_set $g:perception_only [dl_ones $n]
 
-	    # adjust plank visibility (should move to planko packa
-	    dl_set $g:show_planks [dl_repeat $show_planks $n]
-	    dl_local is_plank [dl_regmatch $g:name plank*]
-	    dl_set $g:visible [dl_replace $g:visible $is_plank $show_planks]
+            # adjust plank visibility (should move to planko packa
+            dl_set $g:show_planks [dl_repeat $show_planks $n]
+            dl_local is_plank [dl_regmatch $g:name plank*]
+            dl_set $g:visible [dl_replace $g:visible $is_plank $show_planks]
 
-	    # set fix_color to reddish
-	    dl_set $g:fix_color [dl_repeat [dl_slist "0.8 0.2 0.1"] $n]
-	}
+            # set fix_color to reddish
+            dl_set $g:fix_color [dl_repeat [dl_slist "0.8 0.2 0.1"] $n]
+        }
+
+        $s add_loader setup_biased_perception { nr nplanks keep_left keep_right show_planks board_params ball_params } {
+            set g [my setup_multiworld $nr $nplanks $board_params $ball_params]
+            # perception only
+            set n [dl_length $g:id]
+            dl_set $g:perception_only [dl_ones $n]
+
+            # adjust plank visibility (should move to planko packa
+            dl_set $g:show_planks [dl_repeat $show_planks $n]
+            dl_local is_plank [dl_regmatch $g:name plank*]
+            dl_set $g:visible [dl_replace $g:visible $is_plank $show_planks]
+
+            # set fix_color to reddish
+            dl_set $g:fix_color [dl_repeat [dl_slist "0.8 0.2 0.1"] $n]
+
+            # now mark some trials as done to practice one side or other
+            dl_local skip_left [dl_and [dl_eq stimdg:side 0] [dl_lt [dl_urand $n] $keep_left]]
+            dl_local skip_right [dl_and [dl_eq stimdg:side 1] [dl_lt [dl_urand $n] $keep_right]]
+            dl_local skip [dl_or $skip_left $skip_right]
+            dl_set stimdg:remaining $skip
+        }
     }
 }
-
 
 
 
