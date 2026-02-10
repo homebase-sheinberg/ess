@@ -56,10 +56,7 @@ namespace eval hapticvis {
         dl_local endtrial_is_incorrect [dl_anys [dl_eq $endtrial_subtypes_nested $incorrect_id]]
         dl_local endtrial_ok [dl_or $endtrial_is_correct $endtrial_is_incorrect]
         
-        dl_local valid [dl_and \
-            [dl_eq $endobs_subtypes 1] \
-            $has_endtrial \
-            $endtrial_ok]
+        dl_local valid [dl_and  [dl_eq $endobs_subtypes 1]  $has_endtrial  $endtrial_ok]
         
         if {!$opts(include_invalid)} {
             set n_total [dl_length $valid]
@@ -109,63 +106,42 @@ namespace eval hapticvis {
         
         #
         # STIMULUS events - overall stimulus timing
-        # Use safe methods - events may not exist if trial aborts early
+        # STIMULUS ON should exist for all valid trials (emitted in stim_on state)
+        # STIMULUS OFF should exist (emitted in stim_off state for valid trials)
+        # Use sparse methods for safety
         #
-        dl_local stim_on_times [$f event_times_valid $valid STIMULUS ON]
-        if {$stim_on_times ne ""} {
-            dl_set $trials:stim_on $stim_on_times
-        }
-        
-        dl_local stim_off_times [$f event_times_valid $valid STIMULUS OFF]
-        if {$stim_off_times ne ""} {
-            dl_set $trials:stim_off $stim_off_times
-        }
+        dl_set $trials:stim_on [$f event_time_sparse $valid_indices STIMULUS ON -1]
+        dl_set $trials:stim_off [$f event_time_sparse $valid_indices STIMULUS OFF -1]
         
         #
         # SAMPLE events - sample stimulus timing (the shape to match)
-        # Use safe methods - events may not exist if trial aborts early
+        # SAMPLE ON/OFF may not fire if trial aborts before sample_delay expires
+        # or if subject responds before sample_duration expires (OFF)
+        # Use sparse methods to handle missing events
         #
-        dl_local sample_on_times [$f event_times_valid $valid SAMPLE ON]
-        if {$sample_on_times ne ""} {
-            dl_set $trials:sample_on $sample_on_times
-        }
-        
-        dl_local sample_off_times [$f event_times_valid $valid SAMPLE OFF]
-        if {$sample_off_times ne ""} {
-            dl_set $trials:sample_off $sample_off_times
-        }
+        dl_set $trials:sample_on [$f event_time_sparse $valid_indices SAMPLE ON -1]
+        dl_set $trials:sample_off [$f event_time_sparse $valid_indices SAMPLE OFF -1]
         
         #
         # CHOICES events - choice stimuli timing
-        # Note: Not all variants emit CHOICES (e.g., visual_recognition uses left/right old/new)
-        # Use safe methods - events may not exist if trial aborts before choices
+        # CHOICES ON may not fire if subject responds before choice_delay
+        # CHOICES OFF typically doesn't fire - subject responds before choice_duration expires
+        # Use sparse methods to handle missing events
         #
         if {[$f has_event_type CHOICES]} {
-            dl_local choices_on_times [$f event_times_valid $valid CHOICES ON]
-            if {$choices_on_times ne ""} {
-                dl_set $trials:choices_on $choices_on_times
-            }
-            
-            dl_local choices_off_times [$f event_times_valid $valid CHOICES OFF]
-            if {$choices_off_times ne ""} {
-                dl_set $trials:choices_off $choices_off_times
-            }
+            dl_set $trials:choices_on [$f event_time_sparse $valid_indices CHOICES ON -1]
+            dl_set $trials:choices_off [$f event_time_sparse $valid_indices CHOICES OFF -1]
         }
         
         #
         # CUE events - cue timing (only for cued variants)
-        # Use safe methods - events may not exist if trial aborts before cue
+        # CUE ON may not fire if subject responds before cue_delay
+        # CUE OFF rarely fires - subject typically responds before cue_duration expires
+        # Use sparse methods to handle missing events
         #
         if {[$f has_event_type CUE]} {
-            dl_local cue_on_times [$f event_times_valid $valid CUE ON]
-            if {$cue_on_times ne ""} {
-                dl_set $trials:cue_on $cue_on_times
-            }
-            
-            dl_local cue_off_times [$f event_times_valid $valid CUE OFF]
-            if {$cue_off_times ne ""} {
-                dl_set $trials:cue_off $cue_off_times
-            }
+            dl_set $trials:cue_on [$f event_time_sparse $valid_indices CUE ON -1]
+            dl_set $trials:cue_off [$f event_time_sparse $valid_indices CUE OFF -1]
         }
         
         #
@@ -183,7 +159,17 @@ namespace eval hapticvis {
                 dl_local decide_times [$f event_times $decide_mask]
                 dl_local decide_params [$f event_params $decide_mask]
                 
-                # Select valid trials first, keeping nested structure
+                # Count decisions per obs period BEFORE filling empties
+                # Then select valid trials
+                dl_set $trials:n_decides [dl_choose [dl_lengths $decide_times] $valid_indices]
+                
+                # Fill empty sublists (trials with no DECIDE) before selecting valid
+                dl_local has_decide [dl_anys $decide_mask]
+                dl_local no_decide [dl_not $has_decide]
+                dl_local decide_times [dl_replace $decide_times $no_decide [dl_llist [dl_ilist -1]]]
+                dl_local decide_params [dl_replace $decide_params $no_decide [dl_llist [dl_llist [dl_ilist -1]]]]
+                
+                # Select valid trials, keeping nested structure
                 dl_local decide_times_valid [dl_choose $decide_times $valid_indices]
                 dl_local decide_params_valid [dl_choose $decide_params $valid_indices]
                 
@@ -191,11 +177,8 @@ namespace eval hapticvis {
                 dl_set $trials:decide_all_times $decide_times_valid
                 dl_set $trials:decide_all_params $decide_params_valid
                 
-                # Count number of decisions per trial (for change-of-mind detection)
-                dl_set $trials:n_decides [dl_lengths $decide_times_valid]
-                
                 # Extract final decision (last one per trial - flat)
-                # Use dl_lastPos to get mask for last element in each nested list
+                # dl_lastPos works on filled sublists (single fill element for empty trials)
                 dl_local last_mask [dl_lastPos $decide_times_valid]
                 dl_local final_times [dl_unpack [dl_select $decide_times_valid $last_mask]]
                 dl_local final_params [dl_unpack [dl_select $decide_params_valid $last_mask]]
@@ -207,18 +190,10 @@ namespace eval hapticvis {
         #
         # RESP event - response and timing
         # RESP subtype indicates which choice was selected (slot number)
-        # Use safe methods - RESP only exists on response trials (not ABORT)
+        # Should exist for all valid (CORRECT/INCORRECT) trials, but use sparse for safety
         #
-        dl_local resp_times [$f event_times_valid $valid RESP]
-        if {$resp_times ne ""} {
-            dl_set $trials:resp_time $resp_times
-        }
-        
-        dl_local resp_subtypes [$f event_subtypes_valid $valid RESP]
-        if {$resp_subtypes ne ""} {
-            # response: which choice slot was selected
-            dl_set $trials:response $resp_subtypes
-        }
+        dl_set $trials:resp_time [$f event_time_sparse $valid_indices RESP {} -1]
+        dl_set $trials:response [$f event_subtype_sparse $valid_indices RESP {} -1]
         
         #
         # Compute reaction time (resp_time - sample_on) in ms
@@ -371,3 +346,4 @@ namespace eval hapticvis {
         return $trials
     }
 }
+
