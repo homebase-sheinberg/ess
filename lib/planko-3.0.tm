@@ -165,6 +165,8 @@ namespace eval planko {
         
     proc create_worker_script {} {
 	return {
+	    set ::planko_worker_thread 1
+	    
 	    # Setup worker thread environment (same as before)
 	    set dlshlib [file join /usr/local/dlsh dlsh.zip]
 	    set base [file join [zipfs root] dlsh]
@@ -176,6 +178,7 @@ namespace eval planko {
 	    package require planko
 	    
 	    proc do_planko_work { n d worker_id } {
+		update
 		puts "Worker $worker_id starting generation of $n worlds"
 		
 		set result [catch {
@@ -1146,11 +1149,14 @@ namespace eval planko {
 }    
 
 # Ensure Thread package is loaded before using planko with threading
-if {[catch {package require Thread} err]} {
-    puts "Warning: Thread package not available: $err"
-    planko::disable_threading
-} else {
-    puts "Thread package loaded successfully"
-    # Now safe to enable threading
-    planko::enable_threading
+# Only initialize threading in the main thread, not in worker threads
+if {![info exists ::planko_worker_thread]} {
+    if {[catch {package require Thread} err]} {
+        puts "Warning: Thread package not available: $err"
+        planko::disable_threading
+    } else {
+        puts "Thread package loaded successfully"
+        planko::enable_threading
+    }
 }
+
