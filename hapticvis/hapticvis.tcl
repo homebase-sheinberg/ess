@@ -336,12 +336,10 @@ namespace eval hapticvis {
                 set sample_up -1
             }
             if { $choices_up == 1 } {
-                my choices_off
                 ::ess::evt_put CHOICES OFF [now]
                 set choices_up -1
             }
             if { $cue_up == 1 } {
-                my cue_off
                 ::ess::evt_put CUE OFF [now]
                 set cue_up -1
             }
@@ -522,4 +520,5 @@ namespace eval hapticvis {
         return $sys
     }
 }
+
 
