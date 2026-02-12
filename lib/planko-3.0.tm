@@ -178,7 +178,6 @@ namespace eval planko {
 	    package require planko
 	    
 	    proc do_planko_work { n d worker_id } {
-		update
 		puts "Worker $worker_id starting generation of $n worlds"
 		
 		set result [catch {
