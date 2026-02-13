@@ -26,6 +26,17 @@ namespace eval planko {
     # Detect number of CPUs available
     proc detect_num_cpus {{physical false}} {
 	if {$physical} {
+	    # Linux ARM: count physical cores via sysfs
+	    set core_ids [list]
+	    foreach cpu [glob -nocomplain /sys/devices/system/cpu/cpu\[0-9\]*/topology/core_id] {
+		set f [open $cpu r]
+		set id [string trim [read $f]]
+		close $f
+		if {$id ni $core_ids} { lappend core_ids $id }
+	    }
+	    set count [llength $core_ids]
+	    if {$count > 0} { return $count }
+	    
 	    # Linux: count physical cores
 	    if {[file exists /proc/cpuinfo]} {
 		set f [open /proc/cpuinfo r]
