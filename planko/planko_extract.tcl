@@ -6,7 +6,7 @@
 #
 
 namespace eval planko {
-    
+
     #
     # Extract trials from a planko datafile
     #
@@ -20,7 +20,7 @@ namespace eval planko {
     proc extract_trials {f args} {
         set g [$f group]
         set trials [dg_create]
-        
+
         # Parse options
         array set opts {
             include_invalid 0
@@ -28,7 +28,7 @@ namespace eval planko {
         foreach {key val} $args {
             set opts([string trimleft $key -]) $val
         }
-        
+
         #
         # Determine valid trials
         # Valid = ENDOBS complete (1) and response was made (not NONE/-1)
@@ -42,24 +42,21 @@ namespace eval planko {
         # Note: event_subtype_values is safe here because ENDOBS exists for every
         # obs period by definition
         dl_local endobs_subtypes [$f event_subtype_values ENDOBS]
-        
+
         # Check for RESP events - valid trials have a response (subtype 1 or 2, not NONE)
         dl_local resp_mask [$f select_evt RESP]
         dl_local has_resp [dl_anys $resp_mask]
-        
+
         # Get RESP subtypes to check for actual responses vs NONE
         # RESP subtypes: 1=LEFT, 2=RIGHT, NONE=no response
         dl_local resp_subtypes_nested [$f event_subtypes $resp_mask]
-        
+
         # Valid response: subtype > 0 (LEFT=1 or RIGHT=2)
         dl_local resp_ok [dl_anys [dl_gt $resp_subtypes_nested 0]]
-        
+
         # Valid trials: endobs==COMPLETE(1) and has valid response
-        dl_local valid [dl_and \
-            [dl_eq $endobs_subtypes 1] \
-            $has_resp \
-            $resp_ok]
-        
+        dl_local valid [dl_and  [dl_eq $endobs_subtypes 1]  $has_resp  $resp_ok]
+
         if {!$opts(include_invalid)} {
             set n_total [dl_length $valid]
             set n_valid [dl_sum $valid]
@@ -67,100 +64,87 @@ namespace eval planko {
         } else {
             dl_local valid [dl_ones [dl_length $endobs_subtypes]]
         }
-        
+
         set n_trials [dl_sum $valid]
-        
+
         # Compute valid indices once for use throughout
         dl_local valid_indices [dl_indices $valid]
-        
+
         #
         # Extract trial indices
         #
         dl_set $trials:obsid $valid_indices
-        
+
         #
         # Add standard metadata columns (trialid, date, time, filename, system, protocol, variant, subject)
         #
         df::add_metadata_columns $trials $f $n_trials
-        
+
         #
         # Extract event-based data for valid trials
         #
-        
+
         # Trial outcome (ENDOBS subtype: 0=INCOMPLETE, 1=COMPLETE, 2=BREAK, etc.)
-        # ENDOBS is guaranteed to exist for every obs period
-        dl_set $trials:outcome [dl_choose [$f event_subtype_values ENDOBS] $valid_indices]
-        
+        dl_set $trials:outcome [$f event_subtype_sparse $valid_indices ENDOBS {} -1]
+
         # Trial duration (ENDOBS time)
-        # ENDOBS is guaranteed to exist for every obs period
-        dl_set $trials:duration [dl_choose [$f event_time_values ENDOBS] $valid_indices]
-        
+        dl_set $trials:duration [$f event_time_sparse $valid_indices ENDOBS {} -1]
+
         #
         # STIMTYPE event - contains stimdg index
-        # STIMTYPE is emitted early in each trial, should exist for all obs periods
+        # Use sparse method to maintain index alignment
         #
-        dl_local stimtype [$f event_param_values STIMTYPE]
-        if {$stimtype ne ""} {
-            dl_local stimtype_valid [dl_choose $stimtype $valid_indices]
-            dl_set $trials:stimtype $stimtype_valid
-        }
-        
+        dl_local stimtype_valid [$f event_param_sparse $valid_indices STIMTYPE {} -1]
+        dl_set $trials:stimtype $stimtype_valid
+
         #
         # PATTERN events - stimulus timing
-        # Use safe methods - events may not exist if trial aborts early
+        # Use sparse methods to handle missing events
         #
-        dl_local pattern_on_times [$f event_times_valid $valid PATTERN ON]
-        if {$pattern_on_times ne ""} {
-            dl_set $trials:stimon $pattern_on_times
-        }
-        
-        dl_local pattern_off_times [$f event_times_valid $valid PATTERN OFF]
-        if {$pattern_off_times ne ""} {
-            dl_set $trials:stimoff $pattern_off_times
-        }
-        
+        dl_set $trials:stimon [$f event_time_sparse $valid_indices PATTERN ON -1]
+        dl_set $trials:stimoff [$f event_time_sparse $valid_indices PATTERN OFF -1]
+
         #
         # RESP event - response and timing
-        # For valid trials (by definition), RESP exists with subtype > 0
-        # Use safe methods for consistency and future-proofing
+        # Use sparse methods for safety
         #
-        dl_local resp_times [$f event_times_valid $valid RESP]
-        if {$resp_times ne ""} {
-            dl_set $trials:resp_time $resp_times
-        }
-        
-        dl_local resp_subtypes [$f event_subtypes_valid $valid RESP]
-        if {$resp_subtypes ne ""} {
-            # Response: 1=LEFT, 2=RIGHT -> convert to 0=LEFT, 1=RIGHT
-            dl_set $trials:response [dl_sub $resp_subtypes 1]
-        }
-        
+        dl_set $trials:resp_time [$f event_time_sparse $valid_indices RESP {} -1]
+
+        dl_local resp_svals [$f event_subtype_sparse $valid_indices RESP {} -1]
+        # Response: 1=LEFT, 2=RIGHT -> convert to 0=LEFT, 1=RIGHT
+        dl_set $trials:response [dl_sub $resp_svals 1]
+
         #
         # Compute reaction time (resp_time - stimon)
         #
         if {[dl_exists $trials:resp_time] && [dl_exists $trials:stimon]} {
             dl_set $trials:rt [dl_sub $trials:resp_time $trials:stimon]
         }
-        
+
         #
         # FEEDBACK event - contains response and correctness
-        # FEEDBACK ON params: resp correct
-        # Use safe method since FEEDBACK may not exist on all trials
+        # FEEDBACK ON params: resp correct (two values per event)
+        # Handle sparseness manually since params have structure
         #
-        dl_local feedback_mask [$f select_evt FEEDBACK ON]
-        if {$feedback_mask ne "" && [dl_any $feedback_mask]} {
-            # Select valid first, then unpack
-            dl_local feedback_params_valid [dl_choose [$f event_params $feedback_mask] $valid_indices]
-            dl_local feedback_params [dl_unpack [dl_deepUnpack $feedback_params_valid]]
-            
-            # Params are: resp, correct pairs
-            if {[dl_length $feedback_params] > 0} {
-                dl_local reformatted [dl_transpose [dl_reshape $feedback_params - 2]]
-                dl_set $trials:feedback_resp $reformatted:0
-                dl_set $trials:correct $reformatted:1
+        if {[$f has_event_type FEEDBACK]} {
+            dl_local feedback_mask [$f select_evt FEEDBACK ON]
+            if {$feedback_mask ne "" && [dl_any $feedback_mask]} {
+                dl_local has_feedback [dl_anys $feedback_mask]
+                dl_local no_feedback [dl_not $has_feedback]
+
+                dl_local feedback_params [$f event_params $feedback_mask]
+                # Fill missing with {-1 -1} to maintain 2-element structure
+                dl_local feedback_params [dl_replace $feedback_params $no_feedback  [dl_llist [dl_llist [dl_ilist -1 -1]]]]
+                dl_local feedback_params [dl_unpack [dl_unpack [dl_choose $feedback_params $valid_indices]]]
+
+                if {[dl_length $feedback_params] > 0} {
+                    dl_local reformatted [dl_transpose [dl_reshape $feedback_params - 2]]
+                    dl_set $trials:feedback_resp $reformatted:0
+                    dl_set $trials:correct $reformatted:1
+                }
             }
         }
-        
+
         # If no FEEDBACK event, compute status from response vs side
         if {![dl_exists $trials:correct] && [dl_exists $trials:response]} {
             if {[dl_exists $g:<stimdg>side] && [dl_exists $trials:stimtype]} {
@@ -168,28 +152,20 @@ namespace eval planko {
                 dl_set $trials:correct [dl_eq $trials:response $trials:side]
             }
         }
-        
+
         # Add status as alias for correct (historical convention)
         if {[dl_exists $trials:correct]} {
             dl_set $trials:status $trials:correct
         }
 
-	#
-	# TOUCH event
-	#
-        dl_local touch_mask [$f select_evt TOUCH PRESS]
-        if {$touch_mask ne "" && [dl_any $touch_mask]} {
-            dl_local has_touch [dl_anys $touch_mask]
-            dl_local no_touch [dl_not $has_touch]
-            
-            dl_local touch_times [$f event_times $touch_mask]
-            dl_set $trials:touch_time [dl_choose $touch_times $valid_indices]
-            
-            # Touch position
-            dl_local touch_params [$f event_params $touch_mask]
-            dl_set $trials:touch_pos [dl_choose $touch_params $valid_indices]
+        #
+        # TOUCH event - use sparse methods
+        #
+        if {[$f has_event_type TOUCH]} {
+            dl_set $trials:touch_time [$f event_times_nested $valid_indices TOUCH PRESS]
+            dl_set $trials:touch_pos [$f event_params_nested $valid_indices TOUCH PRESS]
         }
-	        
+
         #
         # REWARD event - sparse (only on correct trials)
         # Use -1 for reward_time when no reward, 0 for reward_ul
@@ -199,42 +175,42 @@ namespace eval planko {
         if {$reward_mask ne "" && [dl_any $reward_mask]} {
             dl_local has_reward [dl_anys $reward_mask]
             dl_local no_reward [dl_not $has_reward]
-            
+
             # Reward time: -1 for no reward
             dl_local reward_times [$f event_times $reward_mask]
             dl_local reward_times [dl_unpack [dl_replace $reward_times $no_reward [dl_llist [dl_ilist -1]]]]
             dl_set $trials:reward_time [dl_choose $reward_times $valid_indices]
-            
+
             # Reward amount: 0 for no reward (params are depth 2, so extra dl_llist wrapper and extra unpack)
             dl_local reward_params [$f event_params $reward_mask]
             dl_local reward_params [dl_unpack [dl_unpack [dl_replace $reward_params $no_reward [dl_llist [dl_llist [dl_ilist 0]]]]]]
             dl_set $trials:reward_ul [dl_choose $reward_params $valid_indices]
-            
+
             # Rewarded flag
             dl_set $trials:rewarded [dl_choose $has_reward $valid_indices]
         }
-        
+
         #
         # Extract stimulus parameters from stimdg
         #
         if {[dl_exists $trials:stimtype]} {
             set stimtype_valid $trials:stimtype
-            
+
             # Copy all stimdg columns, indexed by stimtype
             set all_cols [dg_tclListnames $g]
             set stimdg_cols [lsearch -inline -all -glob $all_cols "<stimdg>*"]
-            
+
             foreach col $stimdg_cols {
                 # Extract column name without <stimdg> prefix
                 set short_name [string range $col 8 end]
-                
+
                 # Skip 'remaining' which is a runtime tracking variable
                 if {$short_name eq "remaining"} continue
-                
+
                 dl_set $trials:$short_name [dl_choose $g:$col $stimtype_valid]
             }
         }
-        
+
         #
         # Extract eye movement data if present
         # These are per-obs-period data, use dl_choose with valid_indices
@@ -242,7 +218,18 @@ namespace eval planko {
         if {[dl_exists $g:ems]} {
             dl_set $trials:ems [dl_choose $g:ems $valid_indices]
         }
-        
+
+        #
+        # Extract biquadratic calibration from session data (if present)
+        #
+        set calib [em::extract_calibration $f]
+        if {$calib ne ""} {
+            em::calibration_info $calib
+            set cal_coeffs [em::calibration_coeffs $calib]
+        } else {
+            set cal_coeffs ""
+        }
+
         # Collect raw eye tracking data streams into a dict for em:: processing
         set em_streams [dict create]
         foreach {ds_path dict_key} {
@@ -253,22 +240,24 @@ namespace eval planko {
             em/time time
             em/blink blink
             em/frame_id frame_id
+            eyetracking/raw eye_raw
         } {
             if {[dl_exists $g:<ds>$ds_path]} {
                 dict set em_streams $dict_key [dl_choose $g:<ds>$ds_path $valid_indices]
             }
         }
-        
+
         # Process eye movement data using em:: utilities
-        if {[dict size $em_streams] > 0} {
-            em::process_raw_streams $trials $em_streams
+        # Pass calibration coefficients so raw -> degrees conversion happens automatically
+        if {[dict size $em_streams] > 0 && [namespace exists ::em]} {
+            em::process_raw_streams $trials $em_streams -calibration $cal_coeffs
         }
-        
+
         # Processed eye position if available
         if {[dl_exists $g:<ds>eyetracking/raw]} {
             dl_set $trials:eye_raw [dl_choose $g:<ds>eyetracking/raw $valid_indices]
         }
-        
+
         return $trials
     }
 }
