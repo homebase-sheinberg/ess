@@ -5,6 +5,8 @@
 # Protocol-specific extractors (e.g., bounce_extract.tcl) can augment this.
 #
 
+package require em
+
 namespace eval planko {
 
     #
